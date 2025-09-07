@@ -5,6 +5,10 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
+	<key>NSCameraUsageDescription</key>
+    <string>This app needs camera access to record your video.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>This app needs microphone access to record audio with your video</string>
 	<string>Ree Social Media App</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>

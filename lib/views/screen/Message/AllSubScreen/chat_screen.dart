@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -164,22 +165,42 @@ class _ChatScreenState extends State<ChatScreen> {
         /// Thumbnail with play button
         Stack(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: msg["isMe"]
-                  ? Image.asset(
-                msg["thumbnail"],
-                height: 180,
-                width: 240,
-                fit: BoxFit.cover,
-              )
-                  : ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                child: Image.asset(
+            InkWell(
+              onTap: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const VideoPreviewScreen(
+                      videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+                      countdownSeconds: 3,
+
+                    ),
+                  ),
+                ).then((savedPath) {
+                  if (savedPath is String && savedPath.isNotEmpty) {
+                    debugPrint('Recorded front-cam file: $savedPath');
+                  }
+                });
+
+
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: msg["isMe"]
+                    ? Image.asset(
                   msg["thumbnail"],
                   height: 180,
                   width: 240,
                   fit: BoxFit.cover,
+                )
+                    : ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                  child: Image.asset(
+                    msg["thumbnail"],
+                    height: 180,
+                    width: 240,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
