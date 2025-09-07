@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:permission_handler/permission_handler.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPreviewScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class VideoPreviewScreen extends StatefulWidget {
 }
 
 class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
+
   CameraController? _frontCam;
   VideoPlayerController? _video;
 
@@ -329,7 +331,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                                 width: 2,
                               ),
                             ),
-                            clipBehavior: Clip.antiAlias,
+                            clipBehavior: Clip.antiAliasWithSaveLayer,
                             child: CameraPreview(_frontCam!),
                           ),
                         ),
@@ -442,8 +444,13 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 child: IconButton(
                   icon: const Icon(Icons.navigate_next, color: Color(0xFF9CC198),
                   size: 30,),
-                  onPressed: () async {
-                    if (mounted) Navigator.pop(context, _recordedFile?.path);
+                  onPressed: ()  {
+                   // if (mounted) Navigator.pop(context, _recordedFile?.path);
+
+                    Get.to(()=> SendOrTrimVideoScreen(
+                      videoUrl: widget.videoUrl
+                    ));
+
                   },
                 ),
               ),
