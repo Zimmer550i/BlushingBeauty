@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/fram_selection_screen.dart';
 import 'package:video_player/video_player.dart';
 
 class SendOrTrimVideoScreen extends StatefulWidget {
@@ -220,31 +221,36 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                  ),
                  child: Column(
                    children: [
-                     Container(
-                       width: double.infinity,
-                       height: 52,
-                       decoration: BoxDecoration(
-                         color: Colors.white,
-                           borderRadius: BorderRadius.circular(12),
-                           border: Border.all(
-                             color: Color(0xFFC4C3C3),
-                             width: 0.5,
-                           ),
-                           boxShadow: [
-                             BoxShadow(
-                               color: Color(0xFF002329).withValues(alpha: 0.07),
-                               offset: Offset(0, 2),
-                               blurRadius: 4,
-                               spreadRadius: 0,
-                             )
-                           ]
+                     InkWell(
+                       onTap: (){
+                         Get.to(()=> FramSelectionScreen(videoUrl: widget.videoUrl));
+                       },
+                       child: Container(
+                         width: double.infinity,
+                         height: 52,
+                         decoration: BoxDecoration(
+                           color: Colors.white,
+                             borderRadius: BorderRadius.circular(12),
+                             border: Border.all(
+                               color: Color(0xFFC4C3C3),
+                               width: 0.5,
+                             ),
+                             boxShadow: [
+                               BoxShadow(
+                                 color: Color(0xFF002329).withValues(alpha: 0.07),
+                                 offset: Offset(0, 2),
+                                 blurRadius: 4,
+                                 spreadRadius: 0,
+                               )
+                             ]
+                         ),
+                         child: Center(child: Text("Trim or Select Image",
+                         style: TextStyle(
+                           color: Color(0xFF413E3E),
+                           fontSize: 16,
+                           fontWeight: FontWeight.w600,
+                         ),)),
                        ),
-                       child: Center(child: Text("Trim or Select Image",
-                       style: TextStyle(
-                         color: Color(0xFF413E3E),
-                         fontSize: 16,
-                         fontWeight: FontWeight.w600,
-                       ),)),
                      )
 
                    ],
