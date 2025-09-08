@@ -98,15 +98,15 @@ class _CustomTextFieldState extends State<CustomTextField> {
           // No border color but keep the border radius
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: widget.borderSide!,
+            borderSide: widget.borderSide ?? BorderSide(color: Color(0xFFC4C3C3), width: 1),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: widget.borderSide!,
+            borderSide: widget.borderSide ?? BorderSide(color:  Color(0xFFC4C3C3), width: 1),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide:widget.borderSide!
+            borderSide:widget.borderSide ?? BorderSide(color:  Color(0xFFC4C3C3), width: 1)
           ),
           contentPadding: EdgeInsets.symmetric(
             horizontal: widget.contentPaddingHorizontal ?? 20,
