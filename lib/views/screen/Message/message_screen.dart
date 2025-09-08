@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/bottom_menu..dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/search_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/chat_screen.dart';
 
@@ -122,16 +123,21 @@ class _MessageScreenState extends State<MessageScreen> {
                   ),
                 ),
                 SizedBox(width: 12),
-                Container(
-                  height: 32,
-                  width: 32,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(6.0),
-                    child: SvgPicture.asset('assets/icons/search.svg'),
+                InkWell(
+                  onTap: (){
+                    Get.to(()=> SearchScreen());
+                  },
+                  child: Container(
+                    height: 32,
+                    width: 32,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: SvgPicture.asset('assets/icons/search.svg'),
+                    ),
                   ),
                 ),
                 SizedBox(width: 12),
