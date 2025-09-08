@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -12,6 +13,7 @@ import 'helpers/di.dart' as di;
 import 'helpers/route.dart';
 void main()async {
   WidgetsFlutterBinding.ensureInitialized();
+  AppRoutes.cameras = await availableCameras();
   Map<String, Map<String, String>> _languages = await di.init();
   runApp( MyApp(languages:_languages,));
 }
