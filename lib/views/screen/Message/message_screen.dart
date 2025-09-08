@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/bottom_menu..dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/chat_screen.dart';
 
 class MessageScreen extends StatefulWidget {
@@ -67,7 +68,7 @@ class _MessageScreenState extends State<MessageScreen> {
     {
       "name": "Mr. John",
       "image":
-      "assets/images/dummy.jpg", // image story
+      "assets/images/dummy.jpg",
       "message": "Hello, how are you?",
       "time": "10:30 AM",
       "active": false
@@ -187,14 +188,19 @@ class _MessageScreenState extends State<MessageScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        "See All",
-                        style: TextStyle(
-                          color: Color(0xFF413E3E),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
+                    InkWell(
+                      onTap: (){
+                        Get.to(()=> SeeAllStoryScreen());
+                      },
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          "See All",
+                          style: TextStyle(
+                            color: Color(0xFF413E3E),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
@@ -446,7 +452,7 @@ class _MessageScreenState extends State<MessageScreen> {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Color(0xFF000000).withValues(alpha: 0.042), // semi-transparent background
+                color: Color(0xFF000000).withValues(alpha: 0.42), // semi-transparent background
 
               ),
               child: Text(

@@ -26,7 +26,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
   double _trimStart = 0;
   double _trimEnd = 1;
 
-  List<String> _thumbnailPaths = [];
+  final List<String> _thumbnailPaths = [];
   final double _thumbnailWidth = 60.0;
   final double _thumbnailHeight = 80.0;
   final double _trimSelectionWidth = 80.0;
@@ -325,7 +325,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
               const SizedBox(width: 12),
               ValueListenableBuilder<bool>(
                 valueListenable: _isPlaying,
-                builder: (_, playing, __) {
+                builder: (_, playing, _) {
                   return InkWell(
                     onTap: () async {
                       if (playing) {
@@ -454,7 +454,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
                         width: _trimSelectionWidth,
                         height: _thumbnailHeight,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFABD4A7).withOpacity(0.50),
+                          color: const Color(0xFFABD4A7).withValues(alpha: 0.50),
                           border: Border.all(
                             color: const Color(0xFFABD4A7),
                             width: 2,

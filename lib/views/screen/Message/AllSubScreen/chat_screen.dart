@@ -243,7 +243,7 @@ class _ChatScreenState extends State<ChatScreen> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
+            SizedBox(
               height: 20,
               width: 20,
               child: SvgPicture.asset('assets/icons/download.svg'),
