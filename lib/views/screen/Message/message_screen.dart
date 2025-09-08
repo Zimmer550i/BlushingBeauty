@@ -6,6 +6,7 @@ import 'package:ree_social_media_app/views/base/bottom_menu..dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/search_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/chat_screen.dart';
+import 'package:ree_social_media_app/views/screen/Notification/notification_screen.dart';
 
 class MessageScreen extends StatefulWidget {
   const MessageScreen({super.key});
@@ -143,16 +144,21 @@ class _MessageScreenState extends State<MessageScreen> {
                 SizedBox(width: 12),
                 Stack(
                   children: [
-                    Container(
-                      height: 32,
-                      width: 32,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: SvgPicture.asset('assets/icons/notification.svg'),
+                    InkWell(
+                      onTap: (){
+                        Get.to(()=> NotificationScreen());
+                      },
+                      child: Container(
+                        height: 32,
+                        width: 32,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: SvgPicture.asset('assets/icons/notification.svg'),
+                        ),
                       ),
                     ),
                     Positioned(
