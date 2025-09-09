@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+
 
 import 'package:ree_social_media_app/views/base/bottom_menu..dart';
+import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_edit_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -18,7 +18,7 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   CameraController? _controller;
   bool _isRecording = false;
-  bool _isVideoMode = false; // Camera or Video mode
+  bool _isVideoMode = false; //
   int _recordDuration = 0;
   Timer? _timer;
 
@@ -62,9 +62,13 @@ class _CameraScreenState extends State<CameraScreen> {
     if (_controller == null || !_controller!.value.isInitialized) return;
     try {
       XFile file = await _controller!.takePicture();
-      // Use `file.path` directly in memory, no saving needed
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Photo captured')),
+
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VideoEditScreen(filePath: file.path, isVideo: false),
+        ),
       );
     } catch (e) {
       print('Error capturing photo: $e');
@@ -91,10 +95,14 @@ class _CameraScreenState extends State<CameraScreen> {
       _isRecording = false;
       _stopTimer();
       setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Video recorded')),
+
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VideoEditScreen(filePath: file.path, isVideo: true),
+        ),
       );
-      // You can use `file.path` in memory for preview or upload
     } catch (e) {
       print('Error stopping video recording: $e');
     }
@@ -133,7 +141,7 @@ class _CameraScreenState extends State<CameraScreen> {
           Positioned.fill(child: CameraPreview(_controller!)),
 
 
-          // Top buttons (Camera / Video)
+          /// Top buttons (Camera / Video)
           Positioned(
             top: 40,
             left: 20,
@@ -141,7 +149,7 @@ class _CameraScreenState extends State<CameraScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                // Camera icon
+                /// Camera icon
                 GestureDetector(
                   onTap: () {
                     setState(() => _isVideoMode = false);
@@ -163,12 +171,12 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
                 const SizedBox(width: 16),
 
-                // Video icon
+                /// Video icon
                 GestureDetector(
                   onTap: () {
                     setState(() => _isVideoMode = true);
 
-                    // Show Snackbar when video mode is activated
+                    /// Show Snackbar when video mode is activated
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Video recording mode activated'),
@@ -194,7 +202,7 @@ class _CameraScreenState extends State<CameraScreen> {
           ),
 
 
-          // Timer (for video)
+          /// Timer (for video)
           if (_isVideoMode)
             Positioned(
               bottom: 200,
@@ -217,7 +225,7 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
-          // Bottom controls
+          /// Bottom controls
           Positioned(
             bottom: 40,
             left: 0,
