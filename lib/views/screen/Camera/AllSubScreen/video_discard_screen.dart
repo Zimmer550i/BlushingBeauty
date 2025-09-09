@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
+import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/send_message_with_friend_screen.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
@@ -222,32 +223,37 @@ class _VideoDiscardScreenState extends State<VideoDiscardScreen> {
                 const SizedBox(height: 20),
                 Column(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      height: 52,
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: const Color(0xFFC4C3C3),
-                            width: 0.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0xFF002329).withValues(alpha: 0.07),
-                              spreadRadius: -1.25,
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            )
-                          ]
-                      ),
-                      child: Center(
-                        child: Text("Send Message ",
-                          style: TextStyle(
-                            color: Color(0xFF676565),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),),
+                    InkWell(
+                      onTap: (){
+                        Get.to(()=> SendMessageWithFriendScreen());
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 52,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFFC4C3C3),
+                              width: 0.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFF002329).withValues(alpha: 0.07),
+                                spreadRadius: -1.25,
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              )
+                            ]
+                        ),
+                        child: Center(
+                          child: Text("Send Message ",
+                            style: TextStyle(
+                              color: Color(0xFF676565),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
