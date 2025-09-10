@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_switch.dart';
+import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/edit_profile_screen.dart';
 
 import '../../base/bottom_menu..dart';
 
@@ -124,7 +125,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: 18,),
               _customRow(
-                onTap: (){},
+                onTap: (){
+                  Get.to(()=> EditProfileScreen());
+                },
                 imagePath: 'assets/icons/personal.svg',
                 title: 'Change Personal Information'
               ),
