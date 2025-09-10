@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/bottom_menu..dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/screen/Contact/create_group_screen.dart';
 
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
@@ -123,7 +125,9 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
             ),
             CustomButton(
-                onTap: (){},
+                onTap: (){
+                  Get.to(()=> CreateGroupScreen());
+                },
                 text: "Create Group")
 
           ]

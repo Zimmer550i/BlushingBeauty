@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/group_details_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -71,16 +72,21 @@ class _ChatScreenState extends State<ChatScreen> {
                     color: Color(0xFF0D1C12),),
                   ),
                   SizedBox(width: 12,),
-                  Container(
-                    height: 44,
-                    width: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: AssetImage("assets/images/dummy.jpg"),
-                        fit: BoxFit.cover,
-                      ),
+                  InkWell(
+                    onTap: (){
+                      Get.to(()=> GroupDetailsScreen());
+                    },
+                    child: Container(
+                      height: 44,
+                      width: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: AssetImage("assets/images/dummy.jpg"),
+                          fit: BoxFit.cover,
+                        ),
 
+                      ),
                     ),
                   ),
                   SizedBox(width: 12,),
@@ -153,8 +159,6 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
-
-
 
   /// ✅ Video Message Bubble
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
@@ -271,8 +275,6 @@ class _ChatScreenState extends State<ChatScreen> {
       ],
     );
   }
-
-
 
   /// ✅ Bottom Input Bar
   Widget _buildInputBar() {
