@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/screen/SetUpProfile/get_start_screen.dart';
 
 class SetupProfileScreen extends StatefulWidget {
   const SetupProfileScreen({super.key});
@@ -129,7 +131,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   ),
                 ),),
               SizedBox(height: 80,),
-              CustomButton(onTap: (){},
+              CustomButton(onTap: (){
+                Get.to(()=> GetStartScreen());
+              },
                   text: "Save")
             ],
           ),
