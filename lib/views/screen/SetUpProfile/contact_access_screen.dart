@@ -59,12 +59,36 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                 fontWeight: FontWeight.w600,
               ),),
               SizedBox(height: 12,),
-              Text("We'll use your contacts to invite friends to re: and show you who is already on the app. Your info stays private",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),),
+
+              RichText(text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: "We'll use your contacts to invite friends to",
+                    style: TextStyle(
+                      color: Color(0xFF413E3E),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    )
+                  ),
+                  TextSpan(
+                    text: " re:",
+                    style: TextStyle(
+                      color: AppColors.primaryColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    )
+                  ),
+                  TextSpan(
+                    text: " and show you who is already on the app. Your info stays private",
+                    style: TextStyle(
+                      color: Color(0xFF413E3E),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    )
+                  )
+
+                ]
+              )),
               SizedBox(height: 80,),
 
               Container(

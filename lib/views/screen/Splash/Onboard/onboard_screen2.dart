@@ -85,13 +85,45 @@ class _OnboardScreen2State extends State<OnboardScreen2> {
                   textAlign: TextAlign.center,),
               ),
               SizedBox(height: 16,),
-              Text("When your media is revealed, re: captures genuine reactions instantly",
-                style: TextStyle(
-                  color: Color(0xFF676565),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                ),
-                textAlign: TextAlign.center,),
+
+              RichText(
+                textAlign: TextAlign.center,
+                  text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: "When your media is revealed",
+                    style: TextStyle(
+                      color: Color(0xFF676565),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    )
+                  ),
+                  TextSpan(
+                    text: " re:",
+                    style: TextStyle(
+                      color: AppColors.primaryColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    )
+                  ),
+                  TextSpan(
+                      text: " captures genuine reactions instantly",
+                      style: TextStyle(
+                        color: Color(0xFF676565),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                      )
+                  ),
+                ]
+              )),
+
+              // Text("When your media is revealed, re: captures genuine reactions instantly",
+              //   style: TextStyle(
+              //     color: Color(0xFF676565),
+              //     fontSize: 16,
+              //     fontWeight: FontWeight.w400,
+              //   ),
+              //   textAlign: TextAlign.center,),
               SizedBox(height: 40,),
 
               Padding(

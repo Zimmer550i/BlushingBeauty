@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/screen/SetUpProfile/enable_notification_screen.dart';
 
 class InviteFriendScreen extends StatefulWidget {
   const InviteFriendScreen({super.key});
@@ -21,7 +23,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // 🔹 Fixed Row (scroll হবে না)
+
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Row(
@@ -59,7 +61,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                 ),
               ),
 
-              // 🔹 Scrollable content
+              /// Scrollable content
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20.0),
@@ -95,7 +97,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Contacts List
+                      /// Contacts List
                       ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -152,12 +154,14 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                           );
                         },
                         separatorBuilder: (_, _) => const SizedBox(height: 16),
-                        itemCount: 8,
+                        itemCount: 5,
                       ),
 
                       const SizedBox(height: 20),
 
-                      CustomButton(onTap: () {}, text: "Next"),
+                      CustomButton(onTap: () {
+                        Get.to(()=> EnableNotificationScreen());
+                      }, text: "Next"),
                     ],
                   ),
                 ),
