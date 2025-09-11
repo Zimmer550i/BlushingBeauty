@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
@@ -27,7 +28,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               padding: EdgeInsets.all(20),
               child: Row(
                 children: [
-                  Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
+                  InkWell(
+                    onTap: () {
+                      Get.back();
+                    },
+                      child: Icon(Icons.arrow_back, color: Color(0xFF0D1C12))),
                   SizedBox(width: 15),
                   Text(
                     "Change Password",

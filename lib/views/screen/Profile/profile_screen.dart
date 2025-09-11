@@ -3,8 +3,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_switch.dart';
+import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/about_us_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/change_password_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/edit_profile_screen.dart';
+import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/privacy_policy_screen.dart';
+import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/report_problem_screen.dart';
+import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/terms_of_service_screen.dart';
 
 import '../../base/bottom_menu..dart';
 
@@ -217,22 +221,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   imagePath: 'assets/icons/delete.svg'),
               SizedBox(height: 17,),
               _customRow(
-                  onTap: (){},
+                  onTap: (){
+                    Get.to(()=> ReportProblemScreen());
+                  },
                   title: 'Report a Problem',
                   imagePath: 'assets/icons/report.svg'),
               SizedBox(height: 17,),
               _customRow(
-                  onTap: (){},
+                  onTap: (){
+                    Get.to(()=> TermsOfServiceScreen());
+                  },
                   title: 'Terms of service',
                   imagePath: 'assets/icons/terms.svg'),
               SizedBox(height: 17,),
               _customRow(
-                  onTap: (){},
+                  onTap: (){
+                    Get.to(()=> PrivacyPolicyScreen());
+                  },
                   title: 'Privacy Policy',
                   imagePath: 'assets/icons/privacy.svg'),
               SizedBox(height: 17,),
               _customRow(
-                  onTap: (){},
+                  onTap: (){
+                    Get.to(()=> AboutUsScreen());
+                  },
                   title: 'About',
                   imagePath: 'assets/icons/about.svg'),
               SizedBox(height: 17,),
