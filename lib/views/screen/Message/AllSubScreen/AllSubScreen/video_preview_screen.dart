@@ -439,21 +439,41 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 },
               ),
               const SizedBox(width: 18),
-              CircleAvatar(
-                backgroundColor: Colors.white,
-                child: IconButton(
-                  icon: const Icon(Icons.navigate_next, color: Color(0xFF9CC198),
-                  size: 30,),
-                  onPressed: ()  {
-                   // if (mounted) Navigator.pop(context, _recordedFile?.path);
 
-                    Get.to(()=> SendOrTrimVideoScreen(
+              InkWell(
+                onTap: (){
+                  Get.to(()=> SendOrTrimVideoScreen(
                       videoUrl: widget.videoUrl
-                    ));
-
-                  },
+                  ));
+                },
+                child: Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFFFFFFF)
+                  ),
+                  child: Icon(Icons.navigate_next,
+                      size: 30,
+                      color: Color(0xFF9CC198)),
                 ),
               ),
+
+              // CircleAvatar(
+              //   backgroundColor: Colors.white,
+              //   child: IconButton(
+              //     icon: const Icon(Icons.navigate_next, color: Color(0xFF9CC198),
+              //     size: 30,),
+              //     onPressed: ()  {
+              //      // if (mounted) Navigator.pop(context, _recordedFile?.path);
+              //
+              //       Get.to(()=> SendOrTrimVideoScreen(
+              //         videoUrl: widget.videoUrl
+              //       ));
+              //
+              //     },
+              //   ),
+              // ),
             ],
           ),
 

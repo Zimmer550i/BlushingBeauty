@@ -171,21 +171,29 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
       ),
       body: Column(
         children: [
+
+
+
           Expanded(
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Positioned.fill(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _video!.value.size.width,
-                      height: _video!.value.size.height,
-                      child: VideoPlayer(_video!),
+                /// ==== Full-screen Front Camera ====
+                if (_frontCam?.value.isInitialized == true)
+                  Positioned.fill(
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        // previewSize null-check করে নিন
+                        width: _frontCam!.value.previewSize?.height ?? MediaQuery.of(context).size.width,
+                        height: _frontCam!.value.previewSize?.width ?? MediaQuery.of(context).size.height,
+                        child: CameraPreview(_frontCam!),
+                      ),
                     ),
                   ),
-                ),
-                if (_frontCam?.value.isInitialized == true)
+
+                /// ==== Sender video as PiP ====
+                if (_video != null && _video!.value.isInitialized)
                   Positioned(
                     top: 0,
                     right: 0,
@@ -193,26 +201,37 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
                       width: 105,
                       height: 130,
                       decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.24),
                         border: Border.all(
                           color: const Color(0xFFABD4A7),
                           width: 2,
                         ),
+
                       ),
                       clipBehavior: Clip.antiAliasWithSaveLayer,
-                      child: CameraPreview(
-                        _frontCam!,
+                      child: FittedBox(
+                        fit: BoxFit.cover,
+                        child: SizedBox(
+                          width: _video!.value.size.width,
+                          height: _video!.value.size.height,
+                          child: VideoPlayer(_video!),
+                        ),
                       ),
                     ),
                   ),
+
+                /// ==== Bottom progress bar ====
                 Positioned(
-               left: 0,
-              right: 0,
+                  left: 0,
+                  right: 0,
                   bottom: 0,
                   child: _buildVideoProgressBar(),
                 ),
               ],
             ),
           ),
+
+
           Container(
             width: double.infinity,
             color: const Color(0xFFFFFFFF),
