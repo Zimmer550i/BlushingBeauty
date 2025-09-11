@@ -64,6 +64,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       image: DecorationImage(image: AssetImage('assets/images/circle.png'))
                     ),
                     child: Stack(
+                      alignment: Alignment.center,
                       children: [
                         Container(
                           height: 155,
@@ -74,6 +75,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             image: DecorationImage(image: AssetImage('assets/images/dummy.jpg'),
                             fit: BoxFit.cover)
                           ),
+                        ),
+                        Positioned(
+                          child: SvgPicture.asset('assets/icons/edit.svg'),
                         )
                       ],
                     ),
