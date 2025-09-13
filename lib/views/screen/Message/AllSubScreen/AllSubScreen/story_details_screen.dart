@@ -93,7 +93,7 @@ class _StoryDetailsScreenState extends State<StoryDetailsScreen> {
                           width: 60,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFF9CC198),
+                            color: AppColors.primaryColor,
                           ),
                           child: const Center(
                             child: Icon(

@@ -57,7 +57,8 @@ class _GetStartScreenState extends State<GetStartScreen> {
               ),),
               SizedBox(height: 42,),
               Center(
-                child: SvgPicture.asset('assets/icons/smail.svg'),
+                child: SvgPicture.asset('assets/icons/smail.svg',
+                color: AppColors.primaryColor,),
               ),
               SizedBox(height: 80,),
               CustomButton(onTap: (){

@@ -86,7 +86,7 @@ class _ContactScreenState extends State<ContactScreen> {
                       const Spacer(),
                       item['isInvite'] == true
                           ? SvgPicture.asset(item['invite'],
-                        color: Color(0xFF9CC198),)
+                        color: AppColors.primaryColor,)
                           : Container(
                         height: 38,
                         width: 80,

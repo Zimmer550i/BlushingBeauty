@@ -58,7 +58,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       width: double.infinity,
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Color(0xFFF7FBF6),
+                        color: Color(0xFF56BBFF).withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

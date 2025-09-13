@@ -217,7 +217,7 @@ class _VideoDiscardScreenState extends State<VideoDiscardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Column(
               children: [
-                _buildTrimAndFrameSelector(),
+                //_buildTrimAndFrameSelector(),
                 const SizedBox(height: 20),
                 _buildThumbnailSlider(),
                 const SizedBox(height: 20),
@@ -348,7 +348,7 @@ class _VideoDiscardScreenState extends State<VideoDiscardScreen> {
                       child: Center(
                         child: Icon(
                           playing ? Icons.pause : Icons.play_arrow,
-                          color: const Color(0xFF9CC198),
+                          color: AppColors.primaryColor,
                         ),
                       ),
                     ),
@@ -362,43 +362,43 @@ class _VideoDiscardScreenState extends State<VideoDiscardScreen> {
     );
   }
 
-  Widget _buildTrimAndFrameSelector() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Text(
-          "Use trim",
-          style: TextStyle(
-              color: _trimEnd - _trimStart < 1.0 ? const Color(0xFF799777) : const Color(0xFF807E7E),
-              fontSize: 10,
-              fontWeight: FontWeight.w400,
-              decoration: _trimEnd - _trimStart < 1.0 ? TextDecoration.underline : null,
-              decorationColor: AppColors.primaryColor
-          ),
-        ),
-        const SizedBox(width: 18),
-        Text(
-          "Use frame",
-          style: TextStyle(
-              color: _trimEnd - _trimStart < 1.0 ? const Color(0xFF799777) : const Color(0xFF807E7E),
-              fontSize: 10,
-              fontWeight: FontWeight.w400,
-              decoration: _trimEnd - _trimStart < 1.0 ? TextDecoration.underline : null,
-              decorationColor: AppColors.primaryColor
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildTrimAndFrameSelector() {
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         "Use trim",
+  //         style: TextStyle(
+  //             color: _trimEnd - _trimStart < 1.0 ? const Color(0xFF799777) : const Color(0xFF807E7E),
+  //             fontSize: 10,
+  //             fontWeight: FontWeight.w400,
+  //             decoration: _trimEnd - _trimStart < 1.0 ? TextDecoration.underline : null,
+  //             decorationColor: AppColors.primaryColor
+  //         ),
+  //       ),
+  //       const SizedBox(width: 18),
+  //       Text(
+  //         "Use frame",
+  //         style: TextStyle(
+  //             color: _trimEnd - _trimStart < 1.0 ? const Color(0xFF799777) : const Color(0xFF807E7E),
+  //             fontSize: 10,
+  //             fontWeight: FontWeight.w400,
+  //             decoration: _trimEnd - _trimStart < 1.0 ? TextDecoration.underline : null,
+  //             decorationColor: AppColors.primaryColor
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildThumbnailSlider() {
     final double fullWidth = _thumbnailPaths.length * (_thumbnailWidth + 2);
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFABD4A7),
+        color: AppColors.primaryColor,
         border: Border.all(
-          color: const Color(0xFFABD4A7),
+          color: AppColors.primaryColor,
           width: 1,
         ),
         borderRadius: BorderRadius.circular(8),
@@ -457,9 +457,9 @@ class _VideoDiscardScreenState extends State<VideoDiscardScreen> {
                         width: _trimSelectionWidth,
                         height: _thumbnailHeight,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFABD4A7).withValues(alpha: 0.50),
+                          color: Color(0xFF56BBFF).withValues(alpha: 0.25),
                           border: Border.all(
-                            color: const Color(0xFFABD4A7),
+                            color: Color(0xFF56BBFF).withValues(alpha: 0.25),
                             width: 2,
                           ),
                           borderRadius: BorderRadius.circular(4),

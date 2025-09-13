@@ -81,7 +81,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   width: 160,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    image: DecorationImage(image: AssetImage('assets/images/demo.png'),
+                    image: DecorationImage(image: AssetImage('assets/images/demo1.png'),
                     fit: BoxFit.cover)
                   ),
                 ),
@@ -113,7 +113,8 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                     width: 1),
                 suffixIcon: Padding(
                   padding: const EdgeInsets.all(10.0),
-                  child: SvgPicture.asset('assets/icons/calender.svg'),
+                  child: SvgPicture.asset('assets/icons/calender.svg',
+                  color: AppColors.primaryColor,),
                 ),
                 prefixIcon: Padding(
                   padding: const EdgeInsets.all(8.0),

@@ -136,7 +136,7 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: EdgeInsets.all(12),
       constraints: BoxConstraints(maxWidth: 250),
       decoration: BoxDecoration(
-        color: msg["isMe"] ? Color(0xFF9CC198) : Color(0xFFECECEC), // solid
+        color: msg["isMe"] ? Color(0xFF56BBFF) : Color(0xFFECECEC), // solid
         borderRadius: msg["isMe"]
             ? BorderRadius.only(
           topLeft: Radius.circular(100),
@@ -217,7 +217,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   width: 50,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFF9CC198),
+                    color: Color(0xFF56BBFF),
                     border: Border.all(color: Colors.white, width: 2),
                   ),
                   child: Icon(Icons.play_arrow, color: Colors.white, size: 28),
@@ -250,7 +250,8 @@ class _ChatScreenState extends State<ChatScreen> {
             SizedBox(
               height: 20,
               width: 20,
-              child: SvgPicture.asset('assets/icons/download.svg'),
+              child: SvgPicture.asset('assets/icons/download.svg',
+                color: Color(0xFF56BBFF),),
             ),
             SizedBox(width: 8),
             Text(
@@ -258,7 +259,7 @@ class _ChatScreenState extends State<ChatScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFF799777),
+                color: Color(0xFF56BBFF),
               ),
             ),
             SizedBox(width: 77),
@@ -281,7 +282,8 @@ class _ChatScreenState extends State<ChatScreen> {
     return Row(
 
       children: [
-      SvgPicture.asset('assets/icons/add_more.svg') ,
+      SvgPicture.asset('assets/icons/add_more.svg',
+      color: Color(0xFF56BBFF),) ,
         SizedBox(width: 8,),
         Expanded(child: CustomTextField(
           controller: messageTextController,
@@ -290,10 +292,10 @@ class _ChatScreenState extends State<ChatScreen> {
        padding: const EdgeInsets.all(10.0),
        child: SvgPicture.asset('assets/icons/camera.svg'),
      ),
-     borderSide: BorderSide(color: Colors.transparent),
-        filColor: Color(0xFFE5F2E4),)),
+     borderSide: BorderSide(color: Colors.transparent),)),
         SizedBox(width: 8,),
-        SvgPicture.asset('assets/icons/send.svg')
+        SvgPicture.asset('assets/icons/send.svg',
+            color: Color(0xFF56BBFF))
 
       ],
     );

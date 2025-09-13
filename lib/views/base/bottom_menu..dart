@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
+import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/app_icons.dart';
 
 class BottomMenu extends StatelessWidget {
@@ -15,13 +16,13 @@ class BottomMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFE5F2E4),
+        color: const Color(0xFFd4eeff),
         borderRadius: const BorderRadius.only(
           topRight: Radius.circular(16),
           topLeft: Radius.circular(16),
         ),
         boxShadow: const [
-          BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 5),
+          BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 1),
         ],
       ),
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -59,7 +60,7 @@ class BottomMenu extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF9CC198) : Colors.transparent,
+              color: isSelected ? Color(0xFFb4e1ff) : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
             child: SvgPicture.asset(
@@ -112,7 +113,7 @@ class BottomMenu extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF9CC198) : Colors.transparent,
+          color: isSelected ? const Color(0xFFb4e1ff) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: SvgPicture.asset(

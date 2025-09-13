@@ -69,7 +69,7 @@ class _OnboardScreen2State extends State<OnboardScreen2> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Color(0xFFECECEC).withValues(alpha: 0.50),
-                    image: DecorationImage(image: AssetImage('assets/images/comment.png'))
+                    image: DecorationImage(image: AssetImage('assets/images/comment2.png'))
                   ),
                 ),
               ),

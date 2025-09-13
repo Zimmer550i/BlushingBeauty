@@ -16,7 +16,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
   @override
   Widget build(BuildContext context) {
     return DropdownButton<Map<String, dynamic>>(
-      dropdownColor: AppColors.primaryColor,
+      dropdownColor: Color(0xFFC4C3C3),
       isExpanded: true,
       hint: const Text("See members",
       style: TextStyle(
@@ -78,7 +78,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
                   height: 22,
                   width: 22,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
+                    color: Color(0xFFc4c3c3),
                     shape: BoxShape.circle
                   ),
                   child: Icon(Icons.remove_circle, color: Colors.white, size: 15),

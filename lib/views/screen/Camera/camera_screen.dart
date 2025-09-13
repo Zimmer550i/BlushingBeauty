@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:ree_social_media_app/utils/app_colors.dart';
 
 
 import 'package:ree_social_media_app/views/base/bottom_menu..dart';
@@ -160,7 +161,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: !_isVideoMode
-                          ? Colors.greenAccent
+                          ? AppColors.primaryColor
                           : Colors.white.withValues(alpha: 0.5),
                     ),
                     child: Padding(
@@ -189,7 +190,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     width: 32,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _isVideoMode ? Colors.redAccent : Colors.white.withValues(alpha: 0.5),
+                      color: _isVideoMode ? AppColors.primaryColor : Colors.white.withValues(alpha: 0.5),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -212,7 +213,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -241,7 +242,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     width: 48,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Color(0xFFD8EBD7), width: 2),
+                      border: Border.all(color: Color(0xFF56BBFF).withValues(alpha: 0.25), width: 2),
                       image: const DecorationImage(
                         image: AssetImage("assets/images/dummy.jpg"),
                         fit: BoxFit.cover,
@@ -257,10 +258,10 @@ class _CameraScreenState extends State<CameraScreen> {
                     height: 60,
                     width: 60,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: _isRecording ? Colors.red : Color(0xFFBCDDB9),
+                        color: _isRecording ? Colors.red : Color(0xFF56BBFF).withValues(alpha: 0.25),
                         width: 4,
                       ),
                     ),
@@ -277,7 +278,10 @@ class _CameraScreenState extends State<CameraScreen> {
                       shape: BoxShape.circle,
                       color: const Color(0xFF676565),
                     ),
-                    child: const Icon(Icons.cameraswitch, size: 32, color: Colors.white),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SvgPicture.asset('assets/icons/camera_swithc.svg'),
+                    ),
                   ),
                 ),
               ],

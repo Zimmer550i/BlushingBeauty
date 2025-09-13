@@ -125,6 +125,7 @@ class _SendMessageWithFriendScreenState extends State<SendMessageWithFriendScree
 
             Expanded(
               child: ListView.separated(
+                padding: EdgeInsets.zero,
                 itemBuilder: (context, index) {
                   final item = searchFriendList[index];
                   return Row(

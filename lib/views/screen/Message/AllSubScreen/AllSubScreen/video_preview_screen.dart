@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:permission_handler/permission_handler.dart';
+import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
 
@@ -260,8 +261,8 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                                 ),
                                 child: Container(
                                   color: Color(
-                                    0xFFABD4A7,
-                                  ).withValues(alpha: 0.20),
+                                    0xFFFFFFFF,
+                                  ).withValues(alpha: 0.50),
                                 ),
                               ),
                               // Big round counter
@@ -272,10 +273,10 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                                     width: 120,
                                     height: 120,
                                     decoration: BoxDecoration(
-                                      color: Color(0xFF9CC198),
+                                      color: Color(0xFF383838),
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: Colors.white,
+                                        color: Colors.white.withValues(alpha: 0.80),
                                         width: 4,
                                       ),
                                     ),
@@ -305,7 +306,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                                       'Media will show after $_secondsRemaining seconds',
                                       style: const TextStyle(
                                         fontSize: 16,
-                                        color: Color(0xFF5E755C),
+                                        color: Color(0xFF383838),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -327,8 +328,8 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                             decoration: BoxDecoration(
                               color: Color(0xFFFFFFFF).withValues(alpha: 0.24),
                               border: Border.all(
-                                color: Color(0xFFABD4A7),
-                                width: 2,
+                                color: Color(0xFF383838),
+                                width: 4,
                               ),
                             ),
                             clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -424,7 +425,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                     child: IconButton(
                       icon: Icon(
                         playing ? Icons.pause : Icons.play_arrow,
-                        color: Color(0xFF9CC198),
+                        color: AppColors.primaryColor,
                       ),
                       onPressed: () async {
                         if (playing) {
@@ -455,7 +456,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                   ),
                   child: Icon(Icons.navigate_next,
                       size: 30,
-                      color: Color(0xFF9CC198)),
+                      color: AppColors.primaryColor),
                 ),
               ),
 

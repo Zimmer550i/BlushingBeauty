@@ -38,7 +38,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: EdgeInsets.all(20),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Color(0xFFE5F2E4),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF56BBFF),
+                      Color(0xFFFFFFFF),
+
+                    ]
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -150,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         context: context,
                         builder: (context){
                           return AlertDialog(
-                            backgroundColor: AppColors.primaryColor,
+                            backgroundColor: Color(0xFFC4C3C3),
                             clipBehavior: Clip.antiAliasWithSaveLayer,
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -256,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       context: context,
                       builder: (context){
                         return AlertDialog(
-                          backgroundColor: AppColors.primaryColor,
+                          backgroundColor: Color(0xFFC4C3C3),
                           clipBehavior: Clip.antiAliasWithSaveLayer,
                           content: Column(
                             mainAxisSize: MainAxisSize.min,

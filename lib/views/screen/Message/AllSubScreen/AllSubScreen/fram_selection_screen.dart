@@ -184,7 +184,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
                     child: FittedBox(
                       fit: BoxFit.cover,
                       child: SizedBox(
-                        // previewSize null-check করে নিন
+
                         width: _frontCam!.value.previewSize?.height ?? MediaQuery.of(context).size.width,
                         height: _frontCam!.value.previewSize?.width ?? MediaQuery.of(context).size.height,
                         child: CameraPreview(_frontCam!),
@@ -203,8 +203,8 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.24),
                         border: Border.all(
-                          color: const Color(0xFFABD4A7),
-                          width: 2,
+                          color: Color(0xFF383838),
+                          width: 4,
                         ),
 
                       ),
@@ -364,7 +364,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
                       child: Center(
                         child: Icon(
                           playing ? Icons.pause : Icons.play_arrow,
-                          color: const Color(0xFF9CC198),
+                          color: AppColors.primaryColor,
                         ),
                       ),
                     ),
@@ -385,7 +385,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
         Text(
           "Use trim",
           style: TextStyle(
-            color: _trimEnd - _trimStart < 1.0 ? const Color(0xFF799777) : const Color(0xFF807E7E),
+            color: _trimEnd - _trimStart < 1.0 ? const Color(0xFF56BBFF) : const Color(0xFF807E7E),
             fontSize: 10,
             fontWeight: FontWeight.w400,
             decoration: _trimEnd - _trimStart < 1.0 ? TextDecoration.underline : null,
@@ -396,7 +396,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
         Text(
           "Use frame",
           style: TextStyle(
-            color: _trimEnd - _trimStart < 1.0 ? const Color(0xFF799777) : const Color(0xFF807E7E),
+            color: _trimEnd - _trimStart < 1.0 ? const Color(0xFF56BBFF) : const Color(0xFF807E7E),
             fontSize: 10,
             fontWeight: FontWeight.w400,
             decoration: _trimEnd - _trimStart < 1.0 ? TextDecoration.underline : null,
@@ -412,7 +412,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFABD4A7).withValues(alpha: 0.1),
+        color: AppColors.primaryColor,
         border: Border.all(
           color: const Color(0xFFABD4A7),
           width: 1,
@@ -430,7 +430,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
                 curve: Curves.easeOut,
               );
             },
-            icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFABD4A7)),
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           ),
           Expanded(
             child: SizedBox(
@@ -473,18 +473,12 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
                         width: _trimSelectionWidth,
                         height: _thumbnailHeight,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFABD4A7).withValues(alpha: 0.50),
+                          color: const Color(0xFF56BBFF).withValues(alpha: 0.25),
                           border: Border.all(
-                            color: const Color(0xFFABD4A7),
+                            color: const Color(0xFF56BBFF).withValues(alpha: 0.25),
                             width: 2,
                           ),
                           borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                          ],
                         ),
                       ),
                     ),
@@ -502,7 +496,7 @@ class _FramSelectionScreenState extends State<FramSelectionScreen> {
                 curve: Curves.easeOut,
               );
             },
-            icon: const Icon(Icons.arrow_forward_ios, color: Color(0xFFABD4A7)),
+            icon:  Icon(Icons.arrow_forward_ios,color:  Colors.white),
           ),
         ],
       ),

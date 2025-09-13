@@ -70,7 +70,7 @@ class _OnboardScreen3State extends State<OnboardScreen3> {
                   decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Color(0xFFECECEC).withValues(alpha: 0.50),
-                      image: DecorationImage(image: AssetImage('assets/images/share.png'))
+                      image: DecorationImage(image: AssetImage('assets/images/share2.png'))
                   ),
                 ),
               ),
@@ -95,12 +95,47 @@ class _OnboardScreen3State extends State<OnboardScreen3> {
                 textAlign: TextAlign.center,),
               SizedBox(height: 40,),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50),
-                child: CustomButton(onTap: (){
-                  Get.offAllNamed(AppRoutes.loginScreen);
-                }, text: "Get Started"),
-              )
+
+              Center(
+                child: InkWell(
+                  onTap: (){
+                    Get.offAllNamed(AppRoutes.loginScreen);
+                  },
+                  child: Container(
+                    width: 200,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF56BBFF),
+                          Color(0xFFFFFFFF)
+                        ]
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 1,
+                          spreadRadius: 0,
+                          color: Color(0xFF002329).withValues(alpha: 0.7),
+                          offset: Offset(0, 0),
+
+                        )
+                      ]
+                    ),
+                    child: Center(
+                      child: Text("Get Started",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),),
+                    ),
+                  ),
+                ),
+              ),
+
+
+
 
 
             ],

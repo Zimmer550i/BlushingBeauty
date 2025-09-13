@@ -54,7 +54,7 @@ class _OnboardScreen1State extends State<OnboardScreen1> {
               ),
               SizedBox(height: 90,),
               Center(
-                child: Image.asset('assets/images/camera.png'),
+                child: Image.asset('assets/images/camera2.png'),
               ),
               SizedBox(height: 40,),
               Center(

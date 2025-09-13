@@ -141,7 +141,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                   width: 26,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF9CC198),
+                    color: AppColors.primaryColor,
                     border: Border.all(color: Colors.white, width: 1),
                   ),
                   child: const Center(

@@ -95,7 +95,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with TickerProv
                       width: 40,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFF9CC198),
+                        color: AppColors.primaryColor,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -112,7 +112,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with TickerProv
               width: double.infinity,
               padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Color(0xFF9CC198),
+                color: AppColors.primaryColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -156,7 +156,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with TickerProv
                     context: context,
                     builder: (context){
                       return AlertDialog(
-                        backgroundColor: AppColors.primaryColor,
+                        backgroundColor: Color(0xFFC4C3C3),
                         clipBehavior: Clip.antiAliasWithSaveLayer,
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -237,7 +237,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with TickerProv
                     context: context,
                     builder: (context){
                       return AlertDialog(
-                        backgroundColor: AppColors.primaryColor,
+                        backgroundColor: Color(0xFFC4C3C3),
                         clipBehavior: Clip.antiAliasWithSaveLayer,
                         content: Column(
                           mainAxisSize: MainAxisSize.min,

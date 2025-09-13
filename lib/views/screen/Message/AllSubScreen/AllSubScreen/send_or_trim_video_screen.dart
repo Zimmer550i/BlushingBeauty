@@ -3,6 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/fram_selection_screen.dart';
 import 'package:video_player/video_player.dart';
@@ -190,8 +191,8 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.24),
                         border: Border.all(
-                          color: const Color(0xFFABD4A7),
-                          width: 2,
+                          color: Color(0xFF383838),
+                          width: 4,
                         ),
                       ),
                       clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -216,8 +217,6 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
               ],
             ),
           ),
-
-
 
           Container(
          width: double.infinity,
@@ -339,7 +338,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                     child: IconButton(
                       icon: Icon(
                         playing ? Icons.pause : Icons.play_arrow,
-                        color: Color(0xFF9CC198),
+                        color: AppColors.primaryColor,
                       ),
                       onPressed: () async {
                         if (playing) {

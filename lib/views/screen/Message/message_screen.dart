@@ -172,8 +172,8 @@ class _MessageScreenState extends State<MessageScreen> {
                         ),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF799777),
+                          decoration:  BoxDecoration(
+                            color: AppColors.primaryColor,
                             shape: BoxShape.circle,
                           ),
                           child: Text(
@@ -354,7 +354,7 @@ class _MessageScreenState extends State<MessageScreen> {
       margin: const EdgeInsets.only(left: 12, right: 8),
       width: 100,
       decoration: BoxDecoration(
-        color: const Color(0xFFA5D6A7),
+        color: AppColors.primaryColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -365,7 +365,7 @@ class _MessageScreenState extends State<MessageScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 5),
               decoration:  BoxDecoration(
-                color: Color(0xFF9CC198).withValues(alpha: .90),
+                color: AppColors.primaryColor,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(8),
                   topRight: Radius.circular(8),
@@ -442,7 +442,7 @@ class _MessageScreenState extends State<MessageScreen> {
                 width: 26,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF9CC198),
+                  color: AppColors.primaryColor,
                   border: Border.all(color: Colors.white, width: 1),
                 ),
                 child: const Center(

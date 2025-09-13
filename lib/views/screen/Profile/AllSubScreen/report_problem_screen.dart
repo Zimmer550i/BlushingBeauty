@@ -132,7 +132,7 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                         ),),
                         SizedBox(height: 8,),
                         CustomTextField(controller: passwordTextController,
-                        filColor: Color(0xFFE5F2E4),
+                        filColor: Color(0xFF56BBFF).withValues(alpha: 0.25),
                         maxLines: 3,
                         hintText: 'Write your comment ',)
                       ],

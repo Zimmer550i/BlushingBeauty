@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_discard_screen.dart';
 import 'package:video_player/video_player.dart';
@@ -274,7 +275,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                     child: IconButton(
                       icon: Icon(
                         playing ? Icons.pause : Icons.play_arrow,
-                        color: const Color(0xFF9CC198),
+                        color: AppColors.primaryColor,
                       ),
                       onPressed: () async {
                         if (playing) {

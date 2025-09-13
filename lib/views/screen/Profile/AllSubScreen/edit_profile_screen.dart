@@ -61,7 +61,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     width: 160,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      image: DecorationImage(image: AssetImage('assets/images/circle.png'))
+                        image: DecorationImage(image: AssetImage('assets/images/circle.png'),
+                       )
                     ),
                     child: Stack(
                       alignment: Alignment.center,
@@ -77,7 +78,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ),
                         Positioned(
-                          child: SvgPicture.asset('assets/icons/edit.svg'),
+                          child: SvgPicture.asset('assets/icons/edit2.svg',),
                         )
                       ],
                     ),
