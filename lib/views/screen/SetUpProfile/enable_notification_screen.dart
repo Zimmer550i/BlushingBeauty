@@ -69,20 +69,25 @@ class _EnableNotificationScreenState extends State<EnableNotificationScreen> {
                 fontWeight: FontWeight.w400,
               ),),
               SizedBox(height: 80,),
-              Container(
-                height: 52,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Color(0xFFC4C3C3), width: 0.5)
-                ),
-                child: Center(
-                  child: Text("Not Now",
-                  style: TextStyle(
-                    color: Color(0xFF676565),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),),
+              InkWell(
+                onTap: (){
+                  Get.to(()=> SetupProfileScreen());
+                },
+                child: Container(
+                  height: 52,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Color(0xFFC4C3C3), width: 0.5)
+                  ),
+                  child: Center(
+                    child: Text("Not Now",
+                    style: TextStyle(
+                      color: Color(0xFF676565),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),),
+                  ),
                 ),
               ),
               SizedBox(height: 24,),

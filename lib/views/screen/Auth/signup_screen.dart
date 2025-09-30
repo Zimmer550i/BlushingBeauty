@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/controllers/auth_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Auth/email_verify_screen.dart';
+
+import '../../../utils/show_snackbar.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,9 +17,8 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-
+  final AuthController authController = Get.put(AuthController());
   bool isCheck = false;
-
   final emailTextController = TextEditingController();
   final passwordTextController = TextEditingController();
 
@@ -87,6 +89,11 @@ class _SignupScreenState extends State<SignupScreen> {
                 borderSide: BorderSide(color: Color(0xFFC4C3C3),
                     width: 1),
                 isPassword: true,
+                validator: (_) {
+                  return authController.validatePassword()
+                      ? null
+                      : authController.passwordError.value;
+                },
                 prefixIcon: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
@@ -150,8 +157,23 @@ class _SignupScreenState extends State<SignupScreen> {
                 ],
               ),
               SizedBox(height: 80,),
-              CustomButton(onTap: (){
-                Get.to(()=> EmailVerifyScreen());
+              CustomButton(onTap: () async {
+                final String email = emailTextController.text.trim();
+                final String password = passwordTextController.text.trim();
+                if(email.isEmpty || password.isEmpty){
+                  showSnackBar('Please fill all the fields',true);
+                }else{
+                  if(isCheck){
+                    final message = await authController.signup(email, password);
+                    if (message == "success") {
+                      Get.to(()=> EmailVerifyScreen(emailOrPhone: email));
+                    } else {
+                      showSnackBar(message,true);
+                    }
+                  }else{
+                    showSnackBar('Please agree to the terms and conditions',true);
+                  }
+                }
               }, text: "Agree and Continue"),
             ],
           ),

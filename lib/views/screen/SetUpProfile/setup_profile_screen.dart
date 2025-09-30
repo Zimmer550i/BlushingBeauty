@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/utils/show_snackbar.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/SetUpProfile/get_start_screen.dart';
@@ -14,19 +18,80 @@ class SetupProfileScreen extends StatefulWidget {
 }
 
 class _SetupProfileScreenState extends State<SetupProfileScreen> {
-
+  final UserController userController = Get.put(UserController());
   final nameTextController = TextEditingController();
+
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  /// Open bottom sheet to select Camera or Gallery
+  Future<void> _chooseImageSource() async {
+    final XFile? pickedFile = await showModalBottomSheet<XFile?>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text("Pick from Gallery"),
+              onTap: () async {
+                Navigator.pop(ctx, await _picker.pickImage(source: ImageSource.gallery));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text("Take a Photo"),
+              onTap: () async {
+                Navigator.pop(ctx, await _picker.pickImage(source: ImageSource.camera));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  /// Handle Save button
+  void _onSave() async {
+    if (nameTextController.text.isEmpty) {
+      showSnackBar("Please enter your name", true);
+      return;
+    }
+
+    // Prevent duplicate API calls while loading
+    if (userController.isLoading.value) return;
+
+    final result = await userController.updateInfo(
+      name: nameTextController.text.trim(),
+      image: _profileImage,
+    );
+
+    if (result == "success") {
+      Get.to(() => const GetStartScreen());
+    } else {
+      showSnackBar(result, true);
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:  SafeArea(
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              /// Top Bar
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -51,7 +116,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   Text(
                     "4 of 4",
                     style: TextStyle(
-                      color: Color(0xFF413E3E),
+                      color: const Color(0xFF413E3E),
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
@@ -60,82 +125,82 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 45,),
-              Text("Set Up Your \nProfile",
+              const SizedBox(height: 45),
+
+              /// Title
+              const Text(
+                "Set Up Your \nProfile",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
                   fontSize: 28,
                   fontWeight: FontWeight.w600,
-                ),),
-              SizedBox(height: 12,),
-              Text("Add your details so friends can recognize you",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),),
-              SizedBox(height: 30,),
-              Center(
-                child: Container(
-                  height: 160,
-                  width: 160,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(image: AssetImage('assets/images/demo1.png'),
-                    fit: BoxFit.cover)
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "Add your details so friends can recognize you",
+                style: TextStyle(
+                  color: Color(0xFF413E3E),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              /// Profile Image Picker
+              InkWell(
+                onTap: _chooseImageSource,
+                child: Center(
+                  child: Container(
+                    height: 160,
+                    width: 160,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: _profileImage != null
+                            ? FileImage(_profileImage!)
+                            : const AssetImage('assets/images/demo1.png')
+                        as ImageProvider,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 40,),
-              CustomTextField(controller: nameTextController,
+              const SizedBox(height: 40),
+
+              /// Name Input
+              CustomTextField(
+                controller: nameTextController,
                 hintText: 'Enter your name',
-                borderSide: BorderSide(color: Color(0xFFC4C3C3),
-                    width: 1),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                      height: 24,
-                      width: 24,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primaryColor
-                      ),
-                      child:Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: SvgPicture.asset('assets/icons/name_fill.svg'),
-                      )
-                  ),
-                ),),
-              SizedBox(height: 20,),
-              CustomTextField(controller: nameTextController,
-                hintText: 'Enter your birthday',
-                borderSide: BorderSide(color: Color(0xFFC4C3C3),
-                    width: 1),
-                suffixIcon: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: SvgPicture.asset('assets/icons/calender.svg',
-                  color: AppColors.primaryColor,),
+                borderSide: const BorderSide(
+                  color: Color(0xFFC4C3C3),
+                  width: 1,
                 ),
                 prefixIcon: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
-                      height: 24,
-                      width: 24,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primaryColor
-                      ),
-                      child:Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: SvgPicture.asset('assets/icons/birth.svg'),
-                      )
+                    height: 24,
+                    width: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primaryColor,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: SvgPicture.asset('assets/icons/name_fill.svg'),
+                    ),
                   ),
-                ),),
-              SizedBox(height: 80,),
-              CustomButton(onTap: (){
-                Get.to(()=> GetStartScreen());
-              },
-                  text: "Save")
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              /// Save Button
+              CustomButton(
+                onTap: _onSave,
+                text: "Save",
+              ),
             ],
           ),
         ),
