@@ -62,7 +62,7 @@ class _GetStartScreenState extends State<GetStartScreen> {
               ),
               SizedBox(height: 80,),
               CustomButton(onTap: (){
-                Get.to(()=> MessageScreen());
+                Get.offAll(()=> MessageScreen());
               },
                   text: "Get Started")
             ],

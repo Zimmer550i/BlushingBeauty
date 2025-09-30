@@ -1,7 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/controllers/auth_controller.dart';
+import 'package:ree_social_media_app/views/screen/Auth/login_screen.dart';
 import 'package:ree_social_media_app/views/screen/Splash/Onboard/onboard_screen1.dart';
+
+import '../Message/message_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,11 +15,17 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final AuthController authController = Get.put(AuthController());
 
   @override
   void initState() {
-    Future.delayed(Duration(seconds: 3), () {
-      Get.to(()=> OnboardScreen1());
+    Future.delayed(Duration(seconds: 3), () async {
+      final isLoggedIn = await authController.previouslyLoggedIn();
+      if (isLoggedIn) {
+        Get.offAll(()=> MessageScreen());
+      } else {
+        Get.to(()=> OnboardScreen1());
+      }
     });
     super.initState();
   }

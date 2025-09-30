@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
+import 'package:ree_social_media_app/views/screen/Auth/login_screen.dart';
 import '../services/api_service.dart';
 import '../services/shared_prefs_service.dart';
 import '../utils/show_snackbar.dart';
@@ -81,16 +82,16 @@ class AuthController extends GetxController {
   }) async {
     isLoading.value = true;
     try {
-      final response = await api.post("v1/account/login/", {
+      final response = await api.post("/auth/login", {
         "email": email.trim(),
         "password": password.trim(),
       });
       var body = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        userController.setInfo(body['data']);
+        userController.setInfo(body['data']['user']);
         if (rememberMe) {
-          setToken(body['data']['tokens']['access']);
+          setToken(body['data']['accessToken']);
         }
         isLoading.value = false;
 
@@ -136,6 +137,26 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       final response = await api.post("/auth//resend-otp", {
+        "email": email.trim(),
+      });
+
+      if (response.statusCode == 200) {
+        isLoading.value = false;
+        return "success";
+      } else {
+        isLoading.value = false;
+        return jsonDecode(response.body)['message'] ?? "Connection Error";
+      }
+    } catch (e) {
+      isLoading.value = false;
+      return "Unexpected error: ${e.toString()}";
+    }
+  }
+
+  Future<String> forgotPassword(String email) async {
+    isLoading.value = true;
+    try {
+      final response = await api.post("/auth/forgot-password", {
         "email": email.trim(),
       });
 
@@ -204,9 +225,9 @@ class AuthController extends GetxController {
   Future<String> resetPassword(String pass, String conPass) async {
     isLoading.value = true;
     try {
-      final response = await api.post("v1/account/reset-password/", {
-        "new_password": pass.trim(),
-        "confirm_password": conPass.trim(),
+      final response = await api.post("/auth/reset-password", {
+        "newPassword": pass.trim(),
+        "confirmPassword": conPass.trim(),
       }, authReq: true);
       var body = jsonDecode(response.body);
 
@@ -261,7 +282,7 @@ class AuthController extends GetxController {
 
   Future<void> logout() async {
     await SharedPrefsService.clear();
-    // Get.offAll(() => AuthOption());
+    Get.offAll(() => LoginScreen());
     showSnackBar("You have been logged out",false);
     isLoggedIn.value = false;
   }

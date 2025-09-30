@@ -10,6 +10,7 @@ import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/privacy_p
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/report_problem_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/terms_of_service_screen.dart';
 
+import '../../../controllers/auth_controller.dart';
 import '../../base/bottom_menu..dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final AuthController authController = Get.put(AuthController());
 
   bool isSwitch = false;
 
@@ -283,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   Expanded(
                                       child: InkWell(
                                           onTap: (){
-                                            Get.back();
+                                            authController.logout();
                                           },
                                           child: Container(
                                             height: 52,

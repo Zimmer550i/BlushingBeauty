@@ -6,6 +6,9 @@ import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Auth/login_screen.dart';
 
+import '../../../controllers/auth_controller.dart';
+import '../../../utils/show_snackbar.dart';
+
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
 
@@ -14,7 +17,7 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-
+  final AuthController authController = Get.put(AuthController());
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
@@ -32,76 +35,100 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 height: 36,
                 width: 46,
                 decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.circular(8)
+                  color: AppColors.primaryColor,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
-                    child: Text("re:",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
-                        ))
+                  child: Text(
+                    "re:",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
-              SizedBox(height: 110,),
-              Text("Set a New \nPassword",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-              ),),
-              SizedBox(height: 12,),
-              Text("Your new password should be at least 8 characters long",
+              SizedBox(height: 110),
+              Text(
+                "Set a New \nPassword",
+                style: TextStyle(
+                  color: Color(0xFF413E3E),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                "Your new password should be at least 8 characters long",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
-                ),),
-              SizedBox(height: 40,),
-              CustomTextField(controller: newPasswordController,
+                ),
+              ),
+              SizedBox(height: 40),
+              CustomTextField(
+                controller: newPasswordController,
                 hintText: 'New Password',
                 isPassword: true,
                 prefixIcon: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
-                      height: 24,
-                      width: 24,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primaryColor
-                      ),
-                      child:Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: SvgPicture.asset('assets/icons/lock.svg'),
-                      )
+                    height: 24,
+                    width: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primaryColor,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: SvgPicture.asset('assets/icons/lock.svg'),
+                    ),
                   ),
-                ),),
-              SizedBox(height: 12,),
-              CustomTextField(controller: confirmPasswordController,
+                ),
+              ),
+              SizedBox(height: 12),
+              CustomTextField(
+                controller: confirmPasswordController,
                 hintText: 'Confirm Password',
                 isPassword: true,
                 prefixIcon: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
-                      height: 24,
-                      width: 24,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primaryColor
-                      ),
-                      child:Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: SvgPicture.asset('assets/icons/lock.svg'),
-                      )
+                    height: 24,
+                    width: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primaryColor,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: SvgPicture.asset('assets/icons/lock.svg'),
+                    ),
                   ),
-                ),),
-              SizedBox(height: 80,),
-              CustomButton(onTap: (){
-                Get.to(()=> LoginScreen());
-              },
-                  text: "Save and Continue")
-
+                ),
+              ),
+              SizedBox(height: 80),
+              CustomButton(
+                onTap: () {
+                  if (newPasswordController.text.isEmpty ||
+                      confirmPasswordController.text.isEmpty) {
+                    showSnackBar("Please fill all fields", true);
+                  } else if (newPasswordController.text !=
+                      confirmPasswordController.text) {
+                    showSnackBar("Passwords do not match", true);
+                  } else {
+                    authController.resetPassword(
+                      newPasswordController.text,
+                      confirmPasswordController.text,
+                    );
+                    showSnackBar("Password changed successfully", false);
+                    Get.offAll(() => LoginScreen());
+                  }
+                },
+                text: "Save and Continue",
+              ),
             ],
           ),
         ),
