@@ -9,12 +9,14 @@ import 'package:ree_social_media_app/themes/light_theme.dart';
 import 'package:ree_social_media_app/utils/app_constants.dart';
 import 'package:ree_social_media_app/utils/message.dart';
 
+import 'controllers/user_controller.dart';
 import 'helpers/di.dart' as di;
 import 'helpers/route.dart';
 void main()async {
   WidgetsFlutterBinding.ensureInitialized();
   AppRoutes.cameras = await availableCameras();
   Map<String, Map<String, String>> _languages = await di.init();
+  Get.put(UserController(), permanent: true);
   runApp( MyApp(languages:_languages,));
 }
 

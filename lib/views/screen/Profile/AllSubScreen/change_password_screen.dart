@@ -5,6 +5,9 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 
+import '../../../../controllers/auth_controller.dart';
+import '../../../../utils/show_snackbar.dart';
+
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 
@@ -13,8 +16,10 @@ class ChangePasswordScreen extends StatefulWidget {
 }
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
-
-  final passwordTextController = TextEditingController();
+  final AuthController authController = Get.put(AuthController());
+  final currentPasswordController = TextEditingController();
+  final newPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +37,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     onTap: () {
                       Get.back();
                     },
-                      child: Icon(Icons.arrow_back, color: Color(0xFF0D1C12))),
+                    child: Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
+                  ),
                   SizedBox(width: 15),
                   Text(
                     "Change Password",
@@ -52,72 +58,105 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomTextField(controller: passwordTextController,
-                    hintText: 'Enter your Password',
+                  CustomTextField(
+                    controller: currentPasswordController,
+                    hintText: 'Enter current Password',
                     isPassword: true,
-                    borderSide: BorderSide(color: Color(0xFFC4C3C3),
-                        width: 1),
+                    borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
                     prefixIcon: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
-                          height: 24,
-                          width: 24,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.primaryColor
-                          ),
-                          child:Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: SvgPicture.asset('assets/icons/lock.svg'),
-                          )
+                        height: 24,
+                        width: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primaryColor,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: SvgPicture.asset('assets/icons/lock.svg'),
+                        ),
                       ),
-                    ),),
-                  SizedBox(height: 16,),
-                  CustomTextField(controller: passwordTextController,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  CustomTextField(
+                    controller: newPasswordController,
                     hintText: 'Enter new password',
                     isPassword: true,
-                    borderSide: BorderSide(color: Color(0xFFC4C3C3),
-                        width: 1),
+                    borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
                     prefixIcon: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
-                          height: 24,
-                          width: 24,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.primaryColor
-                          ),
-                          child:Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: SvgPicture.asset('assets/icons/lock.svg'),
-                          )
+                        height: 24,
+                        width: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primaryColor,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: SvgPicture.asset('assets/icons/lock.svg'),
+                        ),
                       ),
-                    ),),
-                  SizedBox(height: 16,),
-                  CustomTextField(controller: passwordTextController,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  CustomTextField(
+                    controller: confirmPasswordController,
                     hintText: 'Confirm  Password',
                     isPassword: true,
-                    borderSide: BorderSide(color: Color(0xFFC4C3C3),
-                        width: 1),
+                    borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
                     prefixIcon: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
-                          height: 24,
-                          width: 24,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.primaryColor
-                          ),
-                          child:Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: SvgPicture.asset('assets/icons/lock.svg'),
-                          )
+                        height: 24,
+                        width: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primaryColor,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: SvgPicture.asset('assets/icons/lock.svg'),
+                        ),
                       ),
-                    ),),
-                  SizedBox(height: 91,),
-                  CustomButton(onTap: (){},
-                      text: "Save")
-
+                    ),
+                  ),
+                  SizedBox(height: 91),
+                  Obx(
+                    () => CustomButton(
+                      loading: authController.isLoading.value,
+                      onTap: () async {
+                        if (currentPasswordController.text.isEmpty ||
+                            newPasswordController.text.isEmpty ||
+                            confirmPasswordController.text.isEmpty) {
+                          showSnackBar("Please fill all the fields", true);
+                        } else {
+                          if (newPasswordController.text !=
+                              confirmPasswordController.text) {
+                            showSnackBar("Passwords do not match", true);
+                          } else {
+                            final message = await authController.changePassword(
+                                  currentPasswordController.text,
+                                  newPasswordController.text,
+                                  confirmPasswordController.text,
+                                );
+                            if (message == "success") {
+                              Get.back();
+                              showSnackBar(
+                                "Password changed successfully",
+                                false,
+                              );
+                            } else {
+                              showSnackBar("Error $message", true);
+                            }
+                          }
+                        }
+                      },
+                      text: "Save",
+                    ),
+                  ),
                 ],
               ),
             ),

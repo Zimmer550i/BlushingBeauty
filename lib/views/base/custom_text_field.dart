@@ -17,6 +17,7 @@ class CustomTextField extends StatefulWidget {
   final FormFieldValidator? validator;
   final bool isPassword;
   final bool? isEmail;
+  final bool? isRealOnly;
   final int? maxLines;
   final Color? borderColor;
   final BorderSide? borderSide;
@@ -35,6 +36,7 @@ class CustomTextField extends StatefulWidget {
         required this.controller,
         this.keyboardType = TextInputType.text,
         this.isObscureText = false,
+        this.isRealOnly = false,
         this.obscure = '*',
         this.filColor,
         this.labelText,
@@ -65,6 +67,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       child: TextFormField(
         onTap: widget.onTap,
         onChanged: widget.onChanged,
+        readOnly: widget.isRealOnly!,
         controller: widget.controller,
         keyboardType: widget.keyboardType,
         obscuringCharacter: widget.obscure!,

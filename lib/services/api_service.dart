@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 import 'shared_prefs_service.dart';
 
 class ApiService {
-  final String devUrl = "http://10.10.12.54:3000$version";
+  final String devUrl = "http://10.10.12.54:3000";
+  final String devUrlWithVersion = "http://10.10.12.54:3000$version";
   static final String version = "/api/v1";
   final String prodUrl = "$version";
   static final String imgUrl = "";
@@ -16,7 +17,7 @@ class ApiService {
   int callCount = 0;
 
   ApiService() {
-    baseUrl = inDevelopment ? devUrl : prodUrl;
+    baseUrl = inDevelopment ? devUrlWithVersion : prodUrl;
   }
 
   void _logResponse(http.Response response, String method, Uri uri) {

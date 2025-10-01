@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
@@ -22,7 +23,7 @@ class UserController extends GetxController {
       var body = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        setInfo(body);
+        setInfo(body['data']);
         isLoading.value = false;
         return "success";
       } else {
@@ -38,6 +39,7 @@ class UserController extends GetxController {
   void setInfo(Map<String, dynamic>? json) {
     if (json != null) {
       userInfo.value = User.fromJson(json);
+      debugPrint("User Info:====> ${json}");
     }
   }
 
@@ -47,13 +49,14 @@ class UserController extends GetxController {
   }) async {
     isLoading.value = true;
     try {
-      // Build payload
+      // Build payload correctly
       final payload = {
-        "name": name,
+        "data": jsonEncode({
+          "name": name,
+        }),
         if (image != null) "image": image,
       };
 
-      // Send PATCH request
       final response = await api.patch(
         "/user/update-profile",
         payload,
@@ -76,44 +79,15 @@ class UserController extends GetxController {
     }
   }
 
-
-
-
-
-
-  Future<String> changePassword(
-    String oldPass,
-    String newPass,
-    String conPass,
-  ) async {
-    isLoading.value = true;
-    try {
-      final response = await api.post("/api-auth/change_password/", {
-        "old_password": oldPass,
-        "new_password": newPass,
-        "confirm_password": conPass,
-      }, authReq: true);
-
-      if (response.statusCode == 200) {
-        isLoading.value = false;
-        return "success";
-      } else {
-        isLoading.value = false;
-        return jsonDecode(response.body)['message'] ?? "Connection Error";
-      }
-    } catch (e) {
-      isLoading.value = false;
-      return "Unexpected error: ${e.toString()}";
+  String? getImageUrl() {
+    if (userInfo.value == null || userInfo.value!.image == null) {
+      return null;
     }
+
+    String baseUrl = api.devUrl;
+
+    return baseUrl + userInfo.value!.image!;
   }
 
-  // String? getImageUrl() {
-  //   if (userInfo.value == null || userInfo.value!.profilePic == null) {
-  //     return null;
-  //   }
 
-  //   String baseUrl = api.baseUrl;
-
-  //   return baseUrl + userInfo.value!.profilePic!;
-  // }
 }

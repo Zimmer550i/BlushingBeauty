@@ -8,7 +8,6 @@ import '../services/shared_prefs_service.dart';
 import '../utils/show_snackbar.dart';
 
 class AuthController extends GetxController {
-  final UserController userController = Get.put(UserController());
   RxBool isLoggedIn = RxBool(false);
   final api = ApiService();
 
@@ -54,6 +53,7 @@ class AuthController extends GetxController {
     passwordError.value = '';
     return true;
   }
+
   bool validateConfirmPassword() {
     final password = confirmPasswordController.text.trim();
     if (password.isEmpty) {
@@ -89,7 +89,7 @@ class AuthController extends GetxController {
       var body = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        userController.setInfo(body['data']['user']);
+        Get.find<UserController>().setInfo(body['data']['user']);
         if (rememberMe) {
           setToken(body['data']['accessToken']);
         }
@@ -173,12 +173,14 @@ class AuthController extends GetxController {
     }
   }
 
+
   Future<String> verifyForgotPasswordOtp(String code) async {
     isLoading.value = true;
     try {
-      final response = await api.post("v1/account/verify-forget-password-otp/", {
-        "otp": code.trim(),
-      });
+      final response = await api.post(
+        "v1/account/verify-forget-password-otp/",
+        {"otp": code.trim()},
+      );
       var body = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
@@ -244,13 +246,66 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<String> changePassword(
+    String currentPassword,
+    String newPassword,
+    String conPassword,
+  ) async {
+    isLoading.value = true;
+    try {
+      final response = await api.post("/auth/reset-password", {
+        "currentPassword": currentPassword.trim(),
+        "newPassword": newPassword.trim(),
+        "confirmPassword": conPassword.trim(),
+      }, authReq: true);
+      var body = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        isLoading.value = false;
+        return "success";
+      } else {
+        isLoading.value = false;
+        return body['message'] ?? "Connection Error";
+      }
+    } catch (e) {
+      isLoading.value = false;
+      return "Unexpected error: ${e.toString()}";
+    }
+  }
+
+
+  Future<String> reportSubmit(String name, String? email, String? phone,String report) async {
+    isLoading.value = true;
+    try {
+      final response = await api.post("/report/create-report", {
+        "name": name.trim(),
+        "email": email?.trim() ?? '',
+        "phone": phone?.trim() ?? '',
+        "content": report.trim(),
+      },
+      authReq: true);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        isLoading.value = false;
+        return "success";
+      } else {
+        isLoading.value = false;
+        return jsonDecode(response.body)['message'] ?? "Connection Error";
+      }
+    } catch (e) {
+      isLoading.value = false;
+      return "Unexpected error: ${e.toString()}";
+    }
+  }
+
+
   Future<bool> previouslyLoggedIn() async {
     String? token = await SharedPrefsService.get('token');
     if (token != null) {
       debugPrint('🔍 Token found. Fetching user info...');
       final message = await Get.find<UserController>().getInfo();
       if (message == "success") {
-        debugPrint("🟡 Token: $token");
+        debugPrint("🟡 Token:======> $token");
         isLoggedIn.value = true;
         return true;
       }
@@ -261,14 +316,10 @@ class AuthController extends GetxController {
 
   Future<void> sendInvite(String phoneNumber, String senderName) async {
     try {
-      final response = await api.post(
-        "/send-invite",
-        {
-          "phoneNumber": phoneNumber,
-          "senderName": senderName,
-        },
-        authReq: true,
-      );
+      final response = await api.post("/send-invite", {
+        "phoneNumber": phoneNumber,
+        "senderName": senderName,
+      }, authReq: true);
 
       if (response.statusCode == 200) {
         Get.snackbar("Success", "Invitation sent to $phoneNumber");
@@ -283,7 +334,14 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     await SharedPrefsService.clear();
     Get.offAll(() => LoginScreen());
-    showSnackBar("You have been logged out",false);
+    showSnackBar("You have been logged out", false);
+    isLoggedIn.value = false;
+  }
+
+  Future<void> deleteAccount() async {
+    await SharedPrefsService.clear();
+    Get.offAll(() => LoginScreen());
+    showSnackBar("Your account has been deleted", false);
     isLoggedIn.value = false;
   }
 

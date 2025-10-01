@@ -11,6 +11,7 @@ import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/report_pr
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/terms_of_service_screen.dart';
 
 import '../../../controllers/auth_controller.dart';
+import '../../../controllers/user_controller.dart';
 import '../../base/bottom_menu..dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthController authController = Get.put(AuthController());
+  final UserController userController = Get.put(UserController());
 
   bool isSwitch = false;
 
@@ -30,360 +32,298 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              /// Profile Card
+              Obx(() {
+                final imageUrl = userController.getImageUrl();
+                final userName = userController.userInfo.value?.name ?? "Unknown User";
+                final userPhone = userController.userInfo.value?.email ?? "N/A";
+                final userEmail = userController.userInfo.value?.email ?? "N/A";
 
-              Container(
-                padding: EdgeInsets.all(20),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0xFF56BBFF),
-                      Color(0xFFFFFFFF),
+                debugPrint("User Image URL:===========> $imageUrl");
 
-                    ]
+                return Container(
+                  padding: const EdgeInsets.all(20),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0xFF56BBFF),
+                        Color(0xFFFFFFFF),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 100,
-                          width: 100,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(image: AssetImage('assets/images/dummy.jpg'),
-                                  fit: BoxFit.cover)
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// Avatar + Logo Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundImage: (imageUrl != null && imageUrl.isNotEmpty)
+                                ? NetworkImage(imageUrl)
+                                : const AssetImage("assets/images/demo1.png") as ImageProvider,
                           ),
-                        ),
-                        Container(
-                          height: 36,
-                          width: 46,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              "re:",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
+                          Container(
+                            height: 36,
+                            width: 46,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "re:",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                           ),
-                        )
+                        ],
+                      ),
+                      const SizedBox(height: 8),
 
-                      ],
-                    ),
-                    SizedBox(height: 4,),
-                    Text("Sophia Carter",
-                    style: TextStyle(
-                      color: Color(0xFF333333),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                      /// User Info
+                      Text(
+                        userName,
+                        style: const TextStyle(
+                          color: Color(0xFF333333),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        userPhone,
+                        style: const TextStyle(
+                          color: Color(0xFF333333),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        userEmail,
+                        style: const TextStyle(
+                          color: Color(0xFF0957AA),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 40),
 
-                    ),),
-                    SizedBox(height: 4,),
-                    Text("01772968989",
-                    style: TextStyle(
-                      color: Color(0xFF333333),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                    ),),
-                    SizedBox(height: 4,),
-                    Text("SophiaCarter123@gmail.com",
-                    style: TextStyle(
-                      color: Color(0xFF0957AA),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-
-                    ),)
-                  ],
-                ),
-              ),
-              SizedBox(height: 41,),
-
+              /// Push Notifications
               Row(
                 children: [
                   SvgPicture.asset('assets/icons/notification_fill.svg'),
-                  SizedBox(width: 13,),
-                  Text("Push Notifications",
-                  style: TextStyle(
-                    color: Color(0xFF676565),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),),
-                  Spacer(),
-                CustomSwitch(
-                    value: isSwitch,
-                    onChanged: (val){
-                      setState(() {
-                        isSwitch = val;
-                      });
-                    })
-
-                ],
-              ),
-              SizedBox(height: 18,),
-              _customRow(
-                onTap: (){
-                  Get.to(()=> EditProfileScreen());
-                },
-                imagePath: 'assets/icons/personal.svg',
-                title: 'Change Personal Information'
-              ),
-              SizedBox(height: 17,),
-              _customRow(
-                  onTap: (){
-                    Get.to(()=> ChangePasswordScreen());
-                  },
-                  title: 'Change Password',
-                  imagePath: 'assets/icons/change_password.svg'),
-              SizedBox(height: 17,),
-              _customRow(
-                  onTap: (){
-                    showDialog(
-                        context: context,
-                        builder: (context){
-                          return AlertDialog(
-                            backgroundColor: Color(0xFFC4C3C3),
-                            clipBehavior: Clip.antiAliasWithSaveLayer,
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text("Are you sure you want to delete your account?",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                  textAlign: TextAlign.center,),
-                                SizedBox(height: 30,),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                        child: InkWell(
-                                            onTap: (){
-                                              Get.back();
-                                            },
-                                            child: Container(
-                                              height: 52,
-                                              width: 82,
-                                              decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  border: Border.all(color: Color(0xFFFFFFFF), width: 1)
-                                              ),
-                                              child: Center(
-                                                child: Text("Yes",
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),),
-                                              ),
-                                            ))),
-                                    SizedBox(width: 24,),
-                                    Expanded(
-                                        child: InkWell(
-                                            onTap: (){
-                                              Get.back();
-                                            },
-                                            child: Container(
-                                              height: 52,
-                                              width: 187,
-                                              decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  color: Colors.white
-                                              ),
-                                              child: Center(
-                                                child: Text("No",
-                                                  style: TextStyle(
-                                                    color: Color(0xFF676565),
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),),
-                                              ),
-                                            ))),
-
-                                  ],
-                                )
-                              ],
-                            ),
-                          );
-                        });
-                  },
-                  title: 'Delete my account',
-                  imagePath: 'assets/icons/delete.svg'),
-              SizedBox(height: 17,),
-              _customRow(
-                  onTap: (){
-                    Get.to(()=> ReportProblemScreen());
-                  },
-                  title: 'Report a Problem',
-                  imagePath: 'assets/icons/report.svg'),
-              SizedBox(height: 17,),
-              _customRow(
-                  onTap: (){
-                    Get.to(()=> TermsOfServiceScreen());
-                  },
-                  title: 'Terms of service',
-                  imagePath: 'assets/icons/terms.svg'),
-              SizedBox(height: 17,),
-              _customRow(
-                  onTap: (){
-                    Get.to(()=> PrivacyPolicyScreen());
-                  },
-                  title: 'Privacy Policy',
-                  imagePath: 'assets/icons/privacy.svg'),
-              SizedBox(height: 17,),
-              _customRow(
-                  onTap: (){
-                    Get.to(()=> AboutUsScreen());
-                  },
-                  title: 'About',
-                  imagePath: 'assets/icons/about.svg'),
-              SizedBox(height: 17,),
-
-              InkWell(
-                onTap: (){
-
-                  showDialog(
-                      context: context,
-                      builder: (context){
-                        return AlertDialog(
-                          backgroundColor: Color(0xFFC4C3C3),
-                          clipBehavior: Clip.antiAliasWithSaveLayer,
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text("Are you sure you want to log out?",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                                textAlign: TextAlign.center,),
-                              SizedBox(height: 30,),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                      child: InkWell(
-                                          onTap: (){
-                                            authController.logout();
-                                          },
-                                          child: Container(
-                                            height: 52,
-                                            width: 82,
-                                            decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: Color(0xFFFFFFFF), width: 1)
-                                            ),
-                                            child: Center(
-                                              child: Text("Yes",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                ),),
-                                            ),
-                                          ))),
-                                  SizedBox(width: 24,),
-                                  Expanded(
-                                      child: InkWell(
-                                          onTap: (){
-                                            Get.back();
-                                          },
-                                          child: Container(
-                                            height: 52,
-                                            width: 187,
-                                            decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(8),
-                                                color: Colors.white
-                                            ),
-                                            child: Center(
-                                              child: Text("No",
-                                                style: TextStyle(
-                                                  color: Color(0xFF676565),
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                ),),
-                                            ),
-                                          ))),
-
-                                ],
-                              )
-                            ],
-                          ),
-                        );
-                      });
-
-                },
-                child: Row(
-                  children: [
-                    SvgPicture.asset('assets/icons/logout.svg'),
-                    SizedBox(width: 13,),
-                    Text("Logout",
-                    style: TextStyle(
-                      color: Color(0xFFF04B4C),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),),
-
-
-                  ],
-                ),
-              )
-
-
-            ],
-          ),
-        ),
-      ),
-
-      bottomNavigationBar: BottomMenu(3),
-    );
-  }
-
-   Widget _customRow({
-    required String title,
-     required String imagePath,
-     required Function()? onTap
-}) {
-    return InkWell(
-      onTap: onTap,
-      child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SvgPicture.asset(imagePath),
-                  SizedBox(width: 13,),
-                  Text(title,
+                  const SizedBox(width: 13),
+                  const Text(
+                    "Push Notifications",
                     style: TextStyle(
                       color: Color(0xFF676565),
                       fontSize: 16,
                       fontWeight: FontWeight.w400,
-                    ),),
-                  Spacer(),
-                  Icon(Icons.arrow_forward_ios,
-                  color: Color(0xFF799777),)
-
+                    ),
+                  ),
+                  const Spacer(),
+                  CustomSwitch(
+                    value: isSwitch,
+                    onChanged: (val) => setState(() => isSwitch = val),
+                  ),
                 ],
               ),
+              const SizedBox(height: 18),
+
+              /// Settings List
+              _customRow(
+                onTap: () => Get.to(() => const EditProfileScreen()),
+                imagePath: 'assets/icons/personal.svg',
+                title: 'Change Personal Information',
+              ),
+              const SizedBox(height: 17),
+              _customRow(
+                onTap: () => Get.to(() => const ChangePasswordScreen()),
+                title: 'Change Password',
+                imagePath: 'assets/icons/change_password.svg',
+              ),
+              const SizedBox(height: 17),
+              _customRow(
+                onTap: () => _confirmDeleteAccount(context),
+                title: 'Delete my account',
+                imagePath: 'assets/icons/delete.svg',
+              ),
+              const SizedBox(height: 17),
+              _customRow(
+                onTap: () => Get.to(() => const ReportProblemScreen()),
+                title: 'Report a Problem',
+                imagePath: 'assets/icons/report.svg',
+              ),
+              const SizedBox(height: 17),
+              _customRow(
+                onTap: () => Get.to(() => const TermsOfServiceScreen()),
+                title: 'Terms of service',
+                imagePath: 'assets/icons/terms.svg',
+              ),
+              const SizedBox(height: 17),
+              _customRow(
+                onTap: () => Get.to(() => const PrivacyPolicyScreen()),
+                title: 'Privacy Policy',
+                imagePath: 'assets/icons/privacy.svg',
+              ),
+              const SizedBox(height: 17),
+              _customRow(
+                onTap: () => Get.to(() => const AboutUsScreen()),
+                title: 'About',
+                imagePath: 'assets/icons/about.svg',
+              ),
+              const SizedBox(height: 17),
+
+              /// Logout
+              InkWell(
+                onTap: () => _confirmLogout(context),
+                child: Row(
+                  children: [
+                    SvgPicture.asset('assets/icons/logout.svg'),
+                    const SizedBox(width: 13),
+                    const Text(
+                      "Logout",
+                      style: TextStyle(
+                        color: Color(0xFFF04B4C),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: BottomMenu(3),
+    );
+  }
+
+  /// Reusable row for settings
+  Widget _customRow({
+    required String title,
+    required String imagePath,
+    required Function()? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          SvgPicture.asset(imagePath),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Color(0xFF676565),
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+          const Icon(
+            Icons.arrow_forward_ios,
+            color: Color(0xFF799777),
+            size: 16,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFFC4C3C3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Are you sure you want to delete your account?",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            _dialogActions(context, onYes: () {
+              // authController.logout();
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFFC4C3C3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Are you sure you want to log out?",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            _dialogActions(context, onYes: () {
+              authController.logout();
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: onYes,
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.white),
+            ),
+            child: const Text("Yes", style: TextStyle(color: Colors.white)),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () => Get.back(),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            child: const Text("No", style: TextStyle(color: Color(0xFF676565))),
+          ),
+        ),
+      ],
     );
   }
 }

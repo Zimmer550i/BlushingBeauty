@@ -1,73 +1,69 @@
 class User {
-  final String id;
-  final String name;
-  final String email;
-  final String phone;
-  final String image;
-  final String role;
-  final String gender;
-  final DateTime? dob;
-  final bool isDeleted;
-  final bool verified;
-  final bool isFirstLogin;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final int version;
+  final String? id;
+  final String? name;
+  final String? email;
+  final String? role;
+  final String? image;
+  final String? gender;
+  final String? dob;
+  final bool? isDeleted;
+  final bool? verified;
+  final bool? isFirstLogin;
+  final String? createdAt;
+  final String? updatedAt;
+  final int? v;
 
   User({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.phone,
-    required this.image,
-    required this.role,
-    required this.gender,
+    this.id,
+    this.name,
+    this.email,
+    this.role,
+    this.image,
+    this.gender,
     this.dob,
-    required this.isDeleted,
-    required this.verified,
-    required this.isFirstLogin,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.version,
+    this.isDeleted,
+    this.verified,
+    this.isFirstLogin,
+    this.createdAt,
+    this.updatedAt,
+    this.v,
   });
 
-  // From JSON
+  /// Map JSON → User
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['_id'] ?? '',
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      phone: json['phone'] ?? '',
-      image: json['image'] ?? '',
-      role: json['role'] ?? '',
-      gender: json['gender'] ?? '',
-      dob: json['dob'] != null ? DateTime.tryParse(json['dob']) : null,
-      isDeleted: json['isDeleted'] ?? false,
-      verified: json['verified'] ?? false,
-      isFirstLogin: json['isFirstLogin'] ?? false,
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
-      version: json['__v'] ?? 0,
+      id: json["_id"] as String?,
+      name: json["name"] as String?,
+      email: json["email"] as String?,
+      role: json["role"] as String?,
+      image: json["image"] as String?,
+      gender: json["gender"] as String?,
+      dob: json["dob"]?.toString(),
+      isDeleted: json["isDeleted"] as bool?,
+      verified: json["verified"] as bool?,
+      isFirstLogin: json["isFirstLogin"] as bool?,
+      createdAt: json["createdAt"]?.toString(),
+      updatedAt: json["updatedAt"]?.toString(),
+      v: json["__v"] as int?,
     );
   }
 
-  // To JSON
+  /// Map User → JSON
   Map<String, dynamic> toJson() {
     return {
-      '_id': id,
-      'name': name,
-      'email': email,
-      'phone': phone,
-      'image': image,
-      'role': role,
-      'gender': gender,
-      'dob': dob?.toIso8601String(),
-      'isDeleted': isDeleted,
-      'verified': verified,
-      'isFirstLogin': isFirstLogin,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-      '__v': version,
+      "_id": id,
+      "name": name,
+      "email": email,
+      "role": role,
+      "image": image,
+      "gender": gender,
+      "dob": dob,
+      "isDeleted": isDeleted,
+      "verified": verified,
+      "isFirstLogin": isFirstLogin,
+      "createdAt": createdAt,
+      "updatedAt": updatedAt,
+      "__v": v,
     };
   }
 }
