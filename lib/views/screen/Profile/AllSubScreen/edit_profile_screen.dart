@@ -35,14 +35,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               leading: const Icon(Icons.photo_library),
               title: const Text("Pick from Gallery"),
               onTap: () async {
-                Navigator.pop(ctx, await _picker.pickImage(source: ImageSource.gallery));
+                Navigator.pop(
+                  ctx,
+                  await _picker.pickImage(source: ImageSource.gallery),
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: const Text("Take a Photo"),
               onTap: () async {
-                Navigator.pop(ctx, await _picker.pickImage(source: ImageSource.camera));
+                Navigator.pop(
+                  ctx,
+                  await _picker.pickImage(source: ImageSource.camera),
+                );
               },
             ),
           ],
@@ -73,7 +79,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (result == "success") {
       Get.back(); // go back to profile screen
-      showSnackBar("Profile updated successfully",false);
+      showSnackBar("Profile updated successfully", false);
     } else {
       showSnackBar(result, true);
     }
@@ -146,14 +152,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   image: DecorationImage(
                                     image: _profileImage != null
                                         ? FileImage(_profileImage!)
-                                        : const AssetImage('assets/images/dummy.jpg')
-                                    as ImageProvider,
+                                        : const AssetImage(
+                                                'assets/images/dummy.jpg',
+                                              )
+                                              as ImageProvider,
                                     fit: BoxFit.cover,
                                   ),
                                 ),
                               ),
                               Positioned(
-                                child: SvgPicture.asset('assets/icons/edit2.svg'),
+                                child: SvgPicture.asset(
+                                  'assets/icons/edit2.svg',
+                                ),
                               ),
                             ],
                           ),
@@ -167,7 +177,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     CustomTextField(
                       controller: nameTextController,
                       hintText: 'Enter your name',
-                      borderSide: const BorderSide(color: Color(0xFFC4C3C3), width: 1),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFC4C3C3),
+                        width: 1,
+                      ),
                       prefixIcon: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Container(
@@ -179,7 +192,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(4.0),
-                            child: SvgPicture.asset('assets/icons/name_fill.svg'),
+                            child: SvgPicture.asset(
+                              'assets/icons/name_fill.svg',
+                            ),
                           ),
                         ),
                       ),
@@ -188,10 +203,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     const SizedBox(height: 80),
 
                     /// Save Button
-                    CustomButton(
-                      onTap: _onSave,
-                      text: "Save",
-                    ),
+                    Obx(() => CustomButton(
+                        loading: userController.isLoading.value,
+                        onTap: _onSave, text: "Save")),
                   ],
                 ),
               ),

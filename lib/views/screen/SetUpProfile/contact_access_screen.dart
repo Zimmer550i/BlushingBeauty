@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -5,7 +6,7 @@ import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/SetUpProfile/invite_friend_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'enable_notification_screen.dart';
 
 class ContactAccessScreen extends StatefulWidget {
@@ -16,6 +17,41 @@ class ContactAccessScreen extends StatefulWidget {
 }
 
 class _ContactAccessScreenState extends State<ContactAccessScreen> {
+  /// Fetch contacts and save them locally
+  Future<void> _saveContactsToLocal() async {
+    final contacts = await FlutterContacts.getContacts(withProperties: true);
+
+    List<Map<String, dynamic>> contactList = [];
+
+    for (var c in contacts) {
+      if (c.phones.isNotEmpty) {
+        for (var phone in c.phones) {
+          contactList.add({
+            "name": c.displayName,
+            "number": _normalizePhoneNumber(phone.number),
+          });
+        }
+      }
+    }
+
+    // Save to local storage
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("saved_contacts", jsonEncode(contactList));
+
+    print("✅ Contacts saved locally: ${contactList.length}");
+  }
+
+  /// Normalize phone numbers to always include country code
+  String _normalizePhoneNumber(String number) {
+    String cleaned = number.replaceAll(RegExp(r'[^\d+]'), '');
+
+    // Example default: Bangladesh (+88). Change as needed.
+    if (!cleaned.startsWith("+")) {
+      cleaned = "+88$cleaned";
+    }
+    return cleaned;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,9 +59,9 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
         padding: const EdgeInsets.all(20.0),
         child: SafeArea(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Top Bar
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -36,7 +72,7 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                       color: AppColors.primaryColor,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Center(
+                    child: const Center(
                       child: Text(
                         "re:",
                         style: TextStyle(
@@ -50,7 +86,7 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                   Text(
                     "1 of 4",
                     style: TextStyle(
-                      color: Color(0xFF413E3E),
+                      color: const Color(0xFF413E3E),
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
@@ -59,8 +95,9 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 110),
-              Text(
+
+              const SizedBox(height: 110),
+              const Text(
                 "Access Your \nContacts",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
@@ -68,12 +105,12 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
 
               RichText(
                 text: TextSpan(
                   children: [
-                    TextSpan(
+                    const TextSpan(
                       text: "We'll use your contacts to invite friends to",
                       style: TextStyle(
                         color: Color(0xFF413E3E),
@@ -89,9 +126,9 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    TextSpan(
+                    const TextSpan(
                       text:
-                          " and show you who is already on the app. Your info stays private",
+                      " and show you who is already on the app. Your info stays private",
                       style: TextStyle(
                         color: Color(0xFF413E3E),
                         fontSize: 16,
@@ -101,20 +138,23 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: 80),
 
+              const SizedBox(height: 80),
+
+              // Not Now button
               InkWell(
-                onTap: (){
-                  Get.to(()=> EnableNotificationScreen());
+                onTap: () {
+                  Get.to(() => const EnableNotificationScreen());
                 },
                 child: Container(
                   height: 48,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
+                    border:
+                    Border.all(color: const Color(0xFFC4C3C3), width: 0.5),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Text(
                       "Not Now",
                       style: TextStyle(
@@ -126,23 +166,21 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+
+              const SizedBox(height: 20),
+
+              // Allow Access button
               CustomButton(
                 onTap: () async {
-                  // Request permission
                   var status = await Permission.contacts.request();
 
                   if (status.isGranted) {
-                    // Permission granted ✅
-                    final contacts = await FlutterContacts.getContacts();
-                    print("Total contacts: ${contacts.length}");
-
-                    Get.to(() => InviteFriendScreen());
+                    await _saveContactsToLocal();
+                    Get.to(() => const InviteFriendScreen());
                   } else if (status.isDenied) {
-                    // Show a snackbar or alert
-                    Get.snackbar("Permission Denied", "You need to allow access to continue");
+                    Get.snackbar("Permission Denied",
+                        "You need to allow access to continue");
                   } else if (status.isPermanentlyDenied) {
-                    // Open settings
                     openAppSettings();
                   }
                 },

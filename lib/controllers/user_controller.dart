@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import '../models/all_user_model.dart';
+import '../models/multi_body.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
 
@@ -12,6 +14,8 @@ class UserController extends GetxController {
   final RxnString privacyPolicy = RxnString();
   final RxInt unreadNotifications = RxInt(0);
   final notificationRefreshTime = Duration(minutes: 10);
+  var allUsers = <AllUserModel>[].obs;
+
 
   RxBool isLoading = RxBool(false);
   final RxBool isSubscribed = false.obs;
@@ -49,18 +53,26 @@ class UserController extends GetxController {
   }) async {
     isLoading.value = true;
     try {
-      // Build payload correctly
-      final payload = {
-        "data": jsonEncode({
-          "name": name,
-        }),
-        if (image != null) "image": image,
+      final body = {
+        "name": name,
       };
 
-      final response = await api.patch(
+      // Files go here
+      final multipartBody = <MultipartBody>[];
+      if (image != null) {
+        multipartBody.add(
+          MultipartBody(
+            key: "image",
+            file: image,
+          ),
+        );
+      }
+
+      final response = await api.postMultipartData(
         "/user/update-profile",
-        payload,
+        body,
         authReq: true,
+        multipartBody: multipartBody,
       );
 
       if (response.statusCode == 200) {
@@ -79,6 +91,7 @@ class UserController extends GetxController {
     }
   }
 
+
   String? getImageUrl() {
     if (userInfo.value == null || userInfo.value!.image == null) {
       return null;
@@ -87,6 +100,37 @@ class UserController extends GetxController {
     String baseUrl = api.devUrl;
 
     return baseUrl + userInfo.value!.image!;
+  }
+
+  String? addBaseUrl(String image){
+    if(image == null || image.isEmpty){
+      return null;
+    }
+
+    String baseUrl = api.devUrl;
+    return baseUrl + image;
+  }
+
+
+  Future<String> fetchAllUsers({int page = 1, int limit = 10}) async {
+    isLoading.value = true;
+    try {
+      final response = await api.get("/user/all-user?page=$page&limit=$limit", authReq: true);
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final List data = body['data'];
+        allUsers.value = data.map((e) => AllUserModel.fromJson(e)).toList();
+        isLoading.value = false;
+        return "success";
+      } else {
+        isLoading.value = false;
+        return body['message'] ?? "Failed to fetch users";
+      }
+    } catch (e) {
+      isLoading.value = false;
+      return "Unexpected error: ${e.toString()}";
+    }
   }
 
 

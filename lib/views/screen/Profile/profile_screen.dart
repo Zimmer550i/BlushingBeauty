@@ -3,13 +3,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_switch.dart';
-import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/about_us_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/change_password_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/edit_profile_screen.dart';
-import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/privacy_policy_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/report_problem_screen.dart';
-import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/terms_of_service_screen.dart';
-
+import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/all_data_page.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../../controllers/user_controller.dart';
 import '../../base/bottom_menu..dart';
@@ -175,19 +172,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 17),
               _customRow(
-                onTap: () => Get.to(() => const TermsOfServiceScreen()),
+                onTap: () => Get.to(() => AllDataScreen(title: "Terms of Service", endPoint: '/terms',)),
                 title: 'Terms of service',
                 imagePath: 'assets/icons/terms.svg',
               ),
               const SizedBox(height: 17),
               _customRow(
-                onTap: () => Get.to(() => const PrivacyPolicyScreen()),
+                onTap: () => Get.to(() => AllDataScreen(title: "Privacy Policy", endPoint: '/privacy',)),
                 title: 'Privacy Policy',
                 imagePath: 'assets/icons/privacy.svg',
               ),
               const SizedBox(height: 17),
               _customRow(
-                onTap: () => Get.to(() => const AboutUsScreen()),
+                onTap: () => Get.to(() => AllDataScreen(title: "About Us", endPoint: '/about',)),
+
                 title: 'About',
                 imagePath: 'assets/icons/about.svg',
               ),
@@ -269,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 20),
             _dialogActions(context, onYes: () {
-              // authController.logout();
+              authController.deleteAccount();
             }),
           ],
         ),

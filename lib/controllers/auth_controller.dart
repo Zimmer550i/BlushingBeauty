@@ -253,7 +253,7 @@ class AuthController extends GetxController {
   ) async {
     isLoading.value = true;
     try {
-      final response = await api.post("/auth/reset-password", {
+      final response = await api.post("/auth/change-password", {
         "currentPassword": currentPassword.trim(),
         "newPassword": newPassword.trim(),
         "confirmPassword": conPassword.trim(),
@@ -339,10 +339,19 @@ class AuthController extends GetxController {
   }
 
   Future<void> deleteAccount() async {
-    await SharedPrefsService.clear();
-    Get.offAll(() => LoginScreen());
-    showSnackBar("Your account has been deleted", false);
-    isLoggedIn.value = false;
+    try{
+      final response = await api.delete("/user/delete-profile", authReq: true);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await SharedPrefsService.clear();
+        Get.offAll(() => LoginScreen());
+        showSnackBar("Your account has been deleted", false);
+        isLoggedIn.value = false;
+      }else{
+        showSnackBar("Failed: ${response.body}",true);
+      }
+    }catch(e){
+      showSnackBar("Something went wrong: $e",true);
+    }
   }
 
   Future<void> setToken(String value) async {

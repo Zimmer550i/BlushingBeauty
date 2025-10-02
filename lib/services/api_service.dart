@@ -2,7 +2,10 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
+import '../models/multi_body.dart';
 import 'shared_prefs_service.dart';
+import 'package:http_parser/http_parser.dart';
 
 class ApiService {
   final String devUrl = "http://10.10.12.54:3000";
@@ -195,4 +198,75 @@ class ApiService {
       // Get.find<AuthController>().logout();
     }
   }
+
+  Future<http.Response> postMultipartData(
+      String endpoint,
+      Map<String, dynamic> body, {
+        required List<MultipartBody> multipartBody,
+        bool authReq = false,
+      }) async {
+    try {
+      final apiService = ApiService();
+      final headers = await apiService._getHeaders(authReq);
+      final uri = Uri.parse('${apiService.baseUrl}$endpoint');
+
+      debugPrint('====> API Call: $uri');
+      debugPrint('====> Headers: $headers');
+      debugPrint('====> Body Fields: $body');
+      debugPrint('====> Uploading ${multipartBody.length} file(s)');
+
+      // 👇 Use PATCH here
+      var request = http.MultipartRequest('PATCH', uri);
+      request.headers.addAll(headers);
+
+      // Add normal fields
+      body.forEach((key, value) {
+        if (value != null) {
+          request.fields[key] = value.toString();
+        }
+      });
+
+      // Add file fields
+      for (MultipartBody element in multipartBody) {
+        final mimeType = lookupMimeType(element.file.path);
+        final mediaType = _getMediaType(mimeType);
+
+        debugPrint("📤 Uploading file: ${element.file.path} [${mediaType.mimeType}]");
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            element.key,
+            element.file.path,
+            contentType: mediaType,
+          ),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (apiService.showAPICalls) {
+        apiService._logResponse(response, 'PATCH-MULTIPART', uri);
+      }
+
+      apiService._checkTokenExpiry(authReq, response);
+      return response;
+    } catch (e) {
+      debugPrint("❗ Upload exception: $e");
+      throw Exception('Something went wrong while uploading. Please try again.');
+    }
+  }
+
+  /// Helper method to get MediaType from mime string
+  static MediaType _getMediaType(String? mimeType) {
+    if (mimeType != null && mimeType.contains('/')) {
+      final parts = mimeType.split('/');
+      if (parts.length == 2) {
+        return MediaType(parts[0], parts[1]);
+      }
+    }
+    // fallback if mime type is unknown
+    return MediaType('application', 'octet-stream');
+  }
+
 }
