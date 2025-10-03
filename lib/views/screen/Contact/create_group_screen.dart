@@ -130,7 +130,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             ),
 
             CustomButton(onTap: (){
-              Get.to(()=> ChatScreen());
+              ///TODO: need to add the chat screen
+              // Get.to(()=> ChatScreen());
             },
                 text: "Create Now")
 

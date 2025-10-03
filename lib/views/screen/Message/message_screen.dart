@@ -259,7 +259,8 @@ class _MessageScreenState extends State<MessageScreen> {
                   itemBuilder: (context, index) {
                     return InkWell(
                       onTap: (){
-                        Get.to(()=> ChatScreen());
+                        ///TODO: need to add the chat screen
+                        // Get.to(()=> ChatScreen());
                       },
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,

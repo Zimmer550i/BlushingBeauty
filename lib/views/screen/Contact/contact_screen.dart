@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/controllers/contact_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -8,6 +9,7 @@ import 'package:ree_social_media_app/views/base/bottom_menu..dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Contact/create_group_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
@@ -20,6 +22,7 @@ class _ContactScreenState extends State<ContactScreen> {
   final searchTextController = TextEditingController();
   final UserController userController = Get.put(UserController());
   final ContactController contactController = Get.put(ContactController());
+  final ChatController chatController = Get.put(ChatController());
 
   @override
   void initState() {
@@ -109,9 +112,14 @@ class _ContactScreenState extends State<ContactScreen> {
                             ),
                           ),
                           const Spacer(),
-                          SvgPicture.asset(
-                            "assets/icons/message.svg",
-                            color: AppColors.primaryColor,
+                          InkWell(
+                            onTap:(){
+                              chatController.createPrivateChat(matchedUser.id);
+                            },
+                            child: SvgPicture.asset(
+                              "assets/icons/message.svg",
+                              color: AppColors.primaryColor,
+                            ),
                           ),
                         ],
                       );
@@ -151,24 +159,29 @@ class _ContactScreenState extends State<ContactScreen> {
                             ],
                           ),
                           const Spacer(),
-                          Container(
-                            height: 38,
-                            width: 80,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0xFFC4C3C3),
-                                width: 0.5,
+                          InkWell(
+                            onTap: () async {
+                              await contactController.sendInviteSms(number, name);
+                            },
+                            child: Container(
+                              height: 38,
+                              width: 80,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: const Color(0xFFC4C3C3),
+                                  width: 0.5,
+                                ),
                               ),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                "Invite",
-                                style: TextStyle(
-                                  color: Color(0xFF676565),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
+                              child: const Center(
+                                child: Text(
+                                  "Invite",
+                                  style: TextStyle(
+                                    color: Color(0xFF676565),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
                               ),
                             ),

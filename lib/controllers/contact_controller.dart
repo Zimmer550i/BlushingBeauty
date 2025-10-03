@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ContactController extends GetxController {
   var contacts = <Map<String, dynamic>>[].obs; // name + number
@@ -56,6 +57,31 @@ class ContactController extends GetxController {
     if (saved != null) {
       final List decoded = jsonDecode(saved);
       contacts.assignAll(List<Map<String, dynamic>>.from(decoded));
+    }
+  }
+
+  Future<void> sendInviteSms(String number, String name) async {
+    final message =
+        "$name wants to send you a message on re: The app that makes sharing photos and videos more fun by capturing real reactions. "
+        "Be a part of the moment and download here: https://yourappdownloadlink.com";
+
+    final smsUri = Uri(
+      scheme: 'sms',
+      path: number,
+      queryParameters: {
+        'body': message,
+      },
+    );
+
+    try {
+      if (await canLaunchUrl(smsUri)) {
+        await launchUrl(smsUri);
+      } else {
+        print("❌ Could not launch SMS app. URI: $smsUri");
+      }
+    } catch (e, stack) {
+      print("🚨 Error launching SMS: $e");
+      print(stack);
     }
   }
 }
