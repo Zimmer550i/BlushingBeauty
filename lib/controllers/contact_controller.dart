@@ -1,15 +1,23 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:ree_social_media_app/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ContactController extends GetxController {
-  var contacts = <Map<String, dynamic>>[].obs; // name + number
+  var matchedContacts = <Map<String, dynamic>>[].obs;
+  var unmatchedContacts = <Map<String, dynamic>>[].obs;
+  var isLoading = false.obs;
 
-  /// Fetch all contacts with name + phone number
+  final api = ApiService();
+
+  /// Fetch contacts from device & send to API
   Future<void> fetchContacts() async {
     try {
+      isLoading.value = true;
+
       if (await FlutterContacts.requestPermission()) {
         final rawContacts = await FlutterContacts.getContacts(withProperties: true);
 
@@ -22,66 +30,75 @@ class ContactController extends GetxController {
 
               contactList.add({
                 "name": c.displayName,
-                "number": cleanedNumber,
+                "phone": cleanedNumber,
               });
             }
           }
         }
 
-        contacts.assignAll(contactList);
-
-        // Save in SharedPreferences
+        // Save locally
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("saved_contacts", jsonEncode(contactList));
+
+        // ✅ Send contacts to API
+        await sendContactsToApi(contactList);
       }
     } catch (e) {
-      print("Error fetching contacts: $e");
+      debugPrint("🚨 Error fetching contacts: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  /// Normalize phone number to include country code (+407, +1, etc.)
+  /// Normalize phone number
   String _normalizePhoneNumber(String number) {
     String cleaned = number.replaceAll(RegExp(r'[^\d+]'), '');
-
-    // Example: Add default country code if missing
     if (!cleaned.startsWith("+")) {
-      cleaned = "+407$cleaned"; // Change +407 to your default country code
+      cleaned = "+1$cleaned"; // default country code
     }
     return cleaned;
   }
 
-  /// Load contacts from SharedPreferences
-  Future<void> loadFromLocal() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString("saved_contacts");
-    if (saved != null) {
-      final List decoded = jsonDecode(saved);
-      contacts.assignAll(List<Map<String, dynamic>>.from(decoded));
-    }
-  }
-
+  /// Send invite via SMS
   Future<void> sendInviteSms(String number, String name) async {
     final message =
-        "$name wants to send you a message on re: The app that makes sharing photos and videos more fun by capturing real reactions. "
-        "Be a part of the moment and download here: https://yourappdownloadlink.com";
+        "$name wants to connect with you on re: The app that makes sharing photos and videos more fun! Download here: https://yourappdownloadlink.com";
 
     final smsUri = Uri(
       scheme: 'sms',
       path: number,
-      queryParameters: {
-        'body': message,
-      },
+      queryParameters: {'body': message},
     );
 
+    if (await canLaunchUrl(smsUri)) {
+      await launchUrl(smsUri);
+    } else {
+      debugPrint("❌ Could not launch SMS app. URI: $smsUri");
+    }
+  }
+
+  /// Send contacts to backend
+  Future<void> sendContactsToApi(List<Map<String, dynamic>> contactList) async {
     try {
-      if (await canLaunchUrl(smsUri)) {
-        await launchUrl(smsUri);
+      final response = await api.postRaw(
+        "/user/contact",
+        contactList,
+        authReq: true,
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+
+        matchedContacts.assignAll(List<Map<String, dynamic>>.from(decoded["data"]["match"]));
+        unmatchedContacts.assignAll(List<Map<String, dynamic>>.from(decoded["data"]["unmatch"]));
+
+        debugPrint("✅ Matched Contacts: ${matchedContacts.length}");
+        debugPrint("✅ Unmatched Contacts: ${unmatchedContacts.length}");
       } else {
-        print("❌ Could not launch SMS app. URI: $smsUri");
+        debugPrint("❌ Failed to upload contacts: ${response.statusCode}");
       }
-    } catch (e, stack) {
-      print("🚨 Error launching SMS: $e");
-      print(stack);
+    } catch (e) {
+      debugPrint("🚨 Error sending contacts: $e");
     }
   }
 }

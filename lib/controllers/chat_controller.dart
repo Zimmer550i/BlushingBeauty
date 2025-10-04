@@ -1,39 +1,120 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/api_service.dart';
+import '../services/socket_manager.dart';
 import '../views/screen/Message/AllSubScreen/chat_screen.dart';
 
 class ChatController extends GetxController {
   final api = ApiService();
-  final RxBool isLoading = false.obs;
-  final RxList<Map<String, dynamic>> messages = <Map<String, dynamic>>[].obs;
-  final RxBool isPaginating = false.obs;
 
+  /// Reactive state
+  final RxBool isLoading = false.obs;
+  final RxBool isPaginating = false.obs;
+  final RxList<Map<String, dynamic>> messages = <Map<String, dynamic>>[].obs;
+
+  /// Pagination
   int _currentPage = 1;
-  final int _limit = 10;
+  final int _limit = 15;
   bool _hasMore = true;
 
-  /// Reset pagination
-  void resetPagination() {
-    _currentPage = 1;
-    _hasMore = true;
-    messages.clear();
+  /// Scroll
+  late ScrollController scrollController;
+
+  /// Current session
+  late String _chatId;
+  late String _currentUserId;
+
+  @override
+  void onInit() {
+    super.onInit();
+    scrollController = ScrollController();
   }
 
-  /// Fetch first page (used in initState)
-  Future<void> fetchMessages(String chatId) async {
-    resetPagination();
-    await _fetchPage(chatId);
+  void disconnect() {
+    scrollController.dispose();
+    SocketService.clearListeners();
+    SocketService.disconnect();
+    super.onClose();
   }
 
-  /// Load next page (when user scrolls up)
-  Future<void> loadMore(String chatId) async {
+  // ==============================
+  // CHAT FLOW
+  // ==============================
+
+  Future<void> initChat({
+    required String chatId,
+    required String currentUserId,
+    required String token,
+  }) async {
+    _chatId = chatId;
+    _currentUserId = currentUserId;
+
+    // 1. Fetch initial messages
+    await fetchMessages();
+
+    // 2. Connect socket
+    SocketService.connect(token);
+
+    // 3. Listen for new messages
+    SocketService.onMessage((data) {
+      final msg = _mapMessage(data, _currentUserId);
+      messages.insert(0, msg); // 👈 insert at top because reverse:true
+      _scrollToBottom();
+    });
+
+    // 4. Typing
+    SocketService.onTyping((data) {
+      debugPrint("✍️ Typing: $data");
+    });
+  }
+
+  Future<void> createPrivateChat(
+      String name, String image, String memberId, String currentUserId) async {
+    isLoading.value = true;
+    try {
+      final response = await api.post(
+        "/chat/create-private",
+        {"member": memberId},
+        authReq: true,
+      );
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final chatId = body['data']['_id'];
+
+        Get.to(() => ChatScreen(
+          chatId: chatId,
+          receiverName: name,
+          currentUserId: currentUserId,
+          receiverImage: image,
+        ));
+      } else {
+        debugPrint("⚠️ Failed: ${body['message']}");
+      }
+    } catch (e) {
+      debugPrint("❌ Error creating private chat: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ==============================
+  // API MESSAGES
+  // ==============================
+
+  Future<void> fetchMessages() async {
+    _resetPagination();
+    await _fetchPage(appendBottom: true);
+    _scrollToBottom();
+  }
+
+  Future<void> loadOlder() async {
     if (!_hasMore || isPaginating.value) return;
-    await _fetchPage(chatId);
+    await _fetchPage(appendBottom: false);
   }
 
-  Future<void> _fetchPage(String chatId) async {
+  Future<void> _fetchPage({bool appendBottom = true}) async {
     try {
       if (_currentPage == 1) {
         isLoading.value = true;
@@ -42,23 +123,32 @@ class ChatController extends GetxController {
       }
 
       final res = await api.get(
-        "/chat/chat-inbox/$chatId?limit=$_limit&page=$_currentPage",
+        "/chat/chat-inbox/$_chatId?limit=$_limit&page=$_currentPage",
         authReq: true,
       );
-      final body = jsonDecode(res.body);
 
       if (res.statusCode == 200) {
-        final List newMessages = body['data'];
+        final body = jsonDecode(res.body);
+        final List rawMessages = body['data'];
 
-        if (newMessages.isEmpty) {
-          _hasMore = false; // no more pages
+        if (rawMessages.isEmpty) {
+          _hasMore = false;
         } else {
-          // prepend older messages (so order is maintained)
-          messages.insertAll(0, List<Map<String, dynamic>>.from(newMessages));
+          final mapped = rawMessages
+              .map<Map<String, dynamic>>((m) => _mapMessage(m, _currentUserId))
+              .toList();
+
+          if (appendBottom) {
+            // 👇 for first load or new fetch: reverse insert
+            messages.insertAll(0, mapped);
+            _scrollToBottom();
+          } else {
+            // 👇 load older → append at end (because reverse: true flips it)
+            messages.addAll(mapped);
+          }
+
           _currentPage++;
         }
-
-        debugPrint("📩 Page $_currentPage loaded, total: ${messages.length}");
       }
     } catch (e) {
       debugPrint("❌ Error fetching messages: $e");
@@ -68,35 +158,88 @@ class ChatController extends GetxController {
     }
   }
 
-  /// Create a private chat and navigate
-  Future<void> createPrivateChat(String memberId) async {
-    isLoading.value = true;
-    try {
-      final response = await api.post(
-        "/chat/create-private",
-        {"member": memberId},
-        authReq: true,
-      );
+  void _resetPagination() {
+    _currentPage = 1;
+    _hasMore = true;
+    messages.clear();
+  }
 
-      final body = jsonDecode(response.body);
+  // ==============================
+  // SOCKET SEND
+  // ==============================
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final chatData = body['data'];
-        final chatId = chatData['_id'];
-        final createdBy = chatData['createdBy'];
+  void sendText(String text) {
+    SocketService.sendText(
+      chatId: _chatId,
+      senderId: _currentUserId,
+      message: text,
+    );
 
-        debugPrint("✅ Private chat created: $chatId");
+    messages.insert(0, {
+      "isMe": true,
+      "type": "text",
+      "message": text,
+      "media": "",
+      "time":
+      "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}",
+    });
+    _scrollToBottom();
+  }
 
-        /// open ChatScreen with chatId
-        Get.to(() => ChatScreen(chatId: chatId, receiverName: '', currentUserId: createdBy,));
+  void sendImage(String mediaUrl) {
+    SocketService.sendImage(
+      chatId: _chatId,
+      senderId: _currentUserId,
+      mediaUrl: mediaUrl,
+    );
+  }
 
-      } else {
-        debugPrint("⚠️ Failed: ${body['message']}");
+  void sendVideo(String mediaUrl) {
+    SocketService.sendVideo(
+      chatId: _chatId,
+      senderId: _currentUserId,
+      mediaUrl: mediaUrl,
+    );
+  }
+
+  void sendTyping(bool isTyping) {
+    SocketService.sendTyping(
+      chatId: _chatId,
+      senderId: _currentUserId,
+      isTyping: isTyping,
+    );
+  }
+
+  // ==============================
+  // HELPERS
+  // ==============================
+
+  Map<String, dynamic> _mapMessage(dynamic m, String currentUserId) {
+    final createdAt = DateTime.tryParse(m['createdAt'] ?? '');
+    final formattedTime = createdAt != null
+        ? "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}"
+        : "";
+
+    return {
+      "isMe": m["sender"] is Map
+          ? m["sender"]["_id"] == currentUserId
+          : m["sender"] == currentUserId,
+      "type": m["contentType"] ?? "text",
+      "message": m["message"] ?? "",
+      "media": m["media"] ?? "",
+      "time": formattedTime,
+    };
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          0, // 👈 because reverse:true, "0" is bottom
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
-    } catch (e) {
-      debugPrint("❌ Error creating private chat: $e");
-    } finally {
-      isLoading.value = false;
-    }
+    });
   }
 }

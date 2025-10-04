@@ -9,7 +9,6 @@ import 'package:ree_social_media_app/views/base/bottom_menu..dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Contact/create_group_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
@@ -20,15 +19,16 @@ class ContactScreen extends StatefulWidget {
 
 class _ContactScreenState extends State<ContactScreen> {
   final searchTextController = TextEditingController();
-  final UserController userController = Get.put(UserController());
   final ContactController contactController = Get.put(ContactController());
   final ChatController chatController = Get.put(ChatController());
+  final UserController userController = Get.put(UserController());
+
+  String? image;
 
   @override
   void initState() {
     super.initState();
-    contactController.fetchContacts();   // fetch & save contacts
-    userController.fetchAllUsers();      // fetch app users
+    contactController.fetchContacts();
   }
 
   @override
@@ -61,143 +61,97 @@ class _ContactScreenState extends State<ContactScreen> {
 
             Expanded(
               child: Obx(() {
-                if (userController.isLoading.value) {
+                if (contactController.isLoading.value) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (contactController.contacts.isEmpty) {
-                  return const Center(child: Text("No contacts found"));
-                }
-
+                final matched = contactController.matchedContacts;
+                final unmatched = contactController.unmatchedContacts;
                 final apiUsers = userController.allUsers;
-                final contacts = contactController.contacts;
 
-                return ListView.separated(
-                  itemCount: contacts.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final contact = contacts[index];
-                    final number = contact["number"] ?? "";
-                    final name = contact["name"] ?? "Unknown";
+                return ListView(
+                  children: [
+                    // ✅ Matched Contacts
+                    if (matched.isNotEmpty) ...[
+                      ...matched.map((c) {
+                        // try to find the user with same id or phone
+                        final matchedUser = apiUsers.firstWhereOrNull(
+                          (u) =>
+                              u.id == c["_id"] ||
+                              u.phone == c["phone"] ||
+                              u.image == c['image'],
+                        );
 
-                    final matchedUser = apiUsers.firstWhereOrNull(
-                          (u) => u.phone == number || u.email == number,
-                    );
+                        final imageUrl = userController.addBaseUrl(c['image']);
 
-                    if (matchedUser != null) {
-                      final image = userController.addBaseUrl(matchedUser.image);
-                      return Row(
-                        children: [
-                          Container(
-                            height: 44,
-                            width: 44,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: matchedUser.image.isNotEmpty
-                                    ? NetworkImage(image.toString())
-                                    : const AssetImage("assets/images/dummy.jpg")
-                                as ImageProvider,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage: imageUrl != null
+                                ? NetworkImage(imageUrl)
+                                : const AssetImage("assets/images/dummy.jpg")
+                                      as ImageProvider,
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            matchedUser.name.isEmpty ? "No Name" : matchedUser.name,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: AppColors.textColor,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          const Spacer(),
-                          InkWell(
-                            onTap:(){
-                              chatController.createPrivateChat(matchedUser.id);
+                          title: Text(c["name"] ?? "No Name"),
+                          subtitle: Text(c["phone"] ?? ""),
+                          trailing: InkWell(
+                            onTap: () {
+                              chatController.createPrivateChat(
+                                c["name"],
+                                c['image'],
+                                c["_id"],
+                                userController.userInfo.value!.id.toString()
+                              );
                             },
                             child: SvgPicture.asset(
                               "assets/icons/message.svg",
                               color: AppColors.primaryColor,
                             ),
                           ),
-                        ],
-                      );
-                    } else {
-                      return Row(
-                        children: [
-                          Container(
-                            height: 44,
-                            width: 44,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: AssetImage("assets/images/dummy.jpg"),
-                                fit: BoxFit.cover,
-                              ),
+                        );
+                      }).toList(),
+                    ],
+
+                    // ✅ Unmatched Contacts
+                    if (unmatched.isNotEmpty) ...[
+                      ...unmatched.map(
+                        (c) => ListTile(
+                          leading: const CircleAvatar(
+                            backgroundImage: AssetImage(
+                              "assets/images/dummy.jpg",
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textColor,
-                                ),
-                              ),
-                              Text(
-                                number,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          InkWell(
-                            onTap: () async {
-                              await contactController.sendInviteSms(number, name);
-                            },
+                          title: Text(c["name"] ?? "Unknown"),
+                          subtitle: Text(c["phone"] ?? ""),
+                          trailing: InkWell(
+                            onTap: () => contactController.sendInviteSms(
+                              c["phone"],
+                              c["name"],
+                            ),
                             child: Container(
-                              height: 38,
-                              width: 80,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: const Color(0xFFC4C3C3),
-                                  width: 0.5,
-                                ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
                               ),
-                              child: const Center(
-                                child: Text(
-                                  "Invite",
-                                  style: TextStyle(
-                                    color: Color(0xFF676565),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                "Invite",
+                                style: TextStyle(color: Colors.black87),
                               ),
                             ),
                           ),
-                        ],
-                      );
-                    }
-                  },
+                        ),
+                      ),
+                    ],
+                  ],
                 );
               }),
             ),
 
             CustomButton(
-              onTap: () {
-                Get.to(() => CreateGroupScreen());
-              },
+              onTap: () => Get.to(() => CreateGroupScreen()),
               text: "Create Group",
             ),
           ],

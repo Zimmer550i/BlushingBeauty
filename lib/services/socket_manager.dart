@@ -2,17 +2,17 @@ import 'dart:developer';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketService {
-  static IO.Socket? socket;
+  static IO.Socket? _socket;
 
   /// Connect to socket with auth token
   static void connect(String token) {
-    if (socket != null && socket!.connected) {
+    if (_socket != null && _socket!.connected) {
       log("⚠️ Socket already connected");
       return;
     }
 
-    socket = IO.io(
-      'http://10.10.12.54:3000',
+    _socket = IO.io(
+      'http://10.10.12.54:3000', // TODO: make configurable (env/constant)
       IO.OptionBuilder()
           .setTransports(['websocket']) // use WebSocket only
           .enableForceNew()
@@ -21,49 +21,59 @@ class SocketService {
           .build(),
     );
 
-    socket!.connect();
+    _socket!.connect();
 
-    socket!.onConnect((_) {
-      log("✅ Socket connected");
-    });
-
-    socket!.onDisconnect((_) {
-      log("❌ Socket disconnected");
-    });
-
-    socket!.onConnectError((err) {
-      log("🚨 Connect error: $err");
-    });
-
-    socket!.onError((err) {
-      log("🚨 Error: $err");
-    });
-
-    /// Listen for incoming messages
-    socket!.on("receive-message", (data) {
-      log("📥 Message received: $data");
-    });
+    _socket!.onConnect((_) => log("✅ Socket connected"));
+    _socket!.onDisconnect((_) => log("❌ Socket disconnected"));
+    _socket!.onReconnect((_) => log("🔄 Socket reconnected"));
+    _socket!.onConnectError((err) => log("🚨 Connect error: $err"));
+    _socket!.onError((err) => log("🚨 Error: $err"));
   }
 
   /// Disconnect cleanly
   static void disconnect() {
-    socket?.disconnect();
-    socket?.dispose();
-    socket = null;
+    _socket?.disconnect();
+    _socket?.dispose();
+    _socket = null;
+    log("👋 Socket disposed");
   }
 
-  /// Emit a text message
+  /// =====================
+  /// CHAT EVENTS
+  /// =====================
+
+  /// Subscribe to new messages
+  static void onMessage(void Function(dynamic data) handler) {
+    _socket?.off("receive-message"); // prevent duplicate listeners
+    _socket?.on("receive-message", handler);
+  }
+
+  /// Subscribe to typing events
+  static void onTyping(void Function(dynamic data) handler) {
+    _socket?.off("typing");
+    _socket?.on("typing", handler);
+  }
+
+  /// Unsubscribe from all events (when leaving chat)
+  static void clearListeners() {
+    _socket?.off("receive-message");
+    _socket?.off("typing");
+  }
+
+  /// =====================
+  /// MESSAGE EMITS
+  /// =====================
+
   static void sendText({
     required String chatId,
     required String senderId,
     required String message,
   }) {
-    if (socket == null || !socket!.connected) {
-      log("⚠️ Cannot send, socket not connected");
+    if (!isConnected) {
+      log("⚠️ Cannot send text, socket not connected");
       return;
     }
-
-    socket!.emit("send-message", {
+    _socket!.emit("send-message", {
       "chat": chatId,
       "sender": senderId,
       "message": message,
@@ -72,13 +82,13 @@ class SocketService {
     log("➡️ Sent text: $message");
   }
 
-  /// Emit an image message
   static void sendImage({
     required String chatId,
     required String senderId,
     required String mediaUrl,
   }) {
-    socket?.emit("send-message", {
+    if (!isConnected) return;
+    _socket!.emit("send-message", {
       "chat": chatId,
       "sender": senderId,
       "media": mediaUrl,
@@ -87,13 +97,13 @@ class SocketService {
     log("➡️ Sent image: $mediaUrl");
   }
 
-  /// Emit a video message
   static void sendVideo({
     required String chatId,
     required String senderId,
     required String mediaUrl,
   }) {
-    socket?.emit("send-message", {
+    if (!isConnected) return;
+    _socket!.emit("send-message", {
       "chat": chatId,
       "sender": senderId,
       "media": mediaUrl,
@@ -102,17 +112,22 @@ class SocketService {
     log("➡️ Sent video: $mediaUrl");
   }
 
-  /// Typing event
   static void sendTyping({
     required String chatId,
     required String senderId,
     required bool isTyping,
   }) {
-    socket?.emit("typing", {
+    if (!isConnected) return;
+    _socket!.emit("typing", {
       "chat": chatId,
       "sender": senderId,
       "isTyping": isTyping,
     });
     log("✍️ Typing: $isTyping");
   }
+
+  /// =====================
+  /// HELPERS
+  /// =====================
+  static bool get isConnected => _socket?.connected ?? false;
 }

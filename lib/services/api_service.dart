@@ -90,6 +90,33 @@ class ApiService {
     }
   }
 
+
+  Future<http.Response> postRaw(
+      String endpoint,
+      dynamic data, {
+        bool authReq = false,
+      }) async {
+    try {
+      final headers = await _getHeaders(authReq);
+      final uri = Uri.parse('$baseUrl$endpoint');
+
+      final response = await http.post(
+        uri,
+        headers: headers,
+        body: jsonEncode(data), // can be a List or Map
+      );
+
+      if (showAPICalls) _logResponse(response, 'POST', uri);
+      _checkTokenExpiry(authReq, response);
+
+      return response;
+    } catch (e) {
+      debugPrint('❗ POST RAW Error: $e');
+      throw Exception('Something went wrong. Please try again.');
+    }
+  }
+
+
   // Read
   Future<http.Response> get(
     String endpoint, {

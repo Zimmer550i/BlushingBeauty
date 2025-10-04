@@ -103,7 +103,7 @@ class UserController extends GetxController {
   }
 
   String? addBaseUrl(String image){
-    if(image == null || image.isEmpty){
+    if(image.isEmpty){
       return null;
     }
 
