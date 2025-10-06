@@ -68,7 +68,7 @@ class UserController extends GetxController {
         );
       }
 
-      final response = await api.postMultipartData(
+      final response = await api.patchMultipartData(
         "/user/update-profile",
         body,
         authReq: true,

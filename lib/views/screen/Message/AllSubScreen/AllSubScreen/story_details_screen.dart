@@ -85,7 +85,7 @@ class _StoryDetailsScreenState extends State<StoryDetailsScreen> {
                         onTap: () {
                           Get.to(()=> VideoPreviewScreen(
                               videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
-                              countdownSeconds: 3
+                              countdownSeconds: 3, userProfile: '', userName: '',
                           ));
               },
                         child: Container(

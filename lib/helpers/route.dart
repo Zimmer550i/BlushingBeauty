@@ -23,7 +23,7 @@ class AppRoutes{
 
  static List<GetPage> page=[
     GetPage(name:splashScreen, page: ()=>const SplashScreen()),
-    GetPage(name:messageScreen, page: ()=>const MessageScreen()),
+    GetPage(name:messageScreen, page: ()=> MessageScreen()),
     GetPage(name:cameraScreen, page: ()=> CameraScreen(
       cameras: cameras ?? [],
     )),

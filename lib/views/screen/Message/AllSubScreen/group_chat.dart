@@ -11,16 +11,15 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../../../services/shared_prefs_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-
 import '../../../../utils/media_store.dart';
 
-class ChatScreen extends StatefulWidget {
+class GroupChatScreen extends StatefulWidget {
   final String chatId;
   final String receiverName;
   final String currentUserId;
   final String receiverImage;
 
-  const ChatScreen({
+  const GroupChatScreen({
     super.key,
     required this.chatId,
     required this.receiverName,
@@ -29,10 +28,10 @@ class ChatScreen extends StatefulWidget {
   });
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  State<GroupChatScreen> createState() => _GroupChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _GroupChatScreenState extends State<GroupChatScreen> {
   final UserController userController = Get.put(UserController());
   final ChatController chatController = Get.put(ChatController());
 
@@ -191,15 +190,15 @@ class _ChatScreenState extends State<ChatScreen> {
         color: msg["isMe"] ? const Color(0xFF56BBFF) : const Color(0xFFECECEC),
         borderRadius: msg["isMe"]
             ? const BorderRadius.only(
-                topLeft: Radius.circular(100),
-                topRight: Radius.circular(24),
-                bottomLeft: Radius.circular(100),
-              )
+          topLeft: Radius.circular(100),
+          topRight: Radius.circular(24),
+          bottomLeft: Radius.circular(100),
+        )
             : const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(100),
-                bottomRight: Radius.circular(100),
-              ),
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(100),
+          bottomRight: Radius.circular(100),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,

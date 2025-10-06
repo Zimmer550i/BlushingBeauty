@@ -151,9 +151,13 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
 
             CustomButton(
-              onTap: () => Get.to(() => CreateGroupScreen()),
+              onTap: () {
+                final matched = contactController.matchedContacts;
+                Get.to(() => CreateGroupScreen(matchedContacts: matched));
+              },
               text: "Create Group",
             ),
+
           ],
         ),
       ),

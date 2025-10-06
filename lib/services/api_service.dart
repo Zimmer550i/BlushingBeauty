@@ -226,7 +226,7 @@ class ApiService {
     }
   }
 
-  Future<http.Response> postMultipartData(
+  Future<http.Response> patchMultipartData(
       String endpoint,
       Map<String, dynamic> body, {
         required List<MultipartBody> multipartBody,
@@ -283,6 +283,66 @@ class ApiService {
       throw Exception('Something went wrong while uploading. Please try again.');
     }
   }
+
+
+  Future<http.Response> postMultipartData(
+      String endpoint,
+      Map<String, dynamic> body, {
+        required List<MultipartBody> multipartBody,
+        bool authReq = false,
+      }) async {
+    try {
+      final apiService = ApiService();
+      final headers = await apiService._getHeaders(authReq);
+      final uri = Uri.parse('${apiService.baseUrl}$endpoint');
+
+      debugPrint('====> API Call: $uri');
+      debugPrint('====> Headers: $headers');
+      debugPrint('====> Body Fields: $body');
+      debugPrint('====> Uploading ${multipartBody.length} file(s)');
+
+      // 👇 Use POST here
+      var request = http.MultipartRequest('POST', uri);
+      request.headers.addAll(headers);
+
+      // Add normal fields
+      body.forEach((key, value) {
+        if (value != null) {
+          request.fields[key] = value.toString();
+        }
+      });
+
+      // Add file fields
+      for (MultipartBody element in multipartBody) {
+        final mimeType = lookupMimeType(element.file.path);
+        final mediaType = _getMediaType(mimeType);
+
+        debugPrint("📤 Uploading file: ${element.file.path} [${mediaType.mimeType}]");
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            element.key,
+            element.file.path,
+            contentType: mediaType,
+          ),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (apiService.showAPICalls) {
+        apiService._logResponse(response, 'POST-MULTIPART', uri);
+      }
+
+      apiService._checkTokenExpiry(authReq, response);
+      return response;
+    } catch (e) {
+      debugPrint("❗ Upload exception: $e");
+      throw Exception('Something went wrong while uploading. Please try again.');
+    }
+  }
+
 
   /// Helper method to get MediaType from mime string
   static MediaType _getMediaType(String? mimeType) {
