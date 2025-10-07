@@ -17,14 +17,12 @@ import '../../../../utils/media_store.dart';
 class ChatScreen extends StatefulWidget {
   final String chatId;
   final String receiverName;
-  final String currentUserId;
   final String receiverImage;
 
   const ChatScreen({
     super.key,
     required this.chatId,
     required this.receiverName,
-    required this.currentUserId,
     required this.receiverImage,
   });
 
@@ -42,16 +40,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String? image;
   String? token;
+  String? currentUserId;
 
   @override
   void initState() {
     super.initState();
     setData();
 
+
     /// Initialize chat (fetch + socket)
     chatController.initChat(
       chatId: widget.chatId,
-      currentUserId: widget.currentUserId,
+      currentUserId: currentUserId.toString(),
       token: token.toString(),
     );
   }
@@ -66,6 +66,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> setData() async {
     image = userController.addBaseUrl(widget.receiverImage);
+    currentUserId = userController.userInfo.value!.id;
     token = await SharedPrefsService.get('token');
   }
 
@@ -97,12 +98,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  InkWell(
-                    onTap: () => Get.to(() => GroupDetailsScreen()),
-                    child: CircleAvatar(
-                      radius: 22,
-                      backgroundImage: NetworkImage(image.toString()),
-                    ),
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundImage: NetworkImage(image.toString()),
                   ),
                   const SizedBox(width: 12),
                   Text(

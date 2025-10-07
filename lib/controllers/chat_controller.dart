@@ -93,7 +93,7 @@ class ChatController extends GetxController {
   }
 
   Future<void> createPrivateChat(
-      String name, String image, String memberId, String currentUserId) async {
+      String name, String image, String memberId) async {
     isLoading.value = true;
     try {
       final response = await api.post(
@@ -109,7 +109,6 @@ class ChatController extends GetxController {
         Get.to(() => ChatScreen(
           chatId: chatId,
           receiverName: name,
-          currentUserId: currentUserId,
           receiverImage: image,
         ));
       } else {
@@ -139,9 +138,8 @@ class ChatController extends GetxController {
 
         Get.to(() => GroupChatScreen(
           chatId: chatId,
-          receiverName: "Group Chat",
-          currentUserId: _currentUserId,
-          receiverImage: "",
+          groupName: "Group Chat",
+          groupImage: "",
         ));
       } else {
         debugPrint("⚠️ Failed: ${body['message']}");
@@ -283,8 +281,6 @@ class ChatController extends GetxController {
       );
     }
   }
-
-
 
   /// Pick and send video
   Future<void> pickAndSendVideo() async {

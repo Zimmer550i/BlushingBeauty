@@ -99,7 +99,6 @@ class _ContactScreenState extends State<ContactScreen> {
                                 c["name"],
                                 c['image'],
                                 c["_id"],
-                                userController.userInfo.value!.id.toString()
                               );
                             },
                             child: SvgPicture.asset(

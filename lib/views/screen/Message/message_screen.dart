@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/controllers/home_controller.dart';
+import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/services/api_service.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/group_chat.dart';
 
 import '../../base/bottom_menu..dart';
 import '../Notification/notification_screen.dart';
 import 'AllSubScreen/AllSubScreen/search_screen.dart';
+import 'AllSubScreen/chat_screen.dart';
 
 class MessageScreen extends StatefulWidget {
   const MessageScreen({super.key});
@@ -18,6 +23,8 @@ class MessageScreen extends StatefulWidget {
 
 class _MessageScreenState extends State<MessageScreen> {
   final HomeController controller = Get.put(HomeController());
+  final ChatController chatController = Get.put(ChatController());
+  final UserController userController = Get.put(UserController());
   final ScrollController _chatScrollController = ScrollController();
   final ScrollController _storyScrollController = ScrollController();
 
@@ -84,6 +91,14 @@ class _MessageScreenState extends State<MessageScreen> {
                     children: [
                       _buildStoriesSection(),
                       const SizedBox(height: 24),
+                      Text(
+                        "Chats",
+                        style: TextStyle(
+                          color: Color(0xFF413E3E),
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       _buildChatList(),
                       if (_isFetchingMoreChats)
                         const Center(
@@ -103,15 +118,17 @@ class _MessageScreenState extends State<MessageScreen> {
     );
   }
 
-  /// ============================
-  /// 🔹 Top Bar
-  /// ============================
+  /// Top Bar
   Widget _buildTopBar() {
     return Row(
       children: [
         _logoBox(),
         const Spacer(),
-        _iconButton('assets/icons/add.svg'),
+        _iconButton('assets/icons/add.svg',
+        onTap: (){
+
+        }
+        ),
         const SizedBox(width: 12),
         _iconButton(
           'assets/icons/search.svg',
@@ -199,16 +216,15 @@ class _MessageScreenState extends State<MessageScreen> {
     );
   }
 
-  /// ============================
-  /// 🔹 Stories Section
-  /// ============================
+
+  /// Stories Section
   Widget _buildStoriesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
           onTap: () {
-            // navigate to SeeAllStoryScreen
+            Get.to(()=> SeeAllStoryScreen());
           },
           child: Align(
             alignment: Alignment.centerRight,
@@ -224,7 +240,7 @@ class _MessageScreenState extends State<MessageScreen> {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 132,
+          height: 170, // taller cards
           child: Obx(() {
             if (controller.isLoadingStories.value &&
                 controller.stories.isEmpty) {
@@ -241,11 +257,11 @@ class _MessageScreenState extends State<MessageScreen> {
                 if (index > controller.stories.length) {
                   return _isFetchingMoreStories
                       ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: CircularProgressIndicator(),
-                          ),
-                        )
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
                       : const SizedBox();
                 }
 
@@ -255,9 +271,17 @@ class _MessageScreenState extends State<MessageScreen> {
                     ? "${ApiService().devUrl}${story["image"]}"
                     : "${ApiService().devUrl}${story["video"]}";
 
+                // handle author safely
+                String authorName = "User";
+                if (story["author"] is Map) {
+                  authorName = story["author"]["name"] ?? "User";
+                } else if (story["author"] is String) {
+                  authorName = "User"; // fallback, don’t show Mongo ID
+                }
+
                 return _buildStoryCard(
                   mediaUrl,
-                  story["author"]?["name"] ?? "User",
+                  authorName,
                   isVideo,
                 );
               },
@@ -268,62 +292,74 @@ class _MessageScreenState extends State<MessageScreen> {
     );
   }
 
+  /// ✅ Add Story Card
   Widget _buildAddStoryCard() {
+    final image = userController.userInfo.value!.image;
+    final userImage = userController.addBaseUrl(image.toString());
     return Container(
-      margin: const EdgeInsets.only(right: 8),
+      margin: const EdgeInsets.only(left: 12, right: 8),
       width: 100,
+      height: 132,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: Colors.grey.shade300,
-      ),
-      child: const Center(
-        child: Icon(Icons.add, size: 30, color: Colors.black),
-      ),
-    );
-  }
-
-  Widget _buildStoryCard(String url, String name, bool isVideo) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      width: 100,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(8),
+          topLeft: Radius.circular(8),
+        ),
+        image: DecorationImage(
+          image: NetworkImage(userImage.toString()),
+          fit: BoxFit.cover,
+        ),
       ),
       child: Stack(
         children: [
-          if (isVideo)
-            Center(
+          // Left overlay
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(8),
+                topLeft: Radius.circular(8),
+              ),
               child: Container(
-                height: 26,
-                width: 26,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primaryColor,
-                  border: Border.all(color: Colors.white, width: 1),
-                ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                width: 56, // ~half width overlay
+                color: AppColors.primaryColor.withOpacity(0.56),
               ),
             ),
-          Positioned(
+          ),
+
+          // Text
+          const Positioned(
+            left: 10,
+            top: 50,
             bottom: 0,
-            left: 0,
-            right: 0,
+            child: Text(
+              "Add\nStory",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                height: 1.2,
+              ),
+            ),
+          ),
+
+          // Camera button
+          Positioned(
+            left: 15,
+            bottom: 50,
             child: Container(
-              padding: const EdgeInsets.all(6),
-              color: Colors.black54,
-              child: Text(
-                name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: SvgPicture.asset(
+                  'assets/icons/camera.svg',
+                  color: AppColors.primaryColor,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
@@ -332,10 +368,84 @@ class _MessageScreenState extends State<MessageScreen> {
     );
   }
 
-  /// ============================
-  /// 🔹 Chats Section
-  /// ============================
+  /// ✅ Story Card (image/video)
+  Widget _buildStoryCard(String imageUrl, String name, bool isVideo) {
+    const double cardW = 100;
+    const double cardH = 132;
+    const double barH = 32;
+
+    return Container(
+      margin: const EdgeInsets.only(right: 12),
+      width: cardW,
+      height: cardH,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // bg image
+            Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.high,
+            ),
+
+            // centered play button (blue circle with white icon)
+            if (isVideo)
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primaryColor,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Icons.play_arrow, color: Colors.white, size: 26),
+                ),
+              ),
+
+            // solid black bottom bar with name
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                height: barH,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                alignment: Alignment.centerLeft,
+                color: Colors.black.withValues(alpha: .42), // solid
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  ///Chats Section
   Widget _buildChatList() {
+    final currentUserId = userController.userInfo.value?.id ?? "";
+
     return Obx(() {
       if (controller.isLoadingChats.value &&
           controller.privateChats.isEmpty &&
@@ -348,22 +458,219 @@ class _MessageScreenState extends State<MessageScreen> {
       if (allChats.isEmpty) {
         return const Center(child: Text("No chats found"));
       }
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: allChats.length,
+        padding: EdgeInsets.zero,
+        separatorBuilder: (_, __) => const SizedBox(height: 1),
+        itemBuilder: (context, index) {
+          var chat = allChats[index];
+          String name = chat["name"] ?? "Unknown";
+          String image = chat["image"] ?? "";
+          String chatId = chat["_id"] ?? "";
 
-      return Column(
-        children: allChats.map((chat) {
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.grey.shade300,
-              child: Text(chat["name"]?[0] ?? "?"),
-            ),
-            title: Text(chat["name"] ?? "Unknown"),
-            subtitle: Text(controller.getLastMessage(chat)),
-            onTap: () {
-              // Navigate to chat detail screen
-            },
-          );
-        }).toList(),
+          if (chat["type"] == "private") {
+            final members = chat["members"] as List? ?? [];
+            final other = members.firstWhere(
+                  (m) => m["_id"] != currentUserId,
+              orElse: () => null,
+            );
+            if (other != null) {
+              name = other["name"] ?? name;
+              image = other["image"] ?? image;
+            }
+          }
+
+          final imageWithBaseUrl = userController.addBaseUrl(image);
+          final lastMsg = controller.getLastMessage(chat);
+          final lastTime = chat["lastMessage"]?["createdAt"] ?? "";
+
+          String formattedTime = "";
+          if (lastTime.isNotEmpty) {
+            final dt = DateTime.tryParse(lastTime);
+            if (dt != null) {
+              final now = DateTime.now();
+              if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
+                formattedTime = "${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
+              } else if (dt.difference(now).inDays == -1) {
+                formattedTime = "Yesterday";
+              } else {
+                formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
+              }
+            }
+          }
+
+          if(chat["type"] == "private"){
+            return InkWell(
+              onTap: () {
+                Get.to(() => ChatScreen(
+                  chatId: chatId,
+                  receiverName: name,
+                  receiverImage: image,
+                ));
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.grey.shade300,
+                      backgroundImage: image.isNotEmpty
+                          ? NetworkImage(imageWithBaseUrl.toString())
+                          : null,
+                      child: image.isEmpty
+                          ? Text(name.isNotEmpty ? name[0].toUpperCase() : "?")
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              if (chat["isOnline"] == true)
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            lastMsg,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: lastMsg.contains("Video") || lastMsg.contains("Image")
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: lastMsg.contains("Video") || lastMsg.contains("Image")
+                                  ? Colors.black
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      formattedTime,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }else{
+            return InkWell(
+              onTap: () {
+                Get.to(() => GroupChatScreen(
+                  chatId: chatId,
+                  groupName: name,
+                  groupImage: image,
+                ));
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.grey.shade300,
+                      backgroundImage: image.isNotEmpty
+                          ? NetworkImage(imageWithBaseUrl.toString())
+                          : null,
+                      child: image.isEmpty
+                          ? Text(name.isNotEmpty ? name[0].toUpperCase() : "?")
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              if (chat["isOnline"] == true)
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            lastMsg,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: lastMsg.contains("Video") || lastMsg.contains("Image")
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: lastMsg.contains("Video") || lastMsg.contains("Image")
+                                  ? Colors.black
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      formattedTime,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+        },
       );
     });
   }
+
+  /// Helper for month names
+  String _monthName(int month) {
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    return months[month - 1];
+  }
+
+
 }

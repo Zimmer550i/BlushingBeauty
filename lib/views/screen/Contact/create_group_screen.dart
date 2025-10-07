@@ -20,6 +20,7 @@ class CreateGroupScreen extends StatefulWidget {
 
 
 class _CreateGroupScreenState extends State<CreateGroupScreen> {
+  final chatController = Get.put(ChatController());
   final searchTextController = TextEditingController();
 
   late List<Map<String, dynamic>> searchFriendList;
@@ -118,8 +119,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   );
                   return;
                 }
-
-                final chatController = Get.find<ChatController>();
                 chatController.createGroupChat(selected);
               },
               text: "Create Now",

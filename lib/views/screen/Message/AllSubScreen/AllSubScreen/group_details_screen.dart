@@ -1,322 +1,298 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_dropdown.dart';
-import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import '../../../../../controllers/group_chat_controller.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
-  const GroupDetailsScreen({super.key});
+  final String chatId;
+  final String groupName;
+  final String groupImage;
+
+  const GroupDetailsScreen({
+    super.key,
+    required this.chatId,
+    required this.groupName,
+    required this.groupImage,
+  });
 
   @override
   State<GroupDetailsScreen> createState() => _GroupDetailsScreenState();
 }
 
-class _GroupDetailsScreenState extends State<GroupDetailsScreen> with TickerProviderStateMixin{
-  bool showMembers = false;
+class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
+  final GroupChatController controller = Get.put(GroupChatController());
+  final UserController userController = Get.put(UserController());
+  final TextEditingController _nameController = TextEditingController();
 
-  final List<Map<String, dynamic>> searchFriendList = [
-    {"name": "Mr. John", "image": "assets/images/dummy.jpg"},
-    {"name": "Ms. Alice", "image": "assets/images/dummy.jpg"},
-    {"name": "Mr. Smith", "image": "assets/images/dummy.jpg"},
-  ];
-  final sendTextController = TextEditingController();
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+  String? imageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    controller.fetchGroupDetails(widget.chatId);
+
+    ever(controller.groupImage, (_) {
+      setState(() {
+        imageUrl = controller.groupImage.value.isNotEmpty
+            ? controller.groupImage.value.startsWith("http")
+            ? controller.groupImage.value
+            : userController.addBaseUrl(controller.groupImage.value)
+            : "";
+      });
+    });
+  }
+
+
+  Future<void> _chooseImageSource() async {
+    final XFile? pickedFile = await showModalBottomSheet<XFile?>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text("Pick from Gallery"),
+              onTap: () async {
+                Navigator.pop(
+                  ctx,
+                  await _picker.pickImage(source: ImageSource.gallery),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text("Take a Photo"),
+              onTap: () async {
+                Navigator.pop(
+                  ctx,
+                  await _picker.pickImage(source: ImageSource.camera),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+
+      /// ✅ only send image (not fake name)
+      controller.updateGroup(
+        widget.chatId,
+        image: _profileImage,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: SafeArea(
+        child: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            SizedBox(height: 30,),
-
-            Row(
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                InkWell(
-                  onTap: (){
-                    Get.back();
-                  },
-                  child: Icon(Icons.arrow_back,
-                    color: Color(0xFF0D1C12),),
-                ),
-                SizedBox(width: 12,),
-                InkWell(
-                  onTap: (){
-
-                  },
-                  child: Container(
-                    height: 44,
-                    width: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: AssetImage("assets/images/dummy.jpg"),
-                        fit: BoxFit.cover,
-                      ),
-
+                /// Top bar
+                Row(
+                  children: [
+                    InkWell(
+                      onTap: () => Get.back(),
+                      child: const Icon(Icons.arrow_back, color: Colors.black),
                     ),
-                  ),
-                ),
-
-                SizedBox(width: 12,),
-                Text("Mr.John",
-                  style: TextStyle(
-                    color: Color(0xFF413E3E),
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                  ),)
-              ],
-            ),
-            SizedBox(height: 24,),
-
-            Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    height: 200,
-                    width: 200,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: AssetImage("assets/images/group_image.jpg"),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 10,
-                    right: 10,
-                    child: Container(
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primaryColor,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SvgPicture.asset('assets/icons/camera.svg',
-                        color: Colors.white,),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-            SizedBox(height: 50,),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.primaryColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Change Group Name",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),),
-                      Container(
-                        height: 24,
-                        width: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+          controller.groupName.value.isNotEmpty ? controller.groupName.value : "Group",
+          style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF413E3E),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        child: Icon(Icons.keyboard_arrow_up,
-                        color: AppColors.primaryColor,),
-                      )
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                /// Group image
+                Center(
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundImage: (imageUrl?.isNotEmpty ?? false)
+                            ? NetworkImage(imageUrl!)
+                            : null,
+                        child: (imageUrl == null || imageUrl!.isEmpty)
+                            ? Text(
+                          controller.groupName.value.isNotEmpty
+                              ? controller.groupName.value[0].toUpperCase()
+                              : "?",
+                          style: const TextStyle(
+                              fontSize: 28, fontWeight: FontWeight.bold),
+                        )
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: InkWell(
+                          onTap: _chooseImageSource,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryColor,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt,
+                                size: 20, color: Colors.white),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  SizedBox(height: 12,),
-                  CustomTextField(controller: sendTextController,
-                  hintText: 'Write here',),
+                ),
 
-                ],
+                const SizedBox(height: 20),
+
+                /// Change group name
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF56BBFF).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Change Group Name",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF413E3E))),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          hintText: "Write here",
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.transparent),
+                          ),
+                          isDense: true,
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: InkWell(
+                          onTap: () {
+                            final newName = _nameController.text.trim();
+                            if (newName.isNotEmpty) {
+                              controller.updateGroup(
+                                widget.chatId,
+                                name: newName,
+                              );
+                            } else {
+                              Get.snackbar("Error", "Group name cannot be empty");
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              "Update",
+                              style:
+                              TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                /// Members
+                _buildMembersList(),
+
+                /// Options
+                _optionTile("Add members", onTap: () {
+
+                }),
+                _optionTile("Delete chat", onTap: () {
+                  controller.deleteGroup(widget.chatId);
+                }),
+
+                _optionTile("Leave chat", onTap: () {
+                  controller.leaveGroup(widget.chatId);
+                }),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _optionTile(String title, {VoidCallback? onTap, Widget? trailing}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF413E3E),
               ),
             ),
-            SizedBox(height: 24,),
-            CustomDropdown(items: searchFriendList),
-            SizedBox(height: 12,),
-            InkWell(
-              onTap: (){
-                showDialog(
-                    context: context,
-                    builder: (context){
-                      return AlertDialog(
-                        backgroundColor: Color(0xFFC4C3C3),
-                        clipBehavior: Clip.antiAliasWithSaveLayer,
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text("Are you sure you want to delete this chat?",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w400,
-                            ),
-                            textAlign: TextAlign.center,),
-                            SizedBox(height: 30,),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: (){
-                                      Get.back();
-                                    },
-                                    child: Container(
-                                      height: 52,
-                                      width: 82,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: Color(0xFFFFFFFF), width: 1)
-                                      ),
-                                      child: Center(
-                                        child: Text("Yes",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),),
-                                      ),
-                                ))),
-                                SizedBox(width: 24,),
-                                Expanded(
-                                    child: InkWell(
-                                        onTap: (){
-                                          Get.back();
-                                        },
-                                        child: Container(
-                                          height: 52,
-                                          width: 187,
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(8),
-                                            color: Colors.white
-                                          ),
-                                          child: Center(
-                                            child: Text("No",
-                                              style: TextStyle(
-                                                color: Color(0xFF676565),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                              ),),
-                                          ),
-                                        ))),
-
-                              ],
-                            )
-                          ],
-                        ),
-                      );
-                    });
-              },
-              child: Text("Delete chat",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 18,
-                fontWeight: FontWeight.w400,
-              ),),
-            ),
-            SizedBox(height: 12,),
-            InkWell(
-              onTap: (){
-                showDialog(
-                    context: context,
-                    builder: (context){
-                      return AlertDialog(
-                        backgroundColor: Color(0xFFC4C3C3),
-                        clipBehavior: Clip.antiAliasWithSaveLayer,
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text("Are you sure you want to leave this group?",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              textAlign: TextAlign.center,),
-                            SizedBox(height: 30,),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                    child: InkWell(
-                                        onTap: (){
-                                          Get.back();
-                                        },
-                                        child: Container(
-                                          height: 52,
-                                          width: 82,
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(8),
-                                              border: Border.all(color: Color(0xFFFFFFFF), width: 1)
-                                          ),
-                                          child: Center(
-                                            child: Text("Yes",
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                              ),),
-                                          ),
-                                        ))),
-                                SizedBox(width: 24,),
-                                Expanded(
-                                    child: InkWell(
-                                        onTap: (){
-                                          Get.back();
-                                        },
-                                        child: Container(
-                                          height: 52,
-                                          width: 187,
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(8),
-                                              color: Colors.white
-                                          ),
-                                          child: Center(
-                                            child: Text("No",
-                                              style: TextStyle(
-                                                color: Color(0xFF676565),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                              ),),
-                                          ),
-                                        ))),
-
-                              ],
-                            )
-                          ],
-                        ),
-                      );
-                    });
-              },
-              child: Text("Leave chat",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 18,
-                fontWeight: FontWeight.w400,
-              ),),
-            )
-
+            const Spacer(),
+            if (trailing != null) trailing,
           ],
         ),
       ),
     );
   }
+
+  Widget _buildMembersList() {
+    final members = controller.members.map((m) {
+      return {
+        "name": m["name"],
+        "image": userController.addBaseUrl(m["image"]),
+        "_id": m["_id"],
+      };
+    }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, bottom: 20),
+      child: CustomDropdown(
+        items: members,
+        chatId: widget.chatId,
+      ),
+    );
+  }
 }
-
-

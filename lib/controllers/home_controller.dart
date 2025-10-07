@@ -1,10 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:ree_social_media_app/services/api_service.dart';
+
+import '../models/multi_body.dart';
+import '../services/socket_manager.dart';
 
 class HomeController extends GetxController {
   final ApiService _apiService = ApiService();
+  final ImagePicker _picker = ImagePicker();
 
   ///Private & Group Chats
   var privateChats = <dynamic>[].obs;
@@ -28,14 +34,18 @@ class HomeController extends GetxController {
 
   ///Fetch Stories (with pagination)
   Future<String?> getAllStories({int limit = 20, bool loadMore = false}) async {
-    if (isLoadingStories.value || !hasMoreStories.value) return null;
+    // stop if already loading or no more stories when loading more
+    if (isLoadingStories.value || (loadMore && !hasMoreStories.value)) {
+      return null;
+    }
 
     if (!loadMore) {
-      storyPage.value = 1; // reset on fresh load
+      storyPage.value = 1;
       stories.clear();
     }
 
     isLoadingStories.value = true;
+
     try {
       final response = await _apiService.get(
         "/story/all-stories",
@@ -50,23 +60,31 @@ class HomeController extends GetxController {
         final body = jsonDecode(response.body);
 
         if (body["success"] == true) {
-          final List newStories = body["data"] ?? [];
+          final List<dynamic> newStories = body["data"] ?? [];
 
-          if (loadMore) {
-            stories.addAll(newStories);
-          } else {
-            stories.assignAll(newStories);
+          if (newStories.isNotEmpty) {
+            if (loadMore) {
+              stories.addAll(newStories);
+            } else {
+              stories.assignAll(newStories);
+            }
           }
 
-          // pagination check
-          final meta = body["meta"];
-          hasMoreStories.value = storyPage.value < meta["totalPage"];
+          // ✅ Pagination check (with null safety)
+          final meta = body["meta"] ?? {};
+          final totalPage = meta["totalPage"] ?? 1;
+          final currentPage = storyPage.value;
+
+          hasMoreStories.value = currentPage < totalPage;
           if (hasMoreStories.value) storyPage.value++;
+
+          return "success";
+        } else {
+          return body["message"] ?? "Failed to fetch stories";
         }
-        return "success";
       } else {
         debugPrint("⚠️ Fetch stories failed: ${response.body}");
-        return "Something went wrong";
+        return "Something went wrong (${response.statusCode})";
       }
     } catch (e) {
       debugPrint("❌ Error fetching stories: $e");
@@ -151,4 +169,41 @@ class HomeController extends GetxController {
       getAllStories(),
     ]);
   }
+
+  /// Upload media file to API and return URL
+  Future<String?> uploadMedia(File file, {String type = "image"}) async {
+    final multipartBody = [MultipartBody(key: type, file: file)];
+
+    final response = await _apiService.postMultipartData(
+      "/story/create-story",
+      {},
+      multipartBody: multipartBody,
+      authReq: true,
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final resData = jsonDecode(response.body);
+
+      return resData['content'];
+    } else {
+      debugPrint("❗ Upload failed: ${response.body}");
+      return null;
+    }
+  }
+
+
+  /// Pick and send image
+  Future<void> createStory() async {
+    final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+    if (file == null) return;
+    await uploadMedia(File(file.path), type: "image");
+  }
+
+  /// Pick and send video
+  Future<void> pickAndSendVideo() async {
+    final XFile? file = await _picker.pickVideo(source: ImageSource.gallery);
+    if (file == null) return;
+    await uploadMedia(File(file.path), type: "video");
+  }
+
 }

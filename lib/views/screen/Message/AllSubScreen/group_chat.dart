@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/controllers/chat_controller.dart';
+import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/group_details_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
@@ -11,20 +12,19 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../../../services/shared_prefs_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+
 import '../../../../utils/media_store.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final String chatId;
-  final String receiverName;
-  final String currentUserId;
-  final String receiverImage;
+  final String groupName;
+  final String groupImage;
 
   const GroupChatScreen({
     super.key,
     required this.chatId,
-    required this.receiverName,
-    required this.currentUserId,
-    required this.receiverImage,
+    required this.groupName,
+    required this.groupImage,
   });
 
   @override
@@ -37,10 +37,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   final messageTextController = TextEditingController();
 
-
-
   String? image;
   String? token;
+  String? currentUserId;
 
   @override
   void initState() {
@@ -50,7 +49,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     /// Initialize chat (fetch + socket)
     chatController.initChat(
       chatId: widget.chatId,
-      currentUserId: widget.currentUserId,
+      currentUserId: currentUserId.toString(),
       token: token.toString(),
     );
   }
@@ -64,7 +63,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Future<void> setData() async {
-    image = userController.addBaseUrl(widget.receiverImage);
+    image = userController.addBaseUrl(widget.groupImage);
+    currentUserId = userController.userInfo.value!.id;
     token = await SharedPrefsService.get('token');
   }
 
@@ -79,6 +79,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint("Group Chat Screen:=========>");
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -97,19 +98,56 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   ),
                   const SizedBox(width: 12),
                   InkWell(
-                    onTap: () => Get.to(() => GroupDetailsScreen()),
+                    onTap: () => Get.to(
+                          () => GroupDetailsScreen(
+                        chatId: widget.chatId,
+                        groupName: widget.groupName,
+                        groupImage: widget.groupImage,
+                      ),
+                    ),
                     child: CircleAvatar(
                       radius: 22,
-                      backgroundImage: NetworkImage(image.toString()),
+                      backgroundImage: widget.groupImage.isNotEmpty
+                          ? NetworkImage(image.toString())
+                          : null,
+                      child: widget.groupImage.isEmpty
+                          ? Text(
+                              widget.groupName.isNotEmpty
+                                  ? widget.groupName[0].toUpperCase()
+                                  : "?",
+                            )
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    widget.receiverName,
+                    widget.groupName,
                     style: const TextStyle(
                       color: Color(0xFF413E3E),
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  InkWell(
+                    onTap: () => Get.to(
+                          () => GroupDetailsScreen(
+                        chatId: widget.chatId,
+                        groupName: widget.groupName,
+                        groupImage: widget.groupImage,
+                      ),
+                    ),
+                    child: Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.black100),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(7),
+                        child: SvgPicture.asset('assets/icons/more.svg'),
+                      ),
                     ),
                   ),
                 ],
@@ -190,15 +228,15 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         color: msg["isMe"] ? const Color(0xFF56BBFF) : const Color(0xFFECECEC),
         borderRadius: msg["isMe"]
             ? const BorderRadius.only(
-          topLeft: Radius.circular(100),
-          topRight: Radius.circular(24),
-          bottomLeft: Radius.circular(100),
-        )
+                topLeft: Radius.circular(100),
+                topRight: Radius.circular(24),
+                bottomLeft: Radius.circular(100),
+              )
             : const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(100),
-          bottomRight: Radius.circular(100),
-        ),
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(100),
+                bottomRight: Radius.circular(100),
+              ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -302,7 +340,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       videoUrl: localVideo.path, // pass local file
                       countdownSeconds: 3,
                       userProfile: image.toString(),
-                      userName: widget.receiverName,
+                      userName: widget.groupName,
                     ),
                   ),
                 );
@@ -406,8 +444,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   ),
                 ],
               ),
-            )
-
+            ),
           ],
         );
       },
