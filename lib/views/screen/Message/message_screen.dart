@@ -8,7 +8,6 @@ import 'package:ree_social_media_app/services/api_service.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/group_chat.dart';
-
 import '../../base/bottom_menu..dart';
 import '../Notification/notification_screen.dart';
 import 'AllSubScreen/AllSubScreen/search_screen.dart';
@@ -215,7 +214,6 @@ class _MessageScreenState extends State<MessageScreen> {
       ),
     );
   }
-
 
   /// Stories Section
   Widget _buildStoriesSection() {
@@ -671,6 +669,5 @@ class _MessageScreenState extends State<MessageScreen> {
     ];
     return months[month - 1];
   }
-
 
 }

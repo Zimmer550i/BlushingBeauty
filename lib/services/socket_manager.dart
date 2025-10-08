@@ -4,7 +4,6 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 class SocketService {
   static IO.Socket? _socket;
 
-  /// Connect to socket with auth token
   static void connect(String token) {
     if (_socket != null && _socket!.connected) {
       log("⚠️ Socket already connected");
@@ -12,57 +11,81 @@ class SocketService {
     }
 
     _socket = IO.io(
-      'http://10.10.12.54:3000', // TODO: make configurable (env/constant)
+      'http://10.10.12.54:3000',
       IO.OptionBuilder()
-          .setTransports(['websocket']) // use WebSocket only
-          .enableForceNew()
+          .setTransports(['websocket'])
           .disableAutoConnect()
-          .setQuery({'token': token}) // pass token in query
+          .enableForceNew()
+          .setQuery({'token': token})
           .build(),
     );
 
     _socket!.connect();
 
     _socket!.onConnect((_) => log("✅ Socket connected"));
-    _socket!.onDisconnect((_) => log("❌ Socket disconnected"));
     _socket!.onReconnect((_) => log("🔄 Socket reconnected"));
     _socket!.onConnectError((err) => log("🚨 Connect error: $err"));
     _socket!.onError((err) => log("🚨 Error: $err"));
+    _socket!.onDisconnect((_) => log("❌ Socket disconnected"));
   }
 
-  /// Disconnect cleanly
   static void disconnect() {
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
-    log("👋 Socket disposed");
+    log("👋 Socket disconnected and disposed");
   }
 
-  /// =====================
-  /// CHAT EVENTS
-  /// =====================
+  static bool get isConnected => _socket?.connected ?? false;
 
-  /// Subscribe to new messages
-  static void onMessage(void Function(dynamic data) handler) {
-    _socket?.off("receive-message"); // prevent duplicate listeners
-    _socket?.on("receive-message", handler);
+  /// Listen to messages for a specific chatId (dynamic)
+  static void onChatMessage(String chatId, void Function(dynamic data) handler) {
+    if (!isConnected) {
+      log("⚠️ Cannot listen to chat, socket not connected");
+      return;
+    }
+
+    final eventName = "receive-message:$chatId";
+    _socket?.off(eventName); // avoid duplicates
+    _socket?.on(eventName, (data) {
+      log("📩 Message received on $eventName => $data");
+      handler(data);
+    });
+    log("🟢 Subscribed to $eventName");
   }
 
-  /// Subscribe to typing events
-  static void onTyping(void Function(dynamic data) handler) {
-    _socket?.off("typing");
-    _socket?.on("typing", handler);
-  }
-
-  /// Unsubscribe from all events (when leaving chat)
-  static void clearListeners() {
+  /// Optionally: global fallback for systems that emit plain "receive-message"
+  static void onGlobalMessage(void Function(dynamic data) handler) {
     _socket?.off("receive-message");
-    _socket?.off("typing");
+    _socket?.on("receive-message", (data) {
+      log("📩 Global message => $data");
+      handler(data);
+    });
   }
 
-  /// =====================
-  /// MESSAGE EMITS
-  /// =====================
+  /// Listen for typing indicator per chat
+  static void onTyping(String chatId, void Function(dynamic data) handler) {
+    final eventName = "typing:$chatId";
+    _socket?.off(eventName);
+    _socket?.on(eventName, (data) {
+      log("✍️ Typing event on $eventName => $data");
+      handler(data);
+    });
+    log("🟡 Subscribed to typing:$chatId");
+  }
+
+  /// Unsubscribe from a specific chat’s events
+  static void clearChatListeners(String chatId) {
+    _socket?.off("receive-message:$chatId");
+    _socket?.off("typing:$chatId");
+    log("🛑 Cleared listeners for chat: $chatId");
+  }
+
+  /// Remove all listeners (global cleanup)
+  static void clearAllListeners() {
+    _socket?.clearListeners();
+    log("🧹 Cleared all socket listeners");
+  }
 
   static void sendText({
     required String chatId,
@@ -79,7 +102,7 @@ class SocketService {
       "message": message,
       "contentType": "text",
     });
-    log("➡️ Sent text: $message");
+    log("➡️ Sent text: $message to chat: $chatId");
   }
 
   static void sendImage({
@@ -94,7 +117,7 @@ class SocketService {
       "media": mediaUrl,
       "contentType": "image",
     });
-    log("➡️ Sent image: $mediaUrl");
+    log("➡️ Sent image: $mediaUrl to chat: $chatId");
   }
 
   static void sendVideo({
@@ -109,7 +132,7 @@ class SocketService {
       "media": mediaUrl,
       "contentType": "video",
     });
-    log("➡️ Sent video: $mediaUrl");
+    log("➡️ Sent video: $mediaUrl to chat: $chatId");
   }
 
   static void sendTyping({
@@ -123,11 +146,6 @@ class SocketService {
       "sender": senderId,
       "isTyping": isTyping,
     });
-    log("✍️ Typing: $isTyping");
+    log("✍️ Typing [$isTyping] in chat: $chatId");
   }
-
-  /// =====================
-  /// HELPERS
-  /// =====================
-  static bool get isConnected => _socket?.connected ?? false;
 }

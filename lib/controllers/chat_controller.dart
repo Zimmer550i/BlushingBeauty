@@ -2,34 +2,35 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/group_chat.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
+
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
 import '../services/socket_manager.dart';
 import '../views/screen/Message/AllSubScreen/chat_screen.dart';
-import 'package:image_picker/image_picker.dart';
+import '../views/screen/Message/AllSubScreen/group_chat.dart';
 
 class ChatController extends GetxController {
   final api = ApiService();
 
-  /// Reactive state
+  /// Reactive State
   final RxBool isLoading = false.obs;
   final RxBool isPaginating = false.obs;
   final RxList<Map<String, dynamic>> messages = <Map<String, dynamic>>[].obs;
+
   final ImagePicker _picker = ImagePicker();
+  late ScrollController scrollController;
 
   /// Pagination
   int _currentPage = 1;
   final int _limit = 15;
   bool _hasMore = true;
 
-  /// Scroll
-  late ScrollController scrollController;
-
-  /// Current session
+  /// Session data
   late String _chatId;
   late String _currentUserId;
+  late String _token;
 
   @override
   void onInit() {
@@ -37,10 +38,15 @@ class ChatController extends GetxController {
     scrollController = ScrollController();
   }
 
-  void disconnect() {
-    SocketService.clearListeners();
-    SocketService.disconnect();
+  @override
+  void onClose() {
+    disconnect();
     super.onClose();
+  }
+
+  void disconnect() {
+    SocketService.clearChatListeners(_chatId);
+    SocketService.disconnect();
   }
 
   // ==============================
@@ -54,43 +60,45 @@ class ChatController extends GetxController {
   }) async {
     _chatId = chatId;
     _currentUserId = currentUserId;
+    _token = token;
 
-    // 1. Fetch initial messages
+    /// 1️⃣ Fetch initial messages
     await fetchMessages();
 
-    // 2. Connect socket
+    /// 2️⃣ Connect to socket
     SocketService.connect(token);
 
-    // 3. Listen for new messages
-    SocketService.onMessage((data) {
-      final msg = _mapMessage(data, _currentUserId);
+    /// 3️⃣ Delay a bit to ensure connection is ready
+    Future.delayed(const Duration(milliseconds: 500), () {
+      /// ✅ Listen for messages only for this chat
+      SocketService.onChatMessage(_chatId, (data) {
+        final msg = _mapMessage(data, _currentUserId);
 
-      if (msg["isMe"]) {
-        // 👇 find temp with same text
-        final idx = messages.indexWhere(
-              (m) => m["temp"] == true && m["message"] == msg["message"],
-        );
-
-        if (idx != -1) {
-          // replace temporary with real
-          messages[idx] = msg;
+        if (msg["isMe"]) {
+          final idx = messages.indexWhere(
+                (m) => m["temp"] == true && m["message"] == msg["message"],
+          );
+          if (idx != -1) {
+            messages[idx] = msg;
+          } else {
+            messages.insert(0, msg);
+          }
         } else {
           messages.insert(0, msg);
         }
-      } else {
-        // Other user’s message → just insert
-        messages.insert(0, msg);
-      }
+        _scrollToBottom();
+      });
 
-      _scrollToBottom();
-    });
-
-
-    // 4. Typing
-    SocketService.onTyping((data) {
-      debugPrint("✍️ Typing: $data");
+      /// ✍️ Typing listener
+      SocketService.onTyping(_chatId, (data) {
+        debugPrint("✍️ Typing: $data");
+      });
     });
   }
+
+  // ==============================
+  // CREATE CHATS
+  // ==============================
 
   Future<void> createPrivateChat(
       String name, String image, String memberId) async {
@@ -101,11 +109,10 @@ class ChatController extends GetxController {
         {"member": memberId},
         authReq: true,
       );
-      final body = jsonDecode(response.body);
 
+      final body = jsonDecode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final chatId = body['data']['_id'];
-
         Get.to(() => ChatScreen(
           chatId: chatId,
           receiverName: name,
@@ -121,7 +128,6 @@ class ChatController extends GetxController {
     }
   }
 
-
   Future<void> createGroupChat(List<String> memberIds) async {
     isLoading.value = true;
     try {
@@ -132,10 +138,8 @@ class ChatController extends GetxController {
       );
 
       final body = jsonDecode(response.body);
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final chatId = body['data']['_id'];
-
         Get.to(() => GroupChatScreen(
           chatId: chatId,
           groupName: "Group Chat",
@@ -151,9 +155,8 @@ class ChatController extends GetxController {
     }
   }
 
-
   // ==============================
-  // API MESSAGES
+  // FETCH MESSAGES (API)
   // ==============================
 
   Future<void> fetchMessages() async {
@@ -192,14 +195,11 @@ class ChatController extends GetxController {
               .toList();
 
           if (appendBottom) {
-            // 👇 for first load or new fetch: reverse insert
             messages.insertAll(0, mapped);
             _scrollToBottom();
           } else {
-            // 👇 load older → append at end (because reverse: true flips it)
             messages.addAll(mapped);
           }
-
           _currentPage++;
         }
       }
@@ -218,7 +218,7 @@ class ChatController extends GetxController {
   }
 
   // ==============================
-  // SOCKET SEND
+  // SOCKET SEND EVENTS
   // ==============================
 
   void sendText(String text) {
@@ -231,7 +231,7 @@ class ChatController extends GetxController {
     );
 
     messages.insert(0, {
-      "_id": tempId,        // 👈 mark temporary
+      "_id": tempId,
       "isMe": true,
       "type": "text",
       "message": text,
@@ -243,10 +243,8 @@ class ChatController extends GetxController {
     _scrollToBottom();
   }
 
-  /// Upload media file to API and return URL
   Future<String?> uploadMedia(File file, {String type = "image"}) async {
     final multipartBody = [MultipartBody(key: type, file: file)];
-
     final response = await api.postMultipartData(
       "/message/upload",
       {},
@@ -256,8 +254,6 @@ class ChatController extends GetxController {
 
     if (response.statusCode == 200) {
       final resData = jsonDecode(response.body);
-
-      // ✅ API returns mediaUrl at top-level
       return resData['mediaUrl'];
     } else {
       debugPrint("❗ Upload failed: ${response.body}");
@@ -265,14 +261,11 @@ class ChatController extends GetxController {
     }
   }
 
-
-  /// Pick and send image
   Future<void> pickAndSendImage() async {
     final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
     if (file == null) return;
 
     final mediaUrl = await uploadMedia(File(file.path), type: "image");
-
     if (mediaUrl != null) {
       SocketService.sendImage(
         chatId: _chatId,
@@ -282,13 +275,11 @@ class ChatController extends GetxController {
     }
   }
 
-  /// Pick and send video
   Future<void> pickAndSendVideo() async {
     final XFile? file = await _picker.pickVideo(source: ImageSource.gallery);
     if (file == null) return;
 
     final mediaUrl = await uploadMedia(File(file.path), type: "video");
-
     if (mediaUrl != null) {
       SocketService.sendVideo(
         chatId: _chatId,
@@ -297,7 +288,6 @@ class ChatController extends GetxController {
       );
     }
   }
-
 
   void sendTyping(bool isTyping) {
     SocketService.sendTyping(
@@ -330,12 +320,11 @@ class ChatController extends GetxController {
     };
   }
 
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (scrollController.hasClients) {
         scrollController.animateTo(
-          0, // 👈 because reverse:true, "0" is bottom
+          0,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
