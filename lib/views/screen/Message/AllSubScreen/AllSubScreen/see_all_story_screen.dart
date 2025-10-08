@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/story_details_screen.dart';
-import 'package:ree_social_media_app/controllers/home_controller.dart';
+import 'package:ree_social_media_app/controllers/message_controller.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 class SeeAllStoryScreen extends StatelessWidget {
   SeeAllStoryScreen({super.key});
@@ -11,7 +15,7 @@ class SeeAllStoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final HomeController homeController = Get.find<HomeController>();
+    final MessageController homeController = Get.find<MessageController>();
 
     return Scaffold(
       body: Padding(
@@ -39,7 +43,7 @@ class SeeAllStoryScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            /// ✅ Stories grid from controller
+            /// ✅ Stories grid
             Expanded(
               child: Obx(() {
                 if (homeController.isLoadingStories.value) {
@@ -47,27 +51,24 @@ class SeeAllStoryScreen extends StatelessWidget {
                 }
 
                 if (homeController.stories.isEmpty) {
-                  return const Center(
-                    child: Text("No stories available"),
-                  );
+                  return const Center(child: Text("No stories available"));
                 }
 
                 return GridView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 4,
+                    crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                     childAspectRatio: 0.9,
                   ),
                   itemCount: homeController.stories.length,
                   itemBuilder: (context, index) {
-                    var story = homeController.stories[index];
-
+                    final story = homeController.stories[index];
                     final type = story["contentType"];
                     final name = story["author"]?["name"] ?? "Unknown";
 
-                    // pick image or video url
+                    // ✅ Determine media URL
                     String? mediaUrl;
                     if (type == "image" && (story["image"] ?? "").isNotEmpty) {
                       mediaUrl = userController.addBaseUrl(story["image"]);
@@ -75,11 +76,11 @@ class SeeAllStoryScreen extends StatelessWidget {
                       mediaUrl = userController.addBaseUrl(story["video"]);
                     }
 
-                    return _buildStoryCard(
-                      mediaUrl,
-                      name,
-                      type == "video",
-                    );
+                    if (mediaUrl == null || mediaUrl.isEmpty) {
+                      return const Center(child: Icon(Icons.error));
+                    }
+
+                    return _buildStoryCard(context, mediaUrl, name, type == "video");
                   },
                 );
               }),
@@ -90,61 +91,137 @@ class SeeAllStoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStoryCard(String? mediaUrl, String name, bool isVideo) {
-    return InkWell(
-      onTap: () => Get.to(() => const StoryDetailsScreen()),
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        width: 100,
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(8),
-            topRight: Radius.circular(8),
-          ),
-          image: DecorationImage(
-            image: (mediaUrl != null && mediaUrl.isNotEmpty)
-                ? NetworkImage(mediaUrl)
-                : const AssetImage("assets/images/dummy.jpg") as ImageProvider,
+  /// ✅ Handles both image & video stories
+  Widget _buildStoryCard(BuildContext context, String mediaUrl, String name, bool isVideo) {
+    const double barH = 32;
+
+    return FutureBuilder<Widget>(
+      future: isVideo
+          ? _buildVideoThumbnailCard(context, mediaUrl, name)
+          : _buildImageCard(mediaUrl, name),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Container(
+            height: 160,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.black12,
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError || !snap.hasData) {
+          return Container(
+            height: 160,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.black26,
+            ),
+            child: const Center(child: Icon(Icons.error, color: Colors.red)),
+          );
+        }
+        return snap.data!;
+      },
+    );
+  }
+
+  /// 🖼️ Image story card
+  Future<Widget> _buildImageCard(String mediaUrl, String name) async {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.network(
+            mediaUrl,
             fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
           ),
-        ),
+          _buildBottomNameBar(name),
+        ],
+      ),
+    );
+  }
+
+  /// 🎬 Video story card (download + thumbnail + open preview)
+  Future<Widget> _buildVideoThumbnailCard(BuildContext context, String videoUrl, String name) async {
+    // Download video locally for thumbnail
+    final localVideo = await _downloadVideoToLocal(videoUrl);
+
+    // Generate thumbnail
+    final thumbPath = await VideoThumbnail.thumbnailFile(
+      video: localVideo.path,
+      imageFormat: ImageFormat.JPEG,
+      maxHeight: 200,
+      quality: 75,
+    );
+
+    return InkWell(
+      onTap: () => Get.to(() => VideoPreviewScreen(
+        videoUrl: localVideo.path,
+        countdownSeconds: 3,
+        userProfile: "", // pass story owner’s profile pic if available
+        userName: name,
+      )),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
         child: Stack(
+          fit: StackFit.expand,
           children: [
-            if (isVideo)
-              Center(
-                child: Container(
-                  height: 26,
-                  width: 26,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primaryColor,
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                  child: const Icon(Icons.play_arrow,
-                      color: Colors.white, size: 16),
-                ),
-              ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
+            if (thumbPath != null)
+              Image.file(File(thumbPath), fit: BoxFit.cover)
+            else
+              Container(color: Colors.black26, child: const Center(child: Icon(Icons.error))),
+            Center(
               child: Container(
-                padding: const EdgeInsets.all(6),
-                color: Colors.black.withValues(alpha: 0.42),
-                child: Text(
-                  name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryColor,
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
+                child: const Icon(Icons.play_arrow, color: Colors.white, size: 26),
               ),
             ),
+            _buildBottomNameBar(name),
           ],
         ),
       ),
     );
+  }
+
+  /// Bottom overlay name bar
+  Widget _buildBottomNameBar(String name) {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: Container(
+        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        alignment: Alignment.centerLeft,
+        color: Colors.black.withOpacity(0.42),
+        child: Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 🧩 Helper: download remote video to temp folder
+  Future<File> _downloadVideoToLocal(String url) async {
+    final response = await http.get(Uri.parse(url));
+    final dir = await getTemporaryDirectory();
+    final file = File("${dir.path}/${DateTime.now().millisecondsSinceEpoch}.mp4");
+    await file.writeAsBytes(response.bodyBytes);
+    return file;
   }
 }

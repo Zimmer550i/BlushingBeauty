@@ -4,12 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
-
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
 import '../services/socket_manager.dart';
 import '../views/screen/Message/AllSubScreen/chat_screen.dart';
-import '../views/screen/Message/AllSubScreen/group_chat.dart';
+import '../views/screen/Message/groupChat/group_chat.dart';
 
 class ChatController extends GetxController {
   final api = ApiService();
@@ -132,7 +131,7 @@ class ChatController extends GetxController {
     isLoading.value = true;
     try {
       final response = await api.post(
-        "/chat/create-group",
+        "/chat/create-groupChat",
         {"members": memberIds},
         authReq: true,
       );
@@ -149,7 +148,7 @@ class ChatController extends GetxController {
         debugPrint("⚠️ Failed: ${body['message']}");
       }
     } catch (e) {
-      debugPrint("❌ Error creating group chat: $e");
+      debugPrint("❌ Error creating groupChat chat: $e");
     } finally {
       isLoading.value = false;
     }

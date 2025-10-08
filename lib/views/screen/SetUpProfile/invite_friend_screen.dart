@@ -1,8 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ree_social_media_app/controllers/contact_controller.dart';
+import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
@@ -17,13 +17,14 @@ class InviteFriendScreen extends StatefulWidget {
 
 class _InviteFriendScreenState extends State<InviteFriendScreen> {
   final searchTextController = TextEditingController();
-  List<Map<String, dynamic>> contacts = [];
-  List<Map<String, dynamic>> filteredContacts = [];
+  final ContactController contactController = Get.put(ContactController());
+  final UserController userController = Get.put(UserController());
+  final RxSet<String> addedFriends = <String>{}.obs;
 
   @override
   void initState() {
     super.initState();
-    _loadContacts();
+    contactController.fetchContacts();
     searchTextController.addListener(_onSearchChanged);
   }
 
@@ -33,30 +34,128 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
     super.dispose();
   }
 
-  /// Load contacts from SharedPreferences
-  Future<void> _loadContacts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedContacts = prefs.getString("saved_contacts");
-
-    if (savedContacts != null) {
-      List<dynamic> decoded = jsonDecode(savedContacts);
-      setState(() {
-        contacts = decoded.cast<Map<String, dynamic>>();
-        filteredContacts = contacts;
-      });
-    }
+  void _onSearchChanged() {
+    contactController.filterContacts(searchTextController.text);
   }
 
-  /// Search filter
-  void _onSearchChanged() {
-    final query = searchTextController.text.toLowerCase();
-    setState(() {
-      filteredContacts = contacts.where((c) {
-        final name = (c["name"] ?? "").toLowerCase();
-        final number = (c["number"] ?? "").toLowerCase();
-        return name.contains(query) || number.contains(query);
-      }).toList();
-    });
+  Widget _buildContactTile(
+    Map<String, dynamic> contact, {
+    bool isMatched = true,
+  }) {
+    final id = contact["_id"] ?? contact["phone"];
+    final image = userController.addBaseUrl(contact["image"].toString());
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Profile Image
+          Container(
+            height: 48,
+            width: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image:
+                    (contact["image"] != null &&
+                        contact["image"].toString().isNotEmpty)
+                    ? NetworkImage(image.toString())
+                    : const AssetImage('assets/images/dummy.jpg')
+                          as ImageProvider,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Contact info (flexible to prevent overflow)
+          Expanded(
+            child: Text(
+              "${contact["name"] ?? "Unknown"}\n${contact["phone"] ?? ""}",
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              style: const TextStyle(
+                color: Color(0xFF676565),
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // Action Button (wrapped in Obx for reactive updates)
+          isMatched == true ? GestureDetector(
+            onTap: () {
+              if (!addedFriends.contains(id)) {
+                addedFriends.add(id);
+              }
+            },
+            child: Container(
+              height: 38,
+              width: 80,
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF002329).withValues(alpha: 0.07),
+                    offset: const Offset(0, 2),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Obx(
+                      () => Text(
+                    addedFriends.contains(id) ? "Added" : "Add",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ) : GestureDetector(
+            onTap: () {
+              contactController.sendInviteSms(contact["phone"],contact["name"]);
+            },
+            child: Container(
+              height: 38,
+              width: 80,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    offset: const Offset(0, 0),
+                    blurRadius: 4,
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.grey.withValues(alpha: .5),
+                  width: 1,
+                ),
+              ),
+              child: Center(
+                child: Obx(
+                      () => Text(
+                    addedFriends.contains(id) ? "Invited" : "Invite",
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -65,7 +164,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            /// Top bar
+            // Top bar
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Row(
@@ -103,131 +202,89 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
               ),
             ),
 
-            /// Scrollable content
+            // Body
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    const Text(
-                      "Connect With Friends",
-                      style: TextStyle(
-                        color: Color(0xFF413E3E),
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "To start your first messages on re: invite 5 friends who matter most",
-                      style: TextStyle(
-                        color: Color(0xFF413E3E),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
+              child: Obx(() {
+                final matched = contactController.filteredMatchedContacts;
+                final unmatched = contactController.filteredUnmatchedContacts;
+                final isLoading = contactController.isLoading.value;
 
-                    /// Search bar
-                    CustomTextField(
-                      controller: searchTextController,
-                      suffixIcon: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: SvgPicture.asset('assets/icons/search.svg'),
-                      ),
-                      hintText: 'Search Contacts',
-                    ),
-                    const SizedBox(height: 24),
-
-                    /// Contacts List
-                    filteredContacts.isEmpty
-                        ? const Center(
-                      child: Text(
-                        "No contacts found",
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Connect With Friends",
                         style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
+                          color: Color(0xFF413E3E),
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    )
-                        : ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        final contact = filteredContacts[index];
-                        return Row(
-                          children: [
-                            Container(
-                              height: 48,
-                              width: 48,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  image: AssetImage(
-                                      'assets/images/dummy.jpg'), // Fallback
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                "${contact["name"] ?? "Unknown"}\n${contact["number"] ?? ""}",
-                                style: const TextStyle(
-                                  color: Color(0xFF676565),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              height: 38,
-                              width: 80,
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryColor,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF002329)
-                                        .withValues(alpha: 0.07),
-                                    offset: const Offset(0, 2),
-                                    blurRadius: 4,
-                                  )
-                                ],
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  "Add",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                      separatorBuilder: (_, __) =>
-                      const SizedBox(height: 16),
-                      itemCount: filteredContacts.length,
-                    ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "To start your first messages on re: invite 5 friends who matter most",
+                        style: TextStyle(
+                          color: Color(0xFF413E3E),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
-                    const SizedBox(height: 20),
+                      // Search bar
+                      CustomTextField(
+                        controller: searchTextController,
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: SvgPicture.asset('assets/icons/search.svg'),
+                        ),
+                        hintText: 'Search Contacts',
+                      ),
+                      const SizedBox(height: 24),
 
-                    /// Next button
-                    CustomButton(
-                      onTap: () {
-                        Get.to(() => const EnableNotificationScreen());
-                      },
-                      text: "Next",
-                    ),
-                  ],
-                ),
-              ),
+                      // Loading
+                      if (isLoading)
+                        const Center(child: CircularProgressIndicator())
+                      else ...[
+                        // Friends on re:
+                        if (matched.isNotEmpty) ...[
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: matched.length,
+                            itemBuilder: (context, index) => _buildContactTile(
+                              matched[index],
+                              isMatched: true,
+                            ),
+                          ),
+                        ],
+
+                        // Invite to join
+                        if (unmatched.isNotEmpty) ...[
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: unmatched.length,
+                            itemBuilder: (context, index) => _buildContactTile(
+                              unmatched[index],
+                              isMatched: false,
+                            ),
+                          ),
+                        ],
+                      ],
+
+                      const SizedBox(height: 30),
+                      CustomButton(
+                        onTap: () =>
+                            Get.to(() => const EnableNotificationScreen()),
+                        text: "Next",
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ),
           ],
         ),

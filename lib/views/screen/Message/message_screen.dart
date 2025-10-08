@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/controllers/chat_controller.dart';
-import 'package:ree_social_media_app/controllers/home_controller.dart';
+import 'package:ree_social_media_app/controllers/message_controller.dart';
+import 'package:ree_social_media_app/controllers/notification_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/services/api_service.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
-import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/group_chat.dart';
 import '../../base/bottom_menu..dart';
 import '../Notification/notification_screen.dart';
+import 'AllSubScreen/AllSubScreen/add_friends.dart';
 import 'AllSubScreen/AllSubScreen/search_screen.dart';
+import 'AllSubScreen/AllSubScreen/video_preview_screen.dart';
 import 'AllSubScreen/chat_screen.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+
+import 'groupChat/group_chat.dart';
 
 class MessageScreen extends StatefulWidget {
   const MessageScreen({super.key});
@@ -21,9 +29,12 @@ class MessageScreen extends StatefulWidget {
 }
 
 class _MessageScreenState extends State<MessageScreen> {
-  final HomeController controller = Get.put(HomeController());
+  final MessageController controller = Get.put(MessageController());
   final ChatController chatController = Get.put(ChatController());
   final UserController userController = Get.put(UserController());
+  final NotificationController notificationController = Get.put(
+    NotificationController(),
+  );
   final ScrollController _chatScrollController = ScrollController();
   final ScrollController _storyScrollController = ScrollController();
 
@@ -33,6 +44,7 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   void initState() {
     super.initState();
+    notificationController.fetchNotifications();
 
     /// Pagination listener for chats
     _chatScrollController.addListener(() {
@@ -63,14 +75,19 @@ class _MessageScreenState extends State<MessageScreen> {
 
   Future<void> _loadMoreStories() async {
     setState(() => _isFetchingMoreStories = true);
-    await controller.getAllStories(loadMore: true);
+    await controller.fetchChats(loadMore: true);
     setState(() => _isFetchingMoreStories = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: const BottomMenu(0, messageCount: 1),
+      bottomNavigationBar: Obx(()=> BottomMenu(
+        0,
+        messageCount: int.parse(
+          notificationController.totalNotificationCount.toString(),
+        ),
+      ),),
       body: RefreshIndicator(
         onRefresh: controller.refreshAll,
         child: Padding(
@@ -123,10 +140,11 @@ class _MessageScreenState extends State<MessageScreen> {
       children: [
         _logoBox(),
         const Spacer(),
-        _iconButton('assets/icons/add.svg',
-        onTap: (){
-
-        }
+        _iconButton(
+          'assets/icons/add.svg',
+          onTap: () {
+            Get.to(() => AddFriendScreen());
+          },
         ),
         const SizedBox(width: 12),
         _iconButton(
@@ -144,7 +162,9 @@ class _MessageScreenState extends State<MessageScreen> {
       children: [
         _iconButton(
           'assets/icons/notification.svg',
-          onTap: () => Get.to(() => const NotificationScreen()),
+          onTap: () {
+            Get.to(() => const NotificationScreen());
+          },
         ),
         Positioned(
           right: -2,
@@ -161,12 +181,14 @@ class _MessageScreenState extends State<MessageScreen> {
                 color: AppColors.primaryColor,
                 shape: BoxShape.circle,
               ),
-              child: const Text(
-                "1",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
+              child: Obx(
+                () => Text(
+                  notificationController.totalNotificationCount.toString(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -222,7 +244,7 @@ class _MessageScreenState extends State<MessageScreen> {
       children: [
         InkWell(
           onTap: () {
-            Get.to(()=> SeeAllStoryScreen());
+            Get.to(() => SeeAllStoryScreen());
           },
           child: Align(
             alignment: Alignment.centerRight,
@@ -255,11 +277,11 @@ class _MessageScreenState extends State<MessageScreen> {
                 if (index > controller.stories.length) {
                   return _isFetchingMoreStories
                       ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
                       : const SizedBox();
                 }
 
@@ -274,14 +296,10 @@ class _MessageScreenState extends State<MessageScreen> {
                 if (story["author"] is Map) {
                   authorName = story["author"]["name"] ?? "User";
                 } else if (story["author"] is String) {
-                  authorName = "User"; // fallback, don’t show Mongo ID
+                  authorName = "User";
                 }
 
-                return _buildStoryCard(
-                  mediaUrl,
-                  authorName,
-                  isVideo,
-                );
+                return _buildStoryCard(mediaUrl, authorName, isVideo);
               },
             );
           }),
@@ -294,80 +312,124 @@ class _MessageScreenState extends State<MessageScreen> {
   Widget _buildAddStoryCard() {
     final image = userController.userInfo.value!.image;
     final userImage = userController.addBaseUrl(image.toString());
-    return Container(
-      margin: const EdgeInsets.only(left: 12, right: 8),
-      width: 100,
-      height: 132,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(8),
-          topLeft: Radius.circular(8),
-        ),
-        image: DecorationImage(
-          image: NetworkImage(userImage.toString()),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Left overlay
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(8),
-                topLeft: Radius.circular(8),
-              ),
-              child: Container(
-                width: 56, // ~half width overlay
-                color: AppColors.primaryColor.withOpacity(0.56),
-              ),
-            ),
+    return InkWell(
+      onTap: () {
+        controller.createStory();
+      },
+      child: Container(
+        margin: const EdgeInsets.only(left: 12, right: 8),
+        width: 100,
+        height: 132,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(8),
+            topLeft: Radius.circular(8),
           ),
-
-          // Text
-          const Positioned(
-            left: 10,
-            top: 50,
-            bottom: 0,
-            child: Text(
-              "Add\nStory",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                height: 1.2,
-              ),
-            ),
+          image: DecorationImage(
+            image: NetworkImage(userImage.toString()),
+            fit: BoxFit.cover,
           ),
-
-          // Camera button
-          Positioned(
-            left: 15,
-            bottom: 50,
-            child: Container(
-              width: 26,
-              height: 26,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: SvgPicture.asset(
-                  'assets/icons/camera.svg',
-                  color: AppColors.primaryColor,
+        ),
+        child: Stack(
+          children: [
+            // Left overlay
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(8),
+                  topLeft: Radius.circular(8),
+                ),
+                child: Container(
+                  width: 56, // ~half width overlay
+                  color: AppColors.primaryColor.withOpacity(0.56),
                 ),
               ),
             ),
-          ),
-        ],
+
+            // Text
+            const Positioned(
+              left: 10,
+              top: 50,
+              bottom: 0,
+              child: Text(
+                "Add\nStory",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  height: 1.2,
+                ),
+              ),
+            ),
+
+            // Camera button
+            Positioned(
+              left: 15,
+              bottom: 50,
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: SvgPicture.asset(
+                    'assets/icons/camera.svg',
+                    color: AppColors.primaryColor,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  /// ✅ Story Card (image/video)
-  Widget _buildStoryCard(String imageUrl, String name, bool isVideo) {
+  Widget _buildStoryCard(String mediaUrl, String name, bool isVideo) {
+    const double cardW = 100;
+    const double cardH = 132;
+    const double barH = 32;
+
+    return FutureBuilder<Widget>(
+      future: isVideo
+          ? _buildVideoThumbnailWidget(mediaUrl, name)
+          : _buildImageStoryWidget(mediaUrl, name),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            width: cardW,
+            height: cardH,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.black12,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return Container(
+            width: cardW,
+            height: cardH,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.black26,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(child: Icon(Icons.error, color: Colors.red)),
+          );
+        }
+        return snapshot.data!;
+      },
+    );
+  }
+
+  /// Handles image story preview
+  Future<Widget> _buildImageStoryWidget(String mediaUrl, String name) async {
     const double cardW = 100;
     const double cardH = 132;
     const double barH = 32;
@@ -376,43 +438,21 @@ class _MessageScreenState extends State<MessageScreen> {
       margin: const EdgeInsets.only(right: 12),
       width: cardW,
       height: cardH,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(8),
-          topRight: Radius.circular(8),
-        ),
-      ),
       child: ClipRRect(
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
+          topLeft: Radius.circular(8),
         ),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // bg image
             Image.network(
-              imageUrl,
+              mediaUrl,
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
-            ),
-
-            // centered play button (blue circle with white icon)
-            if (isVideo)
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primaryColor,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: const Icon(Icons.play_arrow, color: Colors.white, size: 26),
-                ),
+              errorBuilder: (_, __, ___) => const Center(
+                child: Icon(Icons.broken_image, color: Colors.grey),
               ),
-
-            // solid black bottom bar with name
+            ),
             Positioned(
               left: 0,
               right: 0,
@@ -421,7 +461,7 @@ class _MessageScreenState extends State<MessageScreen> {
                 height: barH,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 alignment: Alignment.centerLeft,
-                color: Colors.black.withValues(alpha: .42), // solid
+                color: Colors.black.withOpacity(0.42),
                 child: Text(
                   name,
                   maxLines: 1,
@@ -438,6 +478,110 @@ class _MessageScreenState extends State<MessageScreen> {
         ),
       ),
     );
+  }
+
+  /// Handles video story preview with thumbnail + play icon + navigation
+  Future<Widget> _buildVideoThumbnailWidget(
+    String videoUrl,
+    String name,
+  ) async {
+    const double cardW = 100;
+    const double cardH = 132;
+    const double barH = 32;
+
+    // ✅ Download video to local (same logic as _downloadVideoToLocal)
+    final localVideo = await _downloadVideoToLocal(videoUrl);
+
+    // ✅ Generate thumbnail
+    final thumbPath = await VideoThumbnail.thumbnailFile(
+      video: localVideo.path,
+      imageFormat: ImageFormat.JPEG,
+      maxHeight: 200,
+      quality: 75,
+    );
+
+    return InkWell(
+      onTap: () {
+        Get.to(
+          () => VideoPreviewScreen(
+            videoUrl: localVideo.path,
+            countdownSeconds: 3,
+            userProfile: "", // you can pass author avatar if available
+            userName: name,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
+        width: cardW,
+        height: cardH,
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(8),
+            topLeft: Radius.circular(8),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              thumbPath != null
+                  ? Image.file(File(thumbPath), fit: BoxFit.cover)
+                  : Container(
+                      color: Colors.black26,
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primaryColor,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  height: barH,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  alignment: Alignment.centerLeft,
+                  color: Colors.black.withOpacity(0.42),
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Download video file locally (same helper you already use)
+  Future<File> _downloadVideoToLocal(String url) async {
+    final response = await http.get(Uri.parse(url));
+    final dir = await getTemporaryDirectory();
+    final file = File(
+      "${dir.path}/${DateTime.now().millisecondsSinceEpoch}.mp4",
+    );
+    await file.writeAsBytes(response.bodyBytes);
+    return file;
   }
 
   ///Chats Section
@@ -471,7 +615,7 @@ class _MessageScreenState extends State<MessageScreen> {
           if (chat["type"] == "private") {
             final members = chat["members"] as List? ?? [];
             final other = members.firstWhere(
-                  (m) => m["_id"] != currentUserId,
+              (m) => m["_id"] != currentUserId,
               orElse: () => null,
             );
             if (other != null) {
@@ -489,8 +633,11 @@ class _MessageScreenState extends State<MessageScreen> {
             final dt = DateTime.tryParse(lastTime);
             if (dt != null) {
               final now = DateTime.now();
-              if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
-                formattedTime = "${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
+              if (dt.day == now.day &&
+                  dt.month == now.month &&
+                  dt.year == now.year) {
+                formattedTime =
+                    "${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
               } else if (dt.difference(now).inDays == -1) {
                 formattedTime = "Yesterday";
               } else {
@@ -499,17 +646,22 @@ class _MessageScreenState extends State<MessageScreen> {
             }
           }
 
-          if(chat["type"] == "private"){
+          if (chat["type"] == "private") {
             return InkWell(
               onTap: () {
-                Get.to(() => ChatScreen(
-                  chatId: chatId,
-                  receiverName: name,
-                  receiverImage: image,
-                ));
+                Get.to(
+                  () => ChatScreen(
+                    chatId: chatId,
+                    receiverName: name,
+                    receiverImage: image,
+                  ),
+                );
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
                 child: Row(
                   children: [
                     CircleAvatar(
@@ -555,10 +707,14 @@ class _MessageScreenState extends State<MessageScreen> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: lastMsg.contains("Video") || lastMsg.contains("Image")
+                              fontWeight:
+                                  lastMsg.contains("Video") ||
+                                      lastMsg.contains("Image")
                                   ? FontWeight.w600
                                   : FontWeight.normal,
-                              color: lastMsg.contains("Video") || lastMsg.contains("Image")
+                              color:
+                                  lastMsg.contains("Video") ||
+                                      lastMsg.contains("Image")
                                   ? Colors.black
                                   : Colors.grey.shade600,
                             ),
@@ -568,26 +724,28 @@ class _MessageScreenState extends State<MessageScreen> {
                     ),
                     Text(
                       formattedTime,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
             );
-          }else{
+          } else {
             return InkWell(
               onTap: () {
-                Get.to(() => GroupChatScreen(
-                  chatId: chatId,
-                  groupName: name,
-                  groupImage: image,
-                ));
+                Get.to(
+                  () => GroupChatScreen(
+                    chatId: chatId,
+                    groupName: name,
+                    groupImage: image,
+                  ),
+                );
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
                 child: Row(
                   children: [
                     CircleAvatar(
@@ -633,10 +791,14 @@ class _MessageScreenState extends State<MessageScreen> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: lastMsg.contains("Video") || lastMsg.contains("Image")
+                              fontWeight:
+                                  lastMsg.contains("Video") ||
+                                      lastMsg.contains("Image")
                                   ? FontWeight.w600
                                   : FontWeight.normal,
-                              color: lastMsg.contains("Video") || lastMsg.contains("Image")
+                              color:
+                                  lastMsg.contains("Video") ||
+                                      lastMsg.contains("Image")
                                   ? Colors.black
                                   : Colors.grey.shade600,
                             ),
@@ -646,10 +808,7 @@ class _MessageScreenState extends State<MessageScreen> {
                     ),
                     Text(
                       formattedTime,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -664,10 +823,19 @@ class _MessageScreenState extends State<MessageScreen> {
   /// Helper for month names
   String _monthName(int month) {
     const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     return months[month - 1];
   }
-
 }

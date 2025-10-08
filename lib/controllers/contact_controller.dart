@@ -9,15 +9,16 @@ import 'package:url_launcher/url_launcher.dart';
 class ContactController extends GetxController {
   var matchedContacts = <Map<String, dynamic>>[].obs;
   var unmatchedContacts = <Map<String, dynamic>>[].obs;
-  var isLoading = false.obs;
+  var filteredMatchedContacts = <Map<String, dynamic>>[].obs;
+  var filteredUnmatchedContacts = <Map<String, dynamic>>[].obs;
 
+  var isLoading = false.obs;
   final api = ApiService();
 
   /// Fetch contacts from device & send to API
   Future<void> fetchContacts() async {
     try {
       isLoading.value = true;
-
       if (await FlutterContacts.requestPermission()) {
         final rawContacts = await FlutterContacts.getContacts(withProperties: true);
 
@@ -27,7 +28,6 @@ class ContactController extends GetxController {
           if (c.phones.isNotEmpty) {
             for (var phone in c.phones) {
               final cleanedNumber = _normalizePhoneNumber(phone.number);
-
               contactList.add({
                 "name": c.displayName,
                 "phone": cleanedNumber,
@@ -36,11 +36,9 @@ class ContactController extends GetxController {
           }
         }
 
-        // Save locally
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("saved_contacts", jsonEncode(contactList));
 
-        // ✅ Send contacts to API
         await sendContactsToApi(contactList);
       }
     } catch (e) {
@@ -50,7 +48,6 @@ class ContactController extends GetxController {
     }
   }
 
-  /// Normalize phone number
   String _normalizePhoneNumber(String number) {
     String cleaned = number.replaceAll(RegExp(r'[^\d+]'), '');
     if (!cleaned.startsWith("+")) {
@@ -59,7 +56,6 @@ class ContactController extends GetxController {
     return cleaned;
   }
 
-  /// Send invite via SMS
   Future<void> sendInviteSms(String number, String name) async {
     final message =
         "$name wants to connect with you on re: The app that makes sharing photos and videos more fun! Download here: https://yourappdownloadlink.com";
@@ -88,9 +84,12 @@ class ContactController extends GetxController {
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-
         matchedContacts.assignAll(List<Map<String, dynamic>>.from(decoded["data"]["match"]));
         unmatchedContacts.assignAll(List<Map<String, dynamic>>.from(decoded["data"]["unmatch"]));
+
+        // Initially all contacts are shown
+        filteredMatchedContacts.assignAll(matchedContacts);
+        filteredUnmatchedContacts.assignAll(unmatchedContacts);
 
         debugPrint("✅ Matched Contacts: ${matchedContacts.length}");
         debugPrint("✅ Unmatched Contacts: ${unmatchedContacts.length}");
@@ -99,6 +98,26 @@ class ContactController extends GetxController {
       }
     } catch (e) {
       debugPrint("🚨 Error sending contacts: $e");
+    }
+  }
+
+  /// 🔍 Search Function
+  void filterContacts(String query) {
+    if (query.isEmpty) {
+      filteredMatchedContacts.assignAll(matchedContacts);
+      filteredUnmatchedContacts.assignAll(unmatchedContacts);
+    } else {
+      final lower = query.toLowerCase();
+      filteredMatchedContacts.assignAll(
+        matchedContacts.where((c) =>
+        (c["name"] ?? "").toLowerCase().contains(lower) ||
+            (c["phone"] ?? "").toLowerCase().contains(lower)),
+      );
+      filteredUnmatchedContacts.assignAll(
+        unmatchedContacts.where((c) =>
+        (c["name"] ?? "").toLowerCase().contains(lower) ||
+            (c["phone"] ?? "").toLowerCase().contains(lower)),
+      );
     }
   }
 }

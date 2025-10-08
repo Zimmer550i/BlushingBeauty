@@ -5,7 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_dropdown.dart';
-import '../../../../../controllers/group_chat_controller.dart';
+import '../../../../controllers/group_chat_controller.dart';
+import 'add_group_member.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final String chatId;
@@ -31,12 +32,16 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
   String? imageUrl;
+  final List<Map<String, dynamic>> members = [];
 
   @override
   void initState() {
     super.initState();
+
+    // 1️⃣ Fetch group details first
     controller.fetchGroupDetails(widget.chatId);
 
+    // 2️⃣ Watch for group image change reactively
     ever(controller.groupImage, (_) {
       setState(() {
         imageUrl = controller.groupImage.value.isNotEmpty
@@ -44,6 +49,21 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             ? controller.groupImage.value
             : userController.addBaseUrl(controller.groupImage.value)
             : "";
+      });
+    });
+
+    // 3️⃣ Watch for members change reactively
+    ever(controller.members, (_) {
+      setState(() {
+        members
+          ..clear()
+          ..addAll(controller.members.map((m) {
+            return {
+              "name": m["name"],
+              "image": userController.addBaseUrl(m["image"]),
+              "_id": m["_id"],
+            };
+          }));
       });
     });
   }
@@ -86,11 +106,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
         _profileImage = File(pickedFile.path);
       });
 
-      /// ✅ only send image (not fake name)
-      controller.updateGroup(
-        widget.chatId,
-        image: _profileImage,
-      );
+      controller.updateGroup(widget.chatId, image: _profileImage);
     }
   }
 
@@ -118,8 +134,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-          controller.groupName.value.isNotEmpty ? controller.groupName.value : "Group",
-          style: const TextStyle(
+                        controller.groupName.value.isNotEmpty
+                            ? controller.groupName.value
+                            : "Group",
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF413E3E),
@@ -142,12 +160,15 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                             : null,
                         child: (imageUrl == null || imageUrl!.isEmpty)
                             ? Text(
-                          controller.groupName.value.isNotEmpty
-                              ? controller.groupName.value[0].toUpperCase()
-                              : "?",
-                          style: const TextStyle(
-                              fontSize: 28, fontWeight: FontWeight.bold),
-                        )
+                                controller.groupName.value.isNotEmpty
+                                    ? controller.groupName.value[0]
+                                          .toUpperCase()
+                                    : "?",
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
                             : null,
                       ),
                       Positioned(
@@ -161,8 +182,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                               color: AppColors.primaryColor,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.camera_alt,
-                                size: 20, color: Colors.white),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -182,10 +206,13 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Change Group Name",
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF413E3E))),
+                      const Text(
+                        "Change Group Name",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF413E3E),
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       TextField(
                         controller: _nameController,
@@ -211,20 +238,27 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                 name: newName,
                               );
                             } else {
-                              Get.snackbar("Error", "Group name cannot be empty");
+                              Get.snackbar(
+                                "Error",
+                                "Group name cannot be empty",
+                              );
                             }
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 20),
+                              vertical: 8,
+                              horizontal: 20,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primaryColor,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text(
                               "Update",
-                              style:
-                              TextStyle(color: Colors.white, fontSize: 16),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                         ),
@@ -238,16 +272,25 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 _buildMembersList(),
 
                 /// Options
-                _optionTile("Add members", onTap: () {
+                _optionTile(
+                  "Add members",
+                  onTap: () {
+                    Get.to(() => AddGroupMemberScreen(chatId: widget.chatId, existMembers: members,));
+                  },
+                ),
+                _optionTile(
+                  "Delete chat",
+                  onTap: () {
+                    controller.deleteGroup(widget.chatId);
+                  },
+                ),
 
-                }),
-                _optionTile("Delete chat", onTap: () {
-                  controller.deleteGroup(widget.chatId);
-                }),
-
-                _optionTile("Leave chat", onTap: () {
-                  controller.leaveGroup(widget.chatId);
-                }),
+                _optionTile(
+                  "Leave chat",
+                  onTap: () {
+                    controller.leaveGroup(widget.chatId);
+                  },
+                ),
               ],
             ),
           );
@@ -265,10 +308,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Color(0xFF413E3E),
-              ),
+              style: const TextStyle(fontSize: 16, color: Color(0xFF413E3E)),
             ),
             const Spacer(),
             if (trailing != null) trailing,
@@ -279,20 +319,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   }
 
   Widget _buildMembersList() {
-    final members = controller.members.map((m) {
-      return {
-        "name": m["name"],
-        "image": userController.addBaseUrl(m["image"]),
-        "_id": m["_id"],
-      };
-    }).toList();
-
     return Padding(
       padding: const EdgeInsets.only(top: 10, bottom: 20),
-      child: CustomDropdown(
-        items: members,
-        chatId: widget.chatId,
-      ),
+      child: CustomDropdown(items: members, chatId: widget.chatId),
     );
   }
 }

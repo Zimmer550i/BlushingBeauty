@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_checkbox_screen.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
-import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/chat_screen.dart';
-
 import '../../../controllers/chat_controller.dart';
 
 class CreateGroupScreen extends StatefulWidget {
@@ -18,25 +17,55 @@ class CreateGroupScreen extends StatefulWidget {
   State<CreateGroupScreen> createState() => _CreateGroupScreenState();
 }
 
-
 class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final chatController = Get.put(ChatController());
+  final userController = Get.put(UserController());
   final searchTextController = TextEditingController();
 
-  late List<Map<String, dynamic>> searchFriendList;
+  late List<Map<String, dynamic>> allFriends; // 🔹 all contacts
+  late List<Map<String, dynamic>> filteredFriends; // 🔹 filtered contacts
 
   @override
   void initState() {
     super.initState();
-    searchFriendList = widget.matchedContacts.map((c) {
+
+    // initialize friend list
+    allFriends = widget.matchedContacts.map((c) {
       return {
-        "_id": c["_id"],  // ✅ keep user ID
+        "_id": c["_id"],
         "name": c["name"] ?? "No Name",
         "image": c["image"] ?? "assets/images/dummy.jpg",
         "isInvite": false,
       };
     }).toList();
 
+    filteredFriends = List.from(allFriends);
+
+    // attach search listener
+    searchTextController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    searchTextController.removeListener(_onSearchChanged);
+    searchTextController.dispose();
+    super.dispose();
+  }
+
+  // 🔎 Search function
+  void _onSearchChanged() {
+    final query = searchTextController.text.trim().toLowerCase();
+
+    setState(() {
+      if (query.isEmpty) {
+        filteredFriends = List.from(allFriends);
+      } else {
+        filteredFriends = allFriends.where((friend) {
+          final name = (friend['name'] ?? '').toLowerCase();
+          return name.contains(query);
+        }).toList();
+      }
+    });
   }
 
   @override
@@ -48,15 +77,26 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
-            Text(
-              "Create Group",
-              style: TextStyle(
-                color: AppColors.textColor,
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              children: [
+                IconButton(
+                  onPressed: Get.back,
+                  icon: const Icon(Icons.arrow_back_ios),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "Create Group",
+                  style: TextStyle(
+                    color: AppColors.textColor,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
+
+            // 🔍 Search box
             CustomTextField(
               controller: searchTextController,
               borderColor: Colors.transparent,
@@ -66,31 +106,39 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               ),
               hintText: 'Search here',
             ),
+
             const SizedBox(height: 24),
+
+            // 👥 Filtered friend list
             Expanded(
-              child: ListView.separated(
+              child: filteredFriends.isEmpty
+                  ? const Center(child: Text("No friends found"))
+                  : ListView.separated(
+                padding: EdgeInsets.zero,
                 itemBuilder: (context, index) {
-                  final item = searchFriendList[index];
-                  final imageUrl = item['image'].toString().startsWith("http")
-                      ? NetworkImage(item['image'])
-                      : AssetImage("assets/images/dummy.jpg") as ImageProvider;
+                  final item = filteredFriends[index];
+                  final imageUrl = userController.addBaseUrl(item['image']);
 
                   return Row(
                     children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundImage: imageUrl,
+                        backgroundImage: imageUrl != null
+                            ? NetworkImage(imageUrl)
+                            : const AssetImage("assets/images/dummy.jpg")
+                        as ImageProvider,
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        item['name'],
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: AppColors.textColor,
-                          fontWeight: FontWeight.w400,
+                      Expanded(
+                        child: Text(
+                          item['name'],
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: AppColors.textColor,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
-                      const Spacer(),
                       CustomCheckboxScreen(
                         value: item['isInvite'],
                         onChanged: (val) {
@@ -103,14 +151,16 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   );
                 },
                 separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemCount: searchFriendList.length,
+                itemCount: filteredFriends.length,
               ),
             ),
+
+            // 🟢 Create Group Button
             CustomButton(
               onTap: () {
-                final selected = searchFriendList
+                final selected = filteredFriends
                     .where((c) => c['isInvite'] == true)
-                    .map((c) => c["_id"].toString()) // ✅ collect IDs
+                    .map((c) => c["_id"].toString())
                     .toList();
 
                 if (selected.isEmpty) {
@@ -119,15 +169,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   );
                   return;
                 }
+
                 chatController.createGroupChat(selected);
               },
               text: "Create Now",
             ),
-
           ],
         ),
       ),
     );
   }
 }
-

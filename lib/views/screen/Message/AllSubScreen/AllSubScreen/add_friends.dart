@@ -5,22 +5,17 @@ import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/controllers/contact_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
-import 'package:ree_social_media_app/views/screen/Contact/create_group_screen.dart';
 
-import '../../base/bottom_menu..dart';
-
-class ContactScreen extends StatefulWidget {
-  const ContactScreen({super.key});
+class AddFriendScreen extends StatefulWidget {
+  const AddFriendScreen({super.key});
 
   @override
-  State<ContactScreen> createState() => _ContactScreenState();
+  State<AddFriendScreen> createState() => _AddFriendScreenState();
 }
 
-class _ContactScreenState extends State<ContactScreen> {
+class _AddFriendScreenState extends State<AddFriendScreen> {
   final searchTextController = TextEditingController();
-
   final ContactController contactController = Get.put(ContactController());
   final ChatController chatController = Get.put(ChatController());
   final UserController userController = Get.put(UserController());
@@ -40,25 +35,37 @@ class _ContactScreenState extends State<ContactScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Contact List",
-                style: TextStyle(
-                  color: AppColors.textColor,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              _buildHeader(),
               const SizedBox(height: 20),
               _buildSearchBar(),
               const SizedBox(height: 16),
               Expanded(child: _buildContactList()),
               const SizedBox(height: 12),
-              _buildCreateGroupButton(),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: BottomMenu(2),
+    );
+  }
+
+  // 🧱 Header
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: Get.back,
+          icon: const Icon(Icons.arrow_back_ios, size: 20),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          "Add Friend",
+          style: TextStyle(
+            color: AppColors.textColor,
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 
@@ -66,7 +73,7 @@ class _ContactScreenState extends State<ContactScreen> {
   Widget _buildSearchBar() {
     return CustomTextField(
       controller: searchTextController,
-      onChanged: contactController.filterContacts,
+      onChanged: contactController.filterContacts, // real-time search
       borderColor: Colors.transparent,
       suffixIcon: Padding(
         padding: const EdgeInsets.all(10.0),
@@ -181,21 +188,6 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  // ➕ Create Group Button
-  Widget _buildCreateGroupButton() {
-    return CustomButton(
-      onTap: () {
-        final matched = contactController.matchedContacts;
-        if (matched.isEmpty) {
-          Get.snackbar("No Friends", "You don’t have any friends to create a groupChat with.");
-          return;
-        }
-        Get.to(() => CreateGroupScreen(matchedContacts: matched));
-      },
-      text: "Create Group",
     );
   }
 }

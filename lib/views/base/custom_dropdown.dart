@@ -49,7 +49,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
           setState(() {
             members.removeWhere((m) => m["_id"] == member["_id"]);
           });
-          Get.snackbar("Removed", "${member['name']} removed from group");
+          Get.snackbar("Removed", "${member['name']} removed from groupChat");
         }
       },
     );

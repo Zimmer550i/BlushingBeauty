@@ -86,7 +86,7 @@ class _OnboardScreen3State extends State<OnboardScreen3> {
                   textAlign: TextAlign.center,),
               ),
               SizedBox(height: 16,),
-              Text("Reactions stay private in 1-to-1 or group chats, unless you decide to share",
+              Text("Reactions stay private in 1-to-1 or groupChat chats, unless you decide to share",
                 style: TextStyle(
                   color: Color(0xFF676565),
                   fontSize: 16,

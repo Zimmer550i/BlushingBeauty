@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/controllers/contact_controller.dart';
+import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 
@@ -12,34 +14,55 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-
-
   final searchTextController = TextEditingController();
 
-  final List<Map<String, dynamic>> searchList = [
-    {
-      "name": "Mr. John",
-      "image":"assets/images/dummy.jpg", // image story
-      "invite": "assets/icons/message.svg",
-      "isInvite": false
-    },
-    {
-      "name": "Mr. John",
-      "image":"assets/images/dummy.jpg",
-      "invite": "assets/icons/message.svg",
+  final ContactController contactController = Get.put(ContactController());
+  final UserController userController = Get.put(UserController());
 
-      "isInvite": true
-    },
-  ];
+  RxList<Map<String, dynamic>> filteredContacts = <Map<String, dynamic>>[].obs;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // fetch contacts from controller
+    contactController.fetchContacts().then((_) {
+      filteredContacts.assignAll(contactController.matchedContacts);
+    });
+
+    // listen to search field
+    searchTextController.addListener(_filterContacts);
+  }
+
+  void _filterContacts() {
+    final query = searchTextController.text.trim().toLowerCase();
+    if (query.isEmpty) {
+      filteredContacts.assignAll(contactController.matchedContacts);
+    } else {
+      final results = contactController.matchedContacts.where((contact) {
+        final name = (contact['name'] ?? '').toString().toLowerCase();
+        final phone = (contact['phone'] ?? '').toString().toLowerCase();
+        return name.contains(query) || phone.contains(query);
+      }).toList();
+      filteredContacts.assignAll(results);
+    }
+  }
+
+  @override
+  void dispose() {
+    searchTextController.removeListener(_filterContacts);
+    searchTextController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            SizedBox(height: 20,),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Container(
@@ -49,7 +72,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     color: AppColors.primaryColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Text(
                       "re:",
                       style: TextStyle(
@@ -60,103 +83,102 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ),
                 ),
-                Spacer(),
+                const Spacer(),
                 InkWell(
-                  onTap: (){
-                    Get.back();
-                  },
+                  onTap: () => Get.back(),
                   child: Container(
                     height: 32,
                     width: 32,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
+                      border:
+                      Border.all(color: const Color(0xFFC4C3C3), width: 0.5),
                     ),
-                    child: Icon(Icons.close),
+                    child: const Icon(Icons.close),
                   ),
                 ),
-                SizedBox(width: 12),
-             
+                const SizedBox(width: 12),
               ],
             ),
-            SizedBox(height: 24,),
-            CustomTextField(controller: searchTextController,
-            borderColor: Colors.transparent,
-            suffixIcon: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: SvgPicture.asset('assets/icons/search.svg'),
+            const SizedBox(height: 24),
+            CustomTextField(
+              controller: searchTextController,
+              borderColor: Colors.transparent,
+              suffixIcon: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: SvgPicture.asset('assets/icons/search.svg'),
+              ),
+              hintText: 'Search here',
             ),
-            hintText: 'Search here',),
-            SizedBox(height: 24,),
-        Expanded(
-          child: ListView.separated(
-            itemBuilder: (context, index) {
-              final item = searchList[index];
-              return Row(
-                children: [
-                  Container(
-                    height: 44,
-                    width: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: AssetImage(item['image']),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "${item['name']}",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: AppColors.textColor,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const Spacer(),
-                  item['isInvite'] == true
-                      ? SvgPicture.asset(item['invite'],
-                  color: AppColors.primaryColor,)
-                      : Container(
-                    height: 38,
-                    width: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color(0xFFC4C3C3),
-                        width: 0.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF002329).withValues(alpha: 0.5),
-                          spreadRadius: -1.25,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+            const SizedBox(height: 24),
+
+            // 🔹 Contact List
+            Expanded(
+              child: Obx(() {
+                if (contactController.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (filteredContacts.isEmpty) {
+                  return const Center(
+                      child: Text("No contacts found",
+                          style: TextStyle(color: Colors.grey)));
+                }
+
+                return ListView.separated(
+                  itemCount: filteredContacts.length,
+                  padding: EdgeInsets.zero,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final c = filteredContacts[index];
+                    final imageUrl = userController.addBaseUrl(c['image']);
+                    final name = c['name'] ?? 'Unknown';
+                    final phone = c['phone'] ?? '';
+
+                    return Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundImage: imageUrl != null
+                              ? NetworkImage(imageUrl)
+                              : const AssetImage("assets/images/dummy.jpg")
+                          as ImageProvider,
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: AppColors.textColor,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            if (phone.isNotEmpty)
+                              Text(
+                                phone,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const Spacer(),
+                        SvgPicture.asset(
+                          "assets/icons/message.svg",
+                          color: AppColors.primaryColor,
+                          height: 22,
                         ),
                       ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        "Invite",
-                        style: TextStyle(
-                          color: Color(0xFF676565),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-            separatorBuilder: (_, _) => const SizedBox(height: 16),
-            itemCount: searchList.length,
-          ),
-        )
-
-        ],
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
         ),
       ),
     );
