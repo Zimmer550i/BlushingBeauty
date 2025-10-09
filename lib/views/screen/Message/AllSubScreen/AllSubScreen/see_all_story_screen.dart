@@ -67,6 +67,7 @@ class SeeAllStoryScreen extends StatelessWidget {
                     final story = homeController.stories[index];
                     final type = story["contentType"];
                     final name = story["author"]?["name"] ?? "Unknown";
+                    final userImage = story["author"]?["image"] ?? "Unknown";
 
                     // ✅ Determine media URL
                     String? mediaUrl;
@@ -80,7 +81,7 @@ class SeeAllStoryScreen extends StatelessWidget {
                       return const Center(child: Icon(Icons.error));
                     }
 
-                    return _buildStoryCard(context, mediaUrl, name, type == "video");
+                    return _buildStoryCard(context, mediaUrl, name,userImage,type == "video");
                   },
                 );
               }),
@@ -92,12 +93,12 @@ class SeeAllStoryScreen extends StatelessWidget {
   }
 
   /// ✅ Handles both image & video stories
-  Widget _buildStoryCard(BuildContext context, String mediaUrl, String name, bool isVideo) {
+  Widget _buildStoryCard(BuildContext context, String mediaUrl, String name,String userImage , bool isVideo) {
     const double barH = 32;
 
     return FutureBuilder<Widget>(
       future: isVideo
-          ? _buildVideoThumbnailCard(context, mediaUrl, name)
+          ? _buildVideoThumbnailCard(context, mediaUrl, name,userImage)
           : _buildImageCard(mediaUrl, name),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
@@ -144,7 +145,7 @@ class SeeAllStoryScreen extends StatelessWidget {
   }
 
   /// 🎬 Video story card (download + thumbnail + open preview)
-  Future<Widget> _buildVideoThumbnailCard(BuildContext context, String videoUrl, String name) async {
+  Future<Widget> _buildVideoThumbnailCard(BuildContext context, String videoUrl, String name, String userImage) async {
     // Download video locally for thumbnail
     final localVideo = await _downloadVideoToLocal(videoUrl);
 
@@ -160,7 +161,7 @@ class SeeAllStoryScreen extends StatelessWidget {
       onTap: () => Get.to(() => VideoPreviewScreen(
         videoUrl: localVideo.path,
         countdownSeconds: 3,
-        userProfile: "", // pass story owner’s profile pic if available
+        userProfile: userImage,
         userName: name,
       )),
       child: ClipRRect(
