@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/controllers/notification_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
@@ -18,7 +17,6 @@ import 'AllSubScreen/chat_screen.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-
 import 'groupChat/group_chat.dart';
 
 class MessageScreen extends StatefulWidget {
@@ -30,7 +28,6 @@ class MessageScreen extends StatefulWidget {
 
 class _MessageScreenState extends State<MessageScreen> {
   final MessageController controller = Get.put(MessageController());
-  final ChatController chatController = Get.put(ChatController());
   final UserController userController = Get.put(UserController());
   final NotificationController notificationController = Get.put(
     NotificationController(),

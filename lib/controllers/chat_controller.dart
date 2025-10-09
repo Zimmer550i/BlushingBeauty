@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:uuid/uuid.dart';
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
+import '../services/shared_prefs_service.dart';
 import '../services/socket_manager.dart';
 import '../views/screen/Message/AllSubScreen/chat_screen.dart';
 import '../views/screen/Message/groupChat/group_chat.dart';
@@ -131,7 +133,7 @@ class ChatController extends GetxController {
     isLoading.value = true;
     try {
       final response = await api.post(
-        "/chat/create-groupChat",
+        "/chat/create-group",
         {"members": memberIds},
         authReq: true,
       );
@@ -295,6 +297,112 @@ class ChatController extends GetxController {
       isTyping: isTyping,
     );
   }
+
+  /// 📤 Send Image or Video to Multiple Chats
+  Future<void> sendMediaToMultipleChats({
+    required List<Map<String, dynamic>> friends,
+    required Set<String> selectedIds,
+    required File mediaFile,
+    required String contentType, // 'image' or 'video'
+  }) async {
+    if (selectedIds.isEmpty) {
+      debugPrint("⚠️ No friends selected to send media.");
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      // 1️⃣ Upload media once
+      final mediaUrl = await uploadMedia(mediaFile, type: contentType);
+      if (mediaUrl == null) {
+        debugPrint("❌ Media upload failed.");
+        return;
+      }
+
+      // 2️⃣ Get user session info
+      final userCtrl = Get.find<UserController>();
+      final token = await SharedPrefsService.get('token');
+      final senderId = userCtrl.userInfo.value?.id;
+
+      if (token == null || senderId == null) {
+        debugPrint("⚠️ Missing token or user ID.");
+        return;
+      }
+
+      // ✅ Maintain one socket connection
+      SocketService.connect(token);
+
+      // 3️⃣ Loop and send to all friends
+      for (final friend in friends) {
+        if (!selectedIds.contains(friend['_id'])) continue;
+
+        final chatId = friend['chatId'];
+        if (chatId == null) {
+          debugPrint("⚠️ No chatId found for ${friend['name']}");
+          continue;
+        }
+
+        // Join specific chat
+        await initChat(
+          chatId: chatId,
+          currentUserId: senderId,
+          token: token,
+        );
+
+        // Send via socket
+        if (contentType == 'image') {
+          SocketService.sendImage(
+            chatId: chatId,
+            senderId: senderId,
+            mediaUrl: mediaUrl,
+          );
+        } else {
+          SocketService.sendVideo(
+            chatId: chatId,
+            senderId: senderId,
+            mediaUrl: mediaUrl,
+          );
+        }
+
+        // ✅ Wait for backend to process the event
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // 🧩 Optional fallback: ensure DB persistence
+        try {
+          await api.post(
+            "/message/create",
+            {
+              "chatId": chatId,
+              "sender": senderId,
+              "media": mediaUrl,
+              "contentType": contentType,
+            },
+            authReq: true,
+          );
+          debugPrint("💾 Message stored via REST for ${friend['name']}");
+        } catch (e) {
+          debugPrint("⚠️ Skipped REST save fallback: $e");
+        }
+
+        debugPrint("✅ Sent $contentType to ${friend['name']}");
+      }
+
+      debugPrint("🎉 Media sent to ${selectedIds.length} friends successfully!");
+
+    } catch (e) {
+      debugPrint("❌ Error sending media to multiple chats: $e");
+    } finally {
+      // 🔌 Disconnect once after all sends are done
+      SocketService.clearAllListeners();
+      SocketService.disconnect();
+      isLoading.value = false;
+    }
+  }
+
+
+
+
 
   // ==============================
   // HELPERS

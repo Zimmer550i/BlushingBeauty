@@ -361,7 +361,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
           const SizedBox(width: 18),
           InkWell(
             onTap: () {
-              Get.to(() => SendOrTrimVideoScreen(videoUrl: widget.videoUrl));
+                Get.to(() => SendOrTrimVideoScreen(videoUrl: widget.videoUrl, userProfile: widget.userProfile, userName: widget.userName));
             },
             child: Container(
               height: 40,

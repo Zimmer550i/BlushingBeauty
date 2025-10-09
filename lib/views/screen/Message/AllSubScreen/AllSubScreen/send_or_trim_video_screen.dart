@@ -10,8 +10,15 @@ import 'package:video_player/video_player.dart';
 
 class SendOrTrimVideoScreen extends StatefulWidget {
   final String videoUrl;
+  final String userProfile;
+  final String userName;
 
-  const SendOrTrimVideoScreen({super.key, required this.videoUrl});
+  const SendOrTrimVideoScreen({
+    super.key,
+    required this.videoUrl,
+    required this.userProfile,
+    required this.userName,
+  });
 
   @override
   State<SendOrTrimVideoScreen> createState() => _SendOrTrimVideoScreenState();
@@ -61,7 +68,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
   Future<void> _initFrontCamera() async {
     final cameras = await availableCameras();
     final front = cameras.firstWhere(
-          (c) => c.lensDirection == CameraLensDirection.front,
+      (c) => c.lensDirection == CameraLensDirection.front,
       orElse: () => cameras.first,
     );
     _frontCam = CameraController(
@@ -108,9 +115,9 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
       try {
         if (_frontCam?.value.isRecordingVideo == true) {
           await _frontCam?.stopVideoRecording();
-    }
-    } catch (_) {}
-    _frontCam?.dispose();
+        }
+      } catch (_) {}
+      _frontCam?.dispose();
     }();
     super.dispose();
   }
@@ -141,14 +148,14 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage("assets/images/dummy.jpg"),
+                  image: NetworkImage(widget.userProfile),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
             SizedBox(width: 12),
             Text(
-              "Mr.John",
+              widget.userName,
               style: TextStyle(
                 color: Color(0xFF413E3E),
                 fontSize: 24,
@@ -161,8 +168,6 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
       body: Column(
         children: [
           /// ====== Video Area ======
-
-
           Expanded(
             child: Stack(
               alignment: Alignment.center,
@@ -190,10 +195,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                       height: 159,
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.24),
-                        border: Border.all(
-                          color: Color(0xFF383838),
-                          width: 4,
-                        ),
+                        border: Border.all(color: Color(0xFF383838), width: 4),
                       ),
                       clipBehavior: Clip.antiAliasWithSaveLayer,
                       child: FittedBox(
@@ -219,63 +221,69 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
           ),
 
           Container(
-         width: double.infinity,
-         color: Color(0xFFFFFFFF),
-         child: Padding(
-           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
-           child: Column(
-             children: [
-               Container(
-                 width: double.infinity,
-                 decoration: BoxDecoration(
-                   color: Colors.white,
-                 ),
-                 child: Column(
-                   children: [
-                     InkWell(
-                       onTap: (){
-                         Get.to(()=> FramSelectionScreen(videoUrl: widget.videoUrl));
-                       },
-                       child: Container(
-                         width: double.infinity,
-                         height: 52,
-                         decoration: BoxDecoration(
-                           color: Colors.white,
-                             borderRadius: BorderRadius.circular(12),
-                             border: Border.all(
-                               color: Color(0xFFC4C3C3),
-                               width: 0.5,
-                             ),
-                             boxShadow: [
-                               BoxShadow(
-                                 color: Color(0xFF002329).withValues(alpha: 0.07),
-                                 offset: Offset(0, 2),
-                                 blurRadius: 4,
-                                 spreadRadius: 0,
-                               )
-                             ]
-                         ),
-                         child: Center(child: Text("Trim or Select Image",
-                         style: TextStyle(
-                           color: Color(0xFF413E3E),
-                           fontSize: 16,
-                           fontWeight: FontWeight.w600,
-                         ),)),
-                       ),
-                     )
-
-                   ],
-                 ),
-               ),
-               SizedBox(height: 20,),
-               CustomButton(onTap: (){},
-                   text: "Send Now"),
-             ],
-           ),
-         ),
-       )
-
-
+            width: double.infinity,
+            color: Color(0xFFFFFFFF),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(color: Colors.white),
+                    child: Column(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            Get.to(
+                              () => FrameSelectionScreen(
+                                videoUrl: widget.videoUrl,
+                                userProfile: widget.userProfile,
+                                userName: widget.userName,
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Color(0xFFC4C3C3),
+                                width: 0.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(
+                                    0xFF002329,
+                                  ).withValues(alpha: 0.07),
+                                  offset: Offset(0, 2),
+                                  blurRadius: 4,
+                                  spreadRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                "Trim or Select Image",
+                                style: TextStyle(
+                                  color: Color(0xFF413E3E),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  CustomButton(onTap: () {}, text: "Send Now"),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -290,9 +298,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.24),
-      ),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.24)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -352,7 +358,6 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                   );
                 },
               ),
-
             ],
           ),
         ],

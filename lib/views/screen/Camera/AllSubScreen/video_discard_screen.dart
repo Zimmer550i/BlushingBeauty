@@ -225,7 +225,7 @@ class _VideoDiscardScreenState extends State<VideoDiscardScreen> {
                   children: [
                     InkWell(
                       onTap: (){
-                        Get.to(()=> SendMessageWithFriendScreen());
+                        Get.to(()=> SendMessageWithFriendScreen(filePath: widget.videoUrl, isVideo: true,));
                       },
                       child: Container(
                         width: double.infinity,

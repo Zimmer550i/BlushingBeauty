@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-
-
 import 'package:ree_social_media_app/views/base/bottom_menu..dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_edit_screen.dart';
 
@@ -16,104 +14,191 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> {
+class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
   CameraController? _controller;
   bool _isRecording = false;
-  bool _isVideoMode = false; //
+  bool _isVideoMode = false;
   int _recordDuration = 0;
   Timer? _timer;
+  bool _isCameraChanging = false;
 
   @override
   void initState() {
     super.initState();
-    _initCamera(widget.cameras[0]);
+    WidgetsBinding.instance.addObserver(this);
+    if (widget.cameras.isNotEmpty) {
+      _initCamera(widget.cameras.first);
+    }
   }
 
+  /// 🔄 Lifecycle handling
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+
+    switch (state) {
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+        _disposeController();
+        break;
+      case AppLifecycleState.resumed:
+        if (widget.cameras.isNotEmpty) {
+          _initCamera(widget.cameras.first);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  /// 📸 Initialize camera safely
   Future<void> _initCamera(CameraDescription description) async {
-    _controller?.dispose();
-    _controller = CameraController(description, ResolutionPreset.high);
-    await _controller!.initialize();
-    if (mounted) setState(() {});
+    if (_isCameraChanging) return;
+    _isCameraChanging = true;
+
+    try {
+      await _disposeController();
+
+      final controller = CameraController(
+        description,
+        ResolutionPreset.medium, // ✅ reduces buffer pressure
+        enableAudio: true,
+        imageFormatGroup: ImageFormatGroup.yuv420, // ✅ stable on Android
+      );
+
+      await controller.initialize();
+
+      if (!mounted) return;
+
+      setState(() {
+        _controller = controller;
+      });
+    } catch (e) {
+      debugPrint('Camera init error: $e');
+    } finally {
+      _isCameraChanging = false;
+    }
   }
 
-  void _switchCamera() {
-    final lensDirection = _controller!.description.lensDirection;
-    CameraDescription newCamera = widget.cameras.firstWhere(
-          (camera) => camera.lensDirection != lensDirection,
-      orElse: () => widget.cameras[0],
+  /// 🧹 Dispose controller safely
+  Future<void> _disposeController() async {
+    try {
+      final oldController = _controller;
+      _controller = null;
+      if (oldController != null && oldController.value.isInitialized) {
+        await oldController.dispose();
+      }
+    } catch (e) {
+      debugPrint("Controller dispose error: $e");
+    }
+
+    // 🧠 Do NOT call setState() if the widget is already disposed
+    // if (mounted) {
+    //   setState(() {});
+    // }
+  }
+
+
+
+  /// 🔄 Switch front/rear camera
+  Future<void> _switchCamera() async {
+    if (_controller == null || _isCameraChanging) return;
+
+    final currentLens = _controller!.description.lensDirection;
+    final newCamera = widget.cameras.firstWhere(
+          (cam) => cam.lensDirection != currentLens,
+      orElse: () => widget.cameras.first,
     );
-    _initCamera(newCamera);
+
+    await _initCamera(newCamera);
   }
 
+  /// 🎥 Capture or record
   Future<void> _onCapturePressed() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
     if (_isVideoMode) {
-      if (_isRecording) {
-        await _stopVideoRecording();
-      } else {
-        await _startVideoRecording();
-      }
+      _isRecording ? await _stopVideoRecording() : await _startVideoRecording();
     } else {
       await _takePhoto();
     }
   }
 
+  /// 📷 Take Photo
   Future<void> _takePhoto() async {
-    if (_controller == null || !_controller!.value.isInitialized) return;
     try {
-      XFile file = await _controller!.takePicture();
-
+      final file = await _controller!.takePicture();
       if (!mounted) return;
-      Navigator.push(
+
+      final path = file.path;
+
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => VideoEditScreen(filePath: file.path, isVideo: false),
+          builder: (_) => VideoEditScreen(filePath: path, isVideo: false),
         ),
       );
+
+      // 🧠 Dispose camera after navigation, safely
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _disposeController();
+      });
+
     } catch (e) {
-      print('Error capturing photo: $e');
+      debugPrint('Error taking photo: $e');
     }
   }
 
+
+  /// ▶️ Start Recording
   Future<void> _startVideoRecording() async {
-    if (_controller!.value.isRecordingVideo) return;
+    if (_controller == null || _controller!.value.isRecordingVideo) return;
+
     try {
       await _controller!.startVideoRecording();
-      _isRecording = true;
-      _recordDuration = 0;
+      setState(() {
+        _isRecording = true;
+        _recordDuration = 0;
+      });
       _startTimer();
-      setState(() {});
     } catch (e) {
-      print('Error starting video recording: $e');
+      debugPrint('Error starting video recording: $e');
     }
   }
 
+  /// ⏹ Stop Recording
   Future<void> _stopVideoRecording() async {
-    if (!_controller!.value.isRecordingVideo) return;
-    try {
-      XFile file = await _controller!.stopVideoRecording();
-      _isRecording = false;
-      _stopTimer();
-      setState(() {});
+    if (_controller == null || !_controller!.value.isRecordingVideo) return;
 
-      if (!mounted) return;
-      Navigator.push(
+    try {
+      final file = await _controller!.stopVideoRecording();
+      _stopTimer();
+      setState(() => _isRecording = false);
+
+      final path = file.path;
+
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => VideoEditScreen(filePath: file.path, isVideo: true),
+          builder: (_) => VideoEditScreen(filePath: path, isVideo: true),
         ),
       );
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _disposeController();
+      });
+
     } catch (e) {
-      print('Error stopping video recording: $e');
+      debugPrint('Error stopping video recording: $e');
     }
   }
 
+
+  /// ⏱ Timer Control
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _recordDuration++;
-      });
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _recordDuration++);
     });
   }
 
@@ -124,86 +209,53 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _controller?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _stopTimer();
+    _disposeController();
     super.dispose();
   }
 
+  /// 🧱 UI Build
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
-      return const Center(child: CircularProgressIndicator());
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Positioned.fill(child: CameraPreview(_controller!)),
+          /// Camera Preview
+          if (_controller != null && _controller!.value.isInitialized)
+            Positioned.fill(child: CameraPreview(_controller!))
+          else
+            const Positioned.fill(
+              child: ColoredBox(color: Colors.black),
+            ),
 
 
-          /// Top buttons (Camera / Video)
+          /// Camera / Video toggle
           Positioned(
             top: 40,
-            left: 20,
             right: 20,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                /// Camera icon
-                GestureDetector(
-                  onTap: () {
-                    setState(() => _isVideoMode = false);
-                  },
-                  child: Container(
-                    height: 32,
-                    width: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: !_isVideoMode
-                          ? AppColors.primaryColor
-                          : Colors.white.withValues(alpha: 0.5),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SvgPicture.asset('assets/icons/camera.svg'),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                /// Video icon
-                GestureDetector(
-                  onTap: () {
-                    setState(() => _isVideoMode = true);
-
-                    /// Show Snackbar when video mode is activated
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Video recording mode activated'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: 32,
-                    width: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isVideoMode ? AppColors.primaryColor : Colors.white.withValues(alpha: 0.5),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SvgPicture.asset('assets/icons/video_cam.svg'),
-                    ),
-                  ),
-                ),
+                _buildModeButton('assets/icons/camera.svg', !_isVideoMode, () {
+                  setState(() => _isVideoMode = false);
+                }),
+                const SizedBox(width: 12),
+                _buildModeButton('assets/icons/video_cam.svg', _isVideoMode, () {
+                  setState(() => _isVideoMode = true);
+                }),
               ],
             ),
           ),
 
-
-          /// Timer (for video)
+          /// Timer display
           if (_isVideoMode)
             Positioned(
               bottom: 200,
@@ -213,20 +265,18 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.4),
+                    color: Colors.black54,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    _isRecording
-                        ? "${_recordDuration.toString().padLeft(2, '0')} sec"
-                        : "00 sec",
+                    _isRecording ? "${_recordDuration}s" : "00s",
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ),
             ),
 
-          /// Bottom controls
+          /// Bottom Controls
           Positioned(
             bottom: 40,
             left: 0,
@@ -234,62 +284,90 @@ class _CameraScreenState extends State<CameraScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // Dummy Gallery
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    height: 48,
-                    width: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Color(0xFF56BBFF).withValues(alpha: 0.25), width: 2),
-                      image: const DecorationImage(
-                        image: AssetImage("assets/images/dummy.jpg"),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Capture / Record button
-                GestureDetector(
-                  onTap: _onCapturePressed,
-                  child: Container(
-                    height: 60,
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _isRecording ? Colors.red : Color(0xFF56BBFF).withValues(alpha: 0.25),
-                        width: 4,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Switch camera
-                InkWell(
-                  onTap: _switchCamera,
-                  child: Container(
-                    height: 48,
-                    width: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF676565),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SvgPicture.asset('assets/icons/camera_swithc.svg'),
-                    ),
-                  ),
-                ),
+                _buildGalleryButton(),
+                _buildCaptureButton(),
+                _buildSwitchButton(),
               ],
             ),
           ),
         ],
       ),
       bottomNavigationBar: BottomMenu(1),
+    );
+  }
+
+  /// 🎚 Mode button
+  Widget _buildModeButton(String asset, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 36,
+        width: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: active ? AppColors.primaryColor : Colors.white30,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SvgPicture.asset(asset),
+        ),
+      ),
+    );
+  }
+
+  /// 🖼 Gallery Button
+  Widget _buildGalleryButton() {
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        height: 48,
+        width: 48,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white24, width: 2),
+          image: const DecorationImage(
+            image: AssetImage("assets/images/dummy.jpg"),
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 📸 Capture / Record button
+  Widget _buildCaptureButton() {
+    return GestureDetector(
+      onTap: _onCapturePressed,
+      child: Container(
+        height: 70,
+        width: 70,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: _isRecording ? Colors.red : Colors.white30,
+            width: 4,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 🔁 Switch camera button
+  Widget _buildSwitchButton() {
+    return InkWell(
+      onTap: _switchCamera,
+      child: Container(
+        height: 48,
+        width: 48,
+        decoration: const BoxDecoration(
+          color: Colors.grey,
+          shape: BoxShape.circle,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SvgPicture.asset('assets/icons/camera_swithc.svg'),
+        ),
+      ),
     );
   }
 }

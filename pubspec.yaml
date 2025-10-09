@@ -34,6 +34,7 @@ dependencies:
   socket_io_client: ^2.0.3
   uuid:
   gallery_saver_plus: ^3.2.9
+  ffmpeg_kit_flutter_new: ^3.2.0
 
 
 

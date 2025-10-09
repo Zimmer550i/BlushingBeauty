@@ -4,8 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
+import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/send_message_with_friend_screen.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_discard_screen.dart';
 import 'package:video_player/video_player.dart';
+
+import '../../../../controllers/camera_controller.dart';
+import '../../../../helpers/route.dart';
+import '../camera_screen.dart';
 
 class VideoEditScreen extends StatefulWidget {
   final String filePath;
@@ -22,6 +27,7 @@ class VideoEditScreen extends StatefulWidget {
 }
 
 class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
+  final CreateStoryController createStoryController = Get.put(CreateStoryController());
   CameraController? _frontCam;
   VideoPlayerController? _video;
 
@@ -79,9 +85,9 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
       try {
         if (_frontCam?.value.isRecordingVideo == true) {
           await _frontCam?.stopVideoRecording();
-    }
-    } catch (_) {}
-    _frontCam?.dispose();
+        }
+      } catch (_) {}
+      _frontCam?.dispose();
     }();
     super.dispose();
   }
@@ -106,21 +112,16 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                 Positioned.fill(
                   child: widget.isVideo
                       ? (_video != null && _video!.value.isInitialized
-                      ? FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _video!.value.size.width,
-                      height: _video!.value.size.height,
-                      child: VideoPlayer(_video!),
-                    ),
-                  )
-                      : const Center(
-                    child: CircularProgressIndicator(),
-                  ))
-                      : Image.file(
-                    File(widget.filePath),
-                    fit: BoxFit.cover,
-                  ),
+                            ? FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: _video!.value.size.width,
+                                  height: _video!.value.size.height,
+                                  child: VideoPlayer(_video!),
+                                ),
+                              )
+                            : const Center(child: CircularProgressIndicator()))
+                      : Image.file(File(widget.filePath), fit: BoxFit.cover),
                 ),
 
                 /// Close button
@@ -128,14 +129,19 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                   top: 20,
                   right: 20,
                   child: InkWell(
-                    onTap: () => Get.back(),
+                    onTap: () {
+                      Get.offAllNamed(AppRoutes.cameraScreen);
+                    },
                     child: Container(
                       height: 32,
                       width: 32,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                         color: Colors.white,
-                        border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
+                        border: Border.all(
+                          color: Color(0xFFC4C3C3),
+                          width: 0.5,
+                        ),
                       ),
                       child: const Center(
                         child: Icon(Icons.close, color: Color(0xFF676565)),
@@ -171,46 +177,61 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                       children: [
                         InkWell(
                           onTap: () {
-                            Get.to(()=> VideoDiscardScreen(videoUrl: widget.filePath));
+                            Get.to(
+                              () =>
+                                  VideoDiscardScreen(videoUrl: widget.filePath),
+                            );
                           },
-                          child: widget.isVideo? Container(
-                            width: double.infinity,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFFC4C3C3),
-                                width: 0.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF002329).withValues(alpha: 0.07),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
-                                  spreadRadius: 0,
+                          child: widget.isVideo
+                              ? Container(
+                                  width: double.infinity,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: const Color(0xFFC4C3C3),
+                                      width: 0.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF002329,
+                                        ).withValues(alpha: 0.07),
+                                        offset: const Offset(0, 2),
+                                        blurRadius: 4,
+                                        spreadRadius: 0,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      "Edit Video",
+                                      style: const TextStyle(
+                                        color: Color(0xFF413E3E),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
                                 )
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                "Edit Video",
-                                style: const TextStyle(
-                                  color: Color(0xFF413E3E),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ):SizedBox(),
+                              : SizedBox(),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
-                  CustomButton(onTap: () {}, text: "Send Message"),
+                  CustomButton(onTap: () {
+                    Get.to(()=> SendMessageWithFriendScreen(filePath: widget.filePath,isVideo: widget.isVideo));
+                  }, text: "Send Message"),
                   const SizedBox(height: 20),
-                  CustomButton(onTap: () {}, text: "Create Story"),
+                  CustomButton(onTap: () {
+                    if(widget.isVideo){
+                      createStoryController.addStory(videoPath: widget.filePath);
+                    }else{
+                      createStoryController.addStory(imagePath: widget.filePath);
+                    }
+                  }, text: "Create Story"),
                 ],
               ),
             ),
@@ -222,14 +243,15 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
 
   /// ==== Video Controls ====
   Widget _buildBottomControls() {
-    final total = _videoDuration.inMilliseconds.toDouble().clamp(1, double.infinity);
+    final total = _videoDuration.inMilliseconds.toDouble().clamp(
+      1,
+      double.infinity,
+    );
     final value = _position.inMilliseconds.toDouble().clamp(0, total);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.24),
-      ),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.24)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

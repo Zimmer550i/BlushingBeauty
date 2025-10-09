@@ -195,7 +195,16 @@ class _ChatScreenState extends State<ChatScreen> {
             color: msg["isMe"]
                 ? const Color(0xFF56BBFF)
                 : const Color(0xFFECECEC),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(32),
+              topRight: const Radius.circular(32),
+              bottomLeft: msg["isMe"]
+                  ? const Radius.circular(32)
+                  : const Radius.circular(0),
+              bottomRight: msg["isMe"]
+                  ? const Radius.circular(0)
+                  : const Radius.circular(32),
+            ),
           ),
           child: Text(
             msg["message"] ?? "",
