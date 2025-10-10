@@ -10,6 +10,9 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../../../../controllers/camera_controller.dart';
+import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 
 
 class FrameSelectionScreen extends StatefulWidget {
@@ -29,6 +32,7 @@ class FrameSelectionScreen extends StatefulWidget {
 }
 
 class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
+  final CreateStoryController createStoryController = Get.put(CreateStoryController());
   CameraController? _frontCam;
   VideoPlayerController? _video;
   bool _isInitialized = false;
@@ -120,7 +124,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   // ---------- VIDEO TRIMMING ----------
   Future<File?> _trimVideo(File inputFile) async {
     try {
-      final dir = await Directory.systemTemp.createTemp();
+      final dir = await getTemporaryDirectory();
       final outputPath = '${dir.path}/trimmed_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
       final totalDuration = _video!.value.duration.inMilliseconds;
@@ -131,14 +135,23 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       final startSec = startMs / 1000.0;
       final durationSec = durationMs / 1000.0;
 
-      final command = "-i ${inputFile.path} -ss $startSec -t $durationSec -c copy $outputPath";
+      final safeInput = '"${inputFile.path}"';
+      final safeOutput = '"$outputPath"';
+
+      final command =
+          '-y -ss $startSec -t $durationSec -i $safeInput -c:v libx264 -c:a aac -preset ultrafast $safeOutput';
+
+      debugPrint("🎬 Running FFmpeg command: $command");
+
       final session = await FFmpegKit.execute(command);
       final returnCode = await session.getReturnCode();
+      final logs = await session.getAllLogsAsString();
 
       if (ReturnCode.isSuccess(returnCode)) {
+        debugPrint("✅ FFmpeg success: $outputPath");
         return File(outputPath);
       } else {
-        debugPrint("❌ FFmpeg failed: $returnCode");
+        debugPrint("❌ FFmpeg failed: $returnCode\nLogs:\n$logs");
         return null;
       }
     } catch (e) {
@@ -324,51 +337,110 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
   // ---------- TRIM SLIDER ----------
   Widget _buildTrimsSlider() {
-    final double fullWidth = _thumbnailPaths.length * (_thumbnailWidth + 4);
+    final double totalWidth = _thumbnailPaths.length * (_thumbnailWidth + 2);
 
     return Container(
       height: 60,
-      decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFABD4A7)),
-      ),
+      margin: const EdgeInsets.symmetric(vertical: 10),
       child: Stack(
+        alignment: Alignment.centerLeft,
         children: [
+          // Thumbnails Filmstrip
           ListView.builder(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
             itemCount: _thumbnailPaths.length,
-            itemBuilder: (context, index) => Container(
-              width: _thumbnailWidth,
-              height: _thumbnailHeight,
-              margin: const EdgeInsets.all(4),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: Image.file(File(_thumbnailPaths[index]), fit: BoxFit.cover),
+            itemBuilder: (context, index) {
+              return Container(
+                width: _thumbnailWidth,
+                margin: const EdgeInsets.symmetric(horizontal: 1),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Image.file(
+                    File(_thumbnailPaths[index]),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // Dark overlay on unselected regions
+          Positioned.fill(
+            child: Stack(
+              children: [
+                // Left dark overlay
+                Positioned(
+                  left: 0,
+                  right: totalWidth - _leftHandle,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(color: Colors.black.withOpacity(0.5)),
+                ),
+
+                // Right dark overlay
+                Positioned(
+                  left: _rightHandle,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(color: Colors.black.withOpacity(0.5)),
+                ),
+              ],
+            ),
+          ),
+
+          // Blue border highlight for selected region
+          Positioned(
+            left: _leftHandle,
+            width: _rightHandle - _leftHandle,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.blueAccent, width: 2),
+                borderRadius: BorderRadius.circular(6),
               ),
             ),
           ),
+
+          // Left handle
           Positioned(
             left: _leftHandle,
+            top: 0,
+            bottom: 0,
             child: GestureDetector(
-              onHorizontalDragUpdate: (d) => setState(() {
-                _leftHandle += d.delta.dx;
-                _leftHandle = _leftHandle.clamp(0.0, _rightHandle - 20);
-                _trimStart = _leftHandle / fullWidth;
-              }),
-              child: _handleWidget(),
+              onHorizontalDragUpdate: (details) {
+                setState(() {
+                  _leftHandle += details.delta.dx;
+                  _leftHandle = (_leftHandle.clamp(0.0, _rightHandle - 30));
+
+                  final totalWidth = _thumbnailPaths.length * (_thumbnailWidth + 2);
+                  _trimStart = (_leftHandle / totalWidth).clamp(0.0, 1.0);
+                });
+              },
+
+              child: _buildHandle(),
             ),
           ),
+
+          // Right handle
           Positioned(
             left: _rightHandle,
+            top: 0,
+            bottom: 0,
             child: GestureDetector(
-              onHorizontalDragUpdate: (d) => setState(() {
-                _rightHandle += d.delta.dx;
-                _rightHandle = _rightHandle.clamp(_leftHandle + 20, fullWidth);
-                _trimEnd = _rightHandle / fullWidth;
-              }),
-              child: _handleWidget(),
+              onHorizontalDragUpdate: (details) {
+                setState(() {
+                  _rightHandle += details.delta.dx;
+                  final totalWidth = _thumbnailPaths.length * (_thumbnailWidth + 2);
+                  _rightHandle = (_rightHandle.clamp(_leftHandle + 30, totalWidth));
+
+                  _trimEnd = (_rightHandle / totalWidth).clamp(0.0, 1.0);
+                });
+              },
+
+              child: _buildHandle(),
             ),
           ),
         ],
@@ -376,40 +448,67 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     );
   }
 
-  Widget _handleWidget() => Container(
-    width: 6,
-    height: _thumbnailHeight,
-    color: Colors.redAccent,
-  );
+  /// White rounded draggable handle with subtle shadow
+  Widget _buildHandle() {
+    return Container(
+      width: 6,
+      decoration: BoxDecoration(
+        color: Colors.blue,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   // ---------- SEND LOGIC ----------
   Future<void> _handleSendNow() async {
-    if (_video == null) return;
+    if (_video == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No video loaded!')),
+      );
+      return;
+    }
 
     final originalFile = File(widget.videoUrl);
+
+    // 🟢 Step 1: Notify user
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Trimming video... Please wait')),
     );
 
+    // 🟢 Step 2: Trim the video
     final trimmedFile = await _trimVideo(originalFile);
 
+    // 🟢 Step 3: If successful, send to next screen
     if (trimmedFile != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trim successful! Sending video...')),
+        const SnackBar(content: Text('Trim successful!')),
       );
 
-      Get.offAllNamed(
-        AppRoutes.messageScreen,
-        arguments: {
-          'videoPath': trimmedFile.path,
-          'userProfile': widget.userProfile,
-          'userName': widget.userName,
-        },
+      // 🚀 Navigate & pass file to SendMessageWithFriendScreen
+      await Get.to(
+            () => SendMessageWithFriendScreen(
+          filePath: trimmedFile.path,
+          isVideo: true,
+        ),
+        transition: Transition.rightToLeft,
+        duration: const Duration(milliseconds: 300),
       );
+
+      // optional: close current trimming screen after navigation
+      // Get.back();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Video trim failed')),
       );
     }
   }
+
 }

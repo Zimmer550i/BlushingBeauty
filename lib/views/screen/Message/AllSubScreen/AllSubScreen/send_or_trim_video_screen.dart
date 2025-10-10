@@ -265,7 +265,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                "Trim or Select Image",
+                                "Trim",
                                 style: TextStyle(
                                   color: Color(0xFF413E3E),
                                   fontSize: 16,

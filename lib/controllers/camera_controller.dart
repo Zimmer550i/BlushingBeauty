@@ -1,21 +1,24 @@
 import 'dart:convert';
-import 'package:get/get.dart';
 import 'dart:io';
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:path/path.dart' as p;
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
 
-class CreateStoryController extends GetxController{
+class CreateStoryController extends GetxController {
   final ApiService _api = ApiService();
   final ImagePicker _picker = ImagePicker();
 
+  /// Add story with optional image/video paths
   Future<void> addStory({String? imagePath, String? videoPath}) async {
     try {
       String? mediaType;
       File? mediaFile;
 
-      // 🟢 Step 1: Decide media type
+      // 🟢 Step 1: Determine media type and file source
       if (imagePath != null) {
         mediaType = 'image';
         mediaFile = File(imagePath);
@@ -23,39 +26,10 @@ class CreateStoryController extends GetxController{
         mediaType = 'video';
         mediaFile = File(videoPath);
       } else {
-        // 🟡 If no path is provided, show bottom sheet for user to pick
-        mediaType = await Get.bottomSheet<String>(
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Wrap(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.image, color: Colors.blue),
-                  title: const Text('Add Image Story'),
-                  onTap: () => Get.back(result: 'image'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.videocam, color: Colors.deepPurple),
-                  title: const Text('Add Video Story'),
-                  onTap: () => Get.back(result: 'video'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.close, color: Colors.redAccent),
-                  title: const Text('Cancel'),
-                  onTap: () => Get.back(result: null),
-                ),
-              ],
-            ),
-          ),
-        );
-
+        // If no path provided → show picker
+        mediaType = await _showMediaPickerSheet();
         if (mediaType == null) return;
 
-        // 🟢 Step 2: Pick from gallery if not provided
         XFile? pickedFile;
         if (mediaType == 'image') {
           pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -67,8 +41,18 @@ class CreateStoryController extends GetxController{
         mediaFile = File(pickedFile.path);
       }
 
-      // 🟢 Step 3: Upload story
-      await _uploadStoryMedia(mediaFile, mediaType);
+      if (mediaFile == null || !(await mediaFile.exists())) {
+        Get.snackbar("Error", "No valid media file selected.");
+        return;
+      }
+
+      // 🟣 Step 2: Ensure .mp4 for videos
+      if (mediaType == 'video') {
+        mediaFile = await _ensureMp4Format(mediaFile);
+      }
+
+      // 🟢 Step 3: Upload story to API
+      await _uploadStoryMedia(mediaFile, mediaType!);
 
     } catch (e) {
       debugPrint("❌ Error creating story: $e");
@@ -81,30 +65,105 @@ class CreateStoryController extends GetxController{
     }
   }
 
-  /// Upload media file (image/video)
+  /// 🧱 Media picker bottom sheet
+  Future<String?> _showMediaPickerSheet() async {
+    return await Get.bottomSheet<String>(
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.image, color: Colors.blue),
+              title: const Text('Add Image Story'),
+              onTap: () => Get.back(result: 'image'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam, color: Colors.deepPurple),
+              title: const Text('Add Video Story'),
+              onTap: () => Get.back(result: 'video'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.close, color: Colors.redAccent),
+              title: const Text('Cancel'),
+              onTap: () => Get.back(result: null),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 🧩 Ensure video file uses .mp4 extension
+  Future<File> _ensureMp4Format(File file) async {
+    final currentExt = p.extension(file.path).toLowerCase();
+    if (currentExt == '.mp4') return file;
+
+    final newPath = p.setExtension(file.path, '.mp4');
+    final newFile = await file.copy(newPath);
+
+    debugPrint('🎥 Renamed video to .mp4 → $newPath');
+    return newFile;
+  }
+
+  /// 📤 Upload story (image or video)
   Future<void> _uploadStoryMedia(File file, String type) async {
     try {
-      final multipartBody = [MultipartBody(key: type, file: file)];
+      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      debugPrint('📡 Uploading $type with MIME type: $mimeType');
+
+      // Build multipart body for ApiService
+      final multipartBody = [
+        MultipartBody(key: type, file: file),
+      ];
+
       final response = await _api.postMultipartData(
         "/story/create-story",
-        {},
+        {}, // You can add text fields like {"caption": "Nice view!"}
         multipartBody: multipartBody,
         authReq: true,
       );
 
+      debugPrint("📥 Server Response: ${response.statusCode}");
+      debugPrint("📦 Body: ${response.body}");
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final resData = jsonDecode(response.body);
         Get.snackbar(
-          "Success",
-          "Your ${resData['message']}",
+          "✅ Success",
+          resData['message'] ?? "Story uploaded successfully!",
           snackPosition: SnackPosition.BOTTOM,
         );
       } else {
-        debugPrint("❗ Upload failed: ${response.body}");
+        // Handle backend validation error (Zod or server message)
+        try {
+          final resData = jsonDecode(response.body);
+          Get.snackbar(
+            "Upload Failed",
+            resData['message'] ?? "Server rejected upload.",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.redAccent.withOpacity(0.2),
+          );
+        } catch (_) {
+          Get.snackbar(
+            "Upload Failed",
+            "Server error: ${response.statusCode}",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.redAccent.withOpacity(0.2),
+          );
+        }
       }
     } catch (e) {
       debugPrint("❌ Exception during upload: $e");
+      Get.snackbar(
+        "Error",
+        "Could not upload story. Please try again.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent.withOpacity(0.2),
+      );
     }
   }
-
 }
