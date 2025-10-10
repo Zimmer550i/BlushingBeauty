@@ -63,7 +63,7 @@ class GroupChatController extends GetxController {
       if (multipartBody.isNotEmpty) {
         // multipart update with file
         response = await _apiService.patchMultipartData(
-          "/chat/update-groupChat/$chatId",
+          "/chat/update-group/$chatId",
           body,
           multipartBody: multipartBody,
           authReq: true,
@@ -71,7 +71,7 @@ class GroupChatController extends GetxController {
       } else {
         // normal patch
         response = await _apiService.patch(
-          "/chat/update-groupChat/$chatId",
+          "/chat/update-group/$chatId",
           body,
           authReq: true,
         );
@@ -107,8 +107,8 @@ class GroupChatController extends GetxController {
     isLoading.value = true;
     try {
       final body = {
-        "chatId": chatId,
         "newMembers": newMembers,
+        "chatId": chatId,
       };
 
       final response = await _apiService.post(
@@ -136,7 +136,7 @@ class GroupChatController extends GetxController {
   Future<void> leaveGroup(String chatId) async {
     try {
       isLoading.value = true;
-      final res = await _apiService.post("/chat/leave-groupChat", {"chatId": chatId}, authReq: true);
+      final res = await _apiService.post("/chat/leave-group", {"groupId": chatId}, authReq: true);
       if (res.statusCode == 200) {
         Get.snackbar("Success", "You left the groupChat");
         Get.back(); // Go back after leaving
@@ -154,7 +154,7 @@ class GroupChatController extends GetxController {
   Future<void> deleteGroup(String chatId) async {
     try {
       isLoading.value = true;
-      final res = await _apiService.delete("/chat/groupChat-chat/$chatId", authReq: true);
+      final res = await _apiService.delete("/chat/group-chat/$chatId", authReq: true);
       if (res.statusCode == 200 || res.statusCode == 201) {
         Get.snackbar("Success", "Group deleted successfully");
         Get.offAll(()=>MessageScreen());

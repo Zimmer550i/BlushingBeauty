@@ -503,7 +503,7 @@ class _MessageScreenState extends State<MessageScreen> {
           () => VideoPreviewScreen(
             videoUrl: localVideo.path,
             countdownSeconds: 3,
-            userProfile: "", // you can pass author avatar if available
+            userProfile: "",
             userName: name,
           ),
         );

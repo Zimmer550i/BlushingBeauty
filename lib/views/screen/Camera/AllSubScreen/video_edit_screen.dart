@@ -5,11 +5,12 @@ import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/send_message_with_friend_screen.dart';
-import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_discard_screen.dart';
+import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_trim_screen.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../controllers/camera_controller.dart';
 import '../../../../helpers/route.dart';
+import '../../../../utils/file_utils.dart';
 import '../camera_screen.dart';
 
 class VideoEditScreen extends StatefulWidget {
@@ -178,8 +179,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                         InkWell(
                           onTap: () {
                             Get.to(
-                              () =>
-                                  VideoDiscardScreen(videoUrl: widget.filePath),
+                              () => VideoTrimAndSendScreen(videoUrl: widget.filePath),
                             );
                           },
                           child: widget.isVideo
@@ -221,9 +221,29 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  CustomButton(onTap: () {
-                    Get.to(()=> SendMessageWithFriendScreen(filePath: widget.filePath,isVideo: widget.isVideo));
-                  }, text: "Send Message"),
+                  CustomButton(
+                    onTap: () async {
+                      try {
+                        if(widget.isVideo){
+                          final formattedFile = await ensureMp4Format(widget.filePath);
+
+                          Get.to(() => SendMessageWithFriendScreen(
+                            filePath: formattedFile.path,
+                            isVideo: widget.isVideo,
+                          ));
+                        }else{
+                          Get.to(() => SendMessageWithFriendScreen(
+                            filePath: widget.filePath,
+                            isVideo: widget.isVideo,
+                          ));
+
+                        }
+                      } catch (e) {
+                        debugPrint('⚠️ Could not format video: $e');
+                      }
+                    },
+                    text: "Send Message",
+                  ),
                   const SizedBox(height: 20),
                   CustomButton(onTap: () {
                     if(widget.isVideo){

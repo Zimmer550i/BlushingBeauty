@@ -365,28 +365,30 @@ class ChatController extends GetxController {
           );
         }
 
-        // ✅ Wait for backend to process the event
-        await Future.delayed(const Duration(milliseconds: 500));
+        // // ✅ Wait for backend to process the event
+        // await Future.delayed(const Duration(milliseconds: 500));
 
-        // 🧩 Optional fallback: ensure DB persistence
-        try {
-          await api.post(
-            "/message/create",
-            {
-              "chatId": chatId,
-              "sender": senderId,
-              "media": mediaUrl,
-              "contentType": contentType,
-            },
-            authReq: true,
-          );
-          debugPrint("💾 Message stored via REST for ${friend['name']}");
-        } catch (e) {
-          debugPrint("⚠️ Skipped REST save fallback: $e");
-        }
+        // // 🧩 Optional fallback: ensure DB persistence
+        // try {
+        //   await api.post(
+        //     "/message/create",
+        //     {
+        //       "chatId": chatId,
+        //       "sender": senderId,
+        //       "media": mediaUrl,
+        //       "contentType": contentType,
+        //     },
+        //     authReq: true,
+        //   );
+        //   debugPrint("💾 Message stored via REST for ${friend['name']}");
+        // } catch (e) {
+        //   debugPrint("⚠️ Skipped REST save fallback: $e");
+        // }
 
         debugPrint("✅ Sent $contentType to ${friend['name']}");
       }
+
+      Get.back();
 
       debugPrint("🎉 Media sent to ${selectedIds.length} friends successfully!");
 

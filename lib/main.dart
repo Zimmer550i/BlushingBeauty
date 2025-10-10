@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/simple/get_state.dart';
 import 'package:ree_social_media_app/controllers/localization_controller.dart';
 import 'package:ree_social_media_app/controllers/theme_controller.dart';
+import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/themes/light_theme.dart';
 import 'package:ree_social_media_app/utils/app_constants.dart';
 import 'package:ree_social_media_app/utils/message.dart';
@@ -12,11 +13,20 @@ import 'package:ree_social_media_app/utils/message.dart';
 import 'controllers/user_controller.dart';
 import 'helpers/di.dart' as di;
 import 'helpers/route.dart';
+List<CameraDescription> cameras = [];
+
 void main()async {
   WidgetsFlutterBinding.ensureInitialized();
   AppRoutes.cameras = await availableCameras();
   Map<String, Map<String, String>> _languages = await di.init();
   Get.put(UserController(), permanent: true);
+  // ✅ Ensure previous camera instances are disposed before new init
+  await GlobalCameraManager.dispose();
+  try {
+    cameras = await availableCameras();
+  } catch (e) {
+    debugPrint("Camera init error: $e");
+  }
   runApp( MyApp(languages:_languages,));
 }
 

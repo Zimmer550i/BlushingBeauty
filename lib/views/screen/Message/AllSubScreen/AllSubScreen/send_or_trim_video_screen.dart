@@ -3,10 +3,13 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
-import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/fram_selection_screen.dart';
 import 'package:video_player/video_player.dart';
+
+import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
+import '../../../Camera/AllSubScreen/video_trim_screen.dart';
 
 class SendOrTrimVideoScreen extends StatefulWidget {
   final String videoUrl;
@@ -25,12 +28,7 @@ class SendOrTrimVideoScreen extends StatefulWidget {
 }
 
 class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
-  CameraController? _frontCam;
   VideoPlayerController? _video;
-
-  bool _isRecording = false;
-  XFile? _recordedFile;
-
   Duration _videoDuration = Duration.zero;
   Duration _position = Duration.zero;
   late final ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
@@ -50,54 +48,45 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
 
   Future<void> _requestPermissions() async {
     final statuses = await [Permission.camera, Permission.microphone].request();
-
     if (statuses[Permission.camera] != PermissionStatus.granted ||
         statuses[Permission.microphone] != PermissionStatus.granted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Camera & Microphone permission required'),
-          ),
+          const SnackBar(content: Text('Camera & Microphone permission required')),
         );
+        Navigator.pop(context);
       }
-
-      if (mounted) Navigator.pop(context);
     }
   }
 
   Future<void> _initFrontCamera() async {
     final cameras = await availableCameras();
     final front = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.front,
+          (c) => c.lensDirection == CameraLensDirection.front,
       orElse: () => cameras.first,
     );
-    _frontCam = CameraController(
-      front,
-      ResolutionPreset.high,
-      enableAudio: true,
-    );
-    await _frontCam!.initialize();
+
+    final controller = await GlobalCameraManager.initialize(front);
+    if (controller == null) return;
+
     if (mounted) setState(() {});
   }
 
   Future<void> _initVideo() async {
-    if (widget.videoUrl.startsWith('http')) {
-      _video = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
-    } else {
-      _video = VideoPlayerController.file(File(widget.videoUrl));
-    }
+    _video = widget.videoUrl.startsWith('http')
+        ? VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+        : VideoPlayerController.file(File(widget.videoUrl));
+
     await _video!.initialize();
     _videoDuration = _video!.value.duration;
     _video!.setLooping(false);
 
     _video!.addListener(() {
       if (!mounted) return;
-      setState(() {
-        _position = _video!.value.position;
-      });
+      _position = _video!.value.position;
       _isPlaying.value = _video!.value.isPlaying;
+      setState(() {});
     });
-    if (mounted) setState(() {});
   }
 
   Future<void> _startBackgroundVideo() async {
@@ -108,17 +97,8 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
 
   @override
   void dispose() {
-    _video?.removeListener(() {});
     _video?.dispose();
-
-    () async {
-      try {
-        if (_frontCam?.value.isRecordingVideo == true) {
-          await _frontCam?.stopVideoRecording();
-        }
-      } catch (_) {}
-      _frontCam?.dispose();
-    }();
+    GlobalCameraManager.dispose();
     super.dispose();
   }
 
@@ -130,33 +110,23 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final camController = GlobalCameraManager.controller;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            InkWell(
-              onTap: () {
-                Get.back();
-              },
-              child: Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
+            InkWell(onTap: Get.back, child: const Icon(Icons.arrow_back, color: Color(0xFF0D1C12))),
+            const SizedBox(width: 12),
+            CircleAvatar(
+              backgroundImage: NetworkImage(widget.userProfile),
+              radius: 22,
             ),
-            SizedBox(width: 12),
-            Container(
-              height: 44,
-              width: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: NetworkImage(widget.userProfile),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text(
               widget.userName,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color(0xFF413E3E),
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
@@ -173,14 +143,14 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
               alignment: Alignment.center,
               children: [
                 /// ==== Full-screen Front Camera ====
-                if (_frontCam?.value.isInitialized == true)
+                if (camController?.value.isInitialized == true)
                   Positioned.fill(
                     child: FittedBox(
                       fit: BoxFit.cover,
                       child: SizedBox(
-                        width: _frontCam!.value.previewSize!.height,
-                        height: _frontCam!.value.previewSize!.width,
-                        child: CameraPreview(_frontCam!),
+                        width: camController!.value.previewSize!.height,
+                        height: camController.value.previewSize!.width,
+                        child: CameraPreview(camController),
                       ),
                     ),
                   ),
@@ -195,7 +165,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                       height: 159,
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.24),
-                        border: Border.all(color: Color(0xFF383838), width: 4),
+                        border: Border.all(color: const Color(0xFF383838), width: 4),
                       ),
                       clipBehavior: Clip.antiAliasWithSaveLayer,
                       child: FittedBox(
@@ -210,78 +180,39 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                   ),
 
                 /// Bottom controls
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: _buildBottomControls(),
-                ),
+                Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomControls()),
               ],
             ),
           ),
 
+          /// ====== Bottom Buttons ======
           Container(
             width: double.infinity,
-            color: Color(0xFFFFFFFF),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(color: Colors.white),
-                    child: Column(
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            Get.to(
-                              () => FrameSelectionScreen(
-                                videoUrl: widget.videoUrl,
-                                userProfile: widget.userProfile,
-                                userName: widget.userName,
-                              ),
-                            );
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Color(0xFFC4C3C3),
-                                width: 0.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color(
-                                    0xFF002329,
-                                  ).withValues(alpha: 0.07),
-                                  offset: Offset(0, 2),
-                                  blurRadius: 4,
-                                  spreadRadius: 0,
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                "Trim",
-                                style: TextStyle(
-                                  color: Color(0xFF413E3E),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  CustomButton(onTap: () {}, text: "Send Now"),
-                ],
-              ),
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
+            child: Column(
+              children: [
+                InkWell(
+                  onTap: () async {
+                    await _safeStopBeforeNavigate(() {
+                      Get.to(() => VideoTrimAndSendScreen(videoUrl: widget.videoUrl));
+                    });
+                  },
+                  child: _buildTrimButton(),
+                ),
+                const SizedBox(height: 20),
+                CustomButton(
+                  onTap: () async {
+                    await _safeStopBeforeNavigate(() {
+                      Get.to(() => SendMessageWithFriendScreen(
+                        filePath: widget.videoUrl,
+                        isVideo: true,
+                      ));
+                    });
+                  },
+                  text: "Send Now",
+                ),
+              ],
             ),
           ),
         ],
@@ -289,76 +220,98 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     );
   }
 
+  Future<void> _safeStopBeforeNavigate(Function onNavigate) async {
+    try {
+      // Stop video
+      if (_video?.value.isPlaying == true) await _video?.pause();
+
+      // Stop and release camera globally
+      await GlobalCameraManager.dispose();
+
+      // Let Android release buffers properly
+      await Future.delayed(const Duration(milliseconds: 300));
+    } catch (e) {
+      debugPrint("⚠️ Error before navigation: $e");
+    }
+
+    if (mounted) onNavigate();
+  }
+
+  Widget _buildTrimButton() => Container(
+    width: double.infinity,
+    height: 52,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: const Color(0xFFC4C3C3), width: 0.5),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF002329).withValues(alpha: 0.07),
+          offset: const Offset(0, 2),
+          blurRadius: 4,
+        ),
+      ],
+    ),
+    child: const Center(
+      child: Text(
+        "Trim",
+        style: TextStyle(
+          color: Color(0xFF413E3E),
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+  );
+
   Widget _buildBottomControls() {
-    final total = _videoDuration.inMilliseconds.toDouble().clamp(
-      1,
-      double.infinity,
-    );
+    final total = _videoDuration.inMilliseconds.toDouble().clamp(1, double.infinity);
     final value = _position.inMilliseconds.toDouble().clamp(0, total);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
       decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.24)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          /// Progress / Seek
-          Row(
-            children: [
-              Text(
-                "${_fmt(_position)} sec",
-                style: TextStyle(
-                  color: Color(0xFF413E3E),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
+          Text(
+            _fmt(_position),
+            style: const TextStyle(color: Color(0xFF413E3E), fontSize: 14, fontWeight: FontWeight.w400),
+          ),
+          Expanded(
+            child: Slider(
+              value: double.parse(value.toString()),
+              min: 0,
+              max: double.parse(total.toString()),
+              activeColor: const Color(0xFF413E3E),
+              inactiveColor: const Color(0xFF413E3E),
+              thumbColor: const Color(0xFFD9D9D9),
+              onChanged: (v) => _video?.seekTo(Duration(milliseconds: v.toInt())),
+            ),
+          ),
+          Text(
+            _fmt(_videoDuration),
+            style: const TextStyle(color: Color(0xFF413E3E), fontSize: 14, fontWeight: FontWeight.w400),
+          ),
+          const SizedBox(width: 12),
+          ValueListenableBuilder<bool>(
+            valueListenable: _isPlaying,
+            builder: (_, playing, __) => CircleAvatar(
+              backgroundColor: Colors.white,
+              child: IconButton(
+                icon: Icon(
+                  playing ? Icons.pause : Icons.play_arrow,
+                  color: AppColors.primaryColor,
                 ),
-              ),
-              Expanded(
-                child: Slider(
-                  value: value.toDouble(),
-                  min: 0,
-                  max: total.toDouble(),
-                  activeColor: Color(0xFF413E3E),
-                  inactiveColor: Color(0xFF413E3E),
-                  thumbColor: Color(0xFFD9D9D9),
-                  onChanged: (v) {
-                    final pos = Duration(milliseconds: v.toInt());
-                    _video?.seekTo(pos);
-                  },
-                ),
-              ),
-              Text(
-                "${_fmt(_videoDuration)} sec",
-                style: TextStyle(
-                  color: Color(0xFF413E3E),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              SizedBox(width: 12),
-              ValueListenableBuilder<bool>(
-                valueListenable: _isPlaying,
-                builder: (_, playing, __) {
-                  return CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                      icon: Icon(
-                        playing ? Icons.pause : Icons.play_arrow,
-                        color: AppColors.primaryColor,
-                      ),
-                      onPressed: () async {
-                        if (playing) {
-                          await _video?.pause();
-                        } else {
-                          await _video?.play();
-                        }
-                        _isPlaying.value = _video?.value.isPlaying ?? false;
-                      },
-                    ),
-                  );
+                onPressed: () async {
+                  if (playing) {
+                    await _video?.pause();
+                  } else {
+                    await _video?.play();
+                  }
+                  _isPlaying.value = _video?.value.isPlaying ?? false;
                 },
               ),
-            ],
+            ),
           ),
         ],
       ),

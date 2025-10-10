@@ -6,6 +6,8 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/bottom_menu..dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_edit_screen.dart';
 
+import '../../../services/camera_manager.dart';
+
 class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
   const CameraScreen({super.key, required this.cameras});
@@ -15,12 +17,13 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
-  CameraController? _controller;
   bool _isRecording = false;
   bool _isVideoMode = false;
   int _recordDuration = 0;
   Timer? _timer;
   bool _isCameraChanging = false;
+
+  CameraController? get _controller => GlobalCameraManager.controller;
 
   @override
   void initState() {
@@ -31,15 +34,14 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
-  /// 🔄 Lifecycle handling
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_controller == null || !_controller!.value.isInitialized) return;
+    if (!GlobalCameraManager.isInitialized) return;
 
     switch (state) {
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
-        _disposeController();
+        GlobalCameraManager.dispose();
         break;
       case AppLifecycleState.resumed:
         if (widget.cameras.isNotEmpty) {
@@ -51,56 +53,15 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
-  /// 📸 Initialize camera safely
   Future<void> _initCamera(CameraDescription description) async {
     if (_isCameraChanging) return;
     _isCameraChanging = true;
 
-    try {
-      await _disposeController();
-
-      final controller = CameraController(
-        description,
-        ResolutionPreset.medium, // ✅ reduces buffer pressure
-        enableAudio: true,
-        imageFormatGroup: ImageFormatGroup.yuv420, // ✅ stable on Android
-      );
-
-      await controller.initialize();
-
-      if (!mounted) return;
-
-      setState(() {
-        _controller = controller;
-      });
-    } catch (e) {
-      debugPrint('Camera init error: $e');
-    } finally {
-      _isCameraChanging = false;
-    }
+    final controller = await GlobalCameraManager.initialize(description);
+    if (controller != null && mounted) setState(() {});
+    _isCameraChanging = false;
   }
 
-  /// 🧹 Dispose controller safely
-  Future<void> _disposeController() async {
-    try {
-      final oldController = _controller;
-      _controller = null;
-      if (oldController != null && oldController.value.isInitialized) {
-        await oldController.dispose();
-      }
-    } catch (e) {
-      debugPrint("Controller dispose error: $e");
-    }
-
-    // 🧠 Do NOT call setState() if the widget is already disposed
-    // if (mounted) {
-    //   setState(() {});
-    // }
-  }
-
-
-
-  /// 🔄 Switch front/rear camera
   Future<void> _switchCamera() async {
     if (_controller == null || _isCameraChanging) return;
 
@@ -109,14 +70,11 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           (cam) => cam.lensDirection != currentLens,
       orElse: () => widget.cameras.first,
     );
-
     await _initCamera(newCamera);
   }
 
-  /// 🎥 Capture or record
   Future<void> _onCapturePressed() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
-
     if (_isVideoMode) {
       _isRecording ? await _stopVideoRecording() : await _startVideoRecording();
     } else {
@@ -124,36 +82,25 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
-  /// 📷 Take Photo
   Future<void> _takePhoto() async {
     try {
       final file = await _controller!.takePicture();
       if (!mounted) return;
-
-      final path = file.path;
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => VideoEditScreen(filePath: path, isVideo: false),
+          builder: (_) => VideoEditScreen(filePath: file.path, isVideo: false),
         ),
-      );
-
-      // 🧠 Dispose camera after navigation, safely
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await _disposeController();
+      ).then((_) async {
+        await GlobalCameraManager.dispose();
       });
-
     } catch (e) {
-      debugPrint('Error taking photo: $e');
+      debugPrint('❌ Error taking photo: $e');
     }
   }
 
-
-  /// ▶️ Start Recording
   Future<void> _startVideoRecording() async {
     if (_controller == null || _controller!.value.isRecordingVideo) return;
-
     try {
       await _controller!.startVideoRecording();
       setState(() {
@@ -166,26 +113,19 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
-  /// ⏹ Stop Recording
   Future<void> _stopVideoRecording() async {
     if (_controller == null || !_controller!.value.isRecordingVideo) return;
-
     try {
       final file = await _controller!.stopVideoRecording();
       _stopTimer();
       setState(() => _isRecording = false);
-
-      final path = file.path;
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => VideoEditScreen(filePath: path, isVideo: true),
+          builder: (_) => VideoEditScreen(filePath: file.path, isVideo: true),
         ),
-      );
-
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await _disposeController();
+      ).then((_) async {
+        await GlobalCameraManager.dispose();
       });
 
     } catch (e) {
@@ -193,8 +133,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
-
-  /// ⏱ Timer Control
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -211,19 +149,25 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _stopTimer();
-    _disposeController();
+    GlobalCameraManager.dispose();
     super.dispose();
   }
 
-  /// 🧱 UI Build
   @override
   Widget build(BuildContext context) {
-    if (_controller == null || !_controller!.value.isInitialized) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator()),
-      );
+    if (_controller == null ||
+        !_controller!.value.isInitialized ||
+        !_controller!.value.isPreviewPaused) {
+      if (!GlobalCameraManager.isInitialized) {
+        return const Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
     }
+
+
+
 
     return Scaffold(
       backgroundColor: Colors.black,

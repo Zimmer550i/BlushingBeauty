@@ -14,7 +14,9 @@ class VideoPreviewScreen extends StatefulWidget {
   const VideoPreviewScreen({
     super.key,
     required this.videoUrl,
-    this.countdownSeconds = 3, required this.userProfile, required this.userName,
+    this.countdownSeconds = 3,
+    required this.userProfile,
+    required this.userName,
   });
 
   final String videoUrl;
@@ -75,10 +77,14 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   Future<void> _initFrontCamera() async {
     final cameras = await availableCameras();
     final front = cameras.firstWhere(
-          (c) => c.lensDirection == CameraLensDirection.front,
+      (c) => c.lensDirection == CameraLensDirection.front,
       orElse: () => cameras.first,
     );
-    _frontCam = CameraController(front, ResolutionPreset.high, enableAudio: true);
+    _frontCam = CameraController(
+      front,
+      ResolutionPreset.high,
+      enableAudio: true,
+    );
     await _frontCam!.initialize();
     if (mounted) setState(() {});
   }
@@ -146,9 +152,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       try {
         if (_frontCam?.value.isRecordingVideo == true) {
           await _frontCam?.stopVideoRecording();
-    }
-    } catch (_) {}
-    _frontCam?.dispose();
+        }
+      } catch (_) {}
+      _frontCam?.dispose();
     }();
 
     super.dispose();
@@ -199,58 +205,58 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       ),
       body: videoReady
           ? Column(
-        children: [
-          Expanded(
-            child: Stack(
-              alignment: Alignment.center,
               children: [
-                Positioned.fill(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _video!.value.size.width,
-                      height: _video!.value.size.height,
-                      child: VideoPlayer(_video!),
-                    ),
-                  ),
-                ),
-
-                /// Countdown Overlay
-                if (_secondsRemaining > 0) _buildCountdownOverlay(),
-
-                /// PiP front camera
-                if (_frontCam?.value.isInitialized == true)
-                  Positioned(
-                    top: 1,
-                    right: 1,
-                    child: Container(
-                      width: 129,
-                      height: 159,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.24),
-                        border: Border.all(
-                          color: const Color(0xFF383838),
-                          width: 4,
+                Expanded(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Positioned.fill(
+                        child: FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _video!.value.size.width,
+                            height: _video!.value.size.height,
+                            child: VideoPlayer(_video!),
+                          ),
                         ),
                       ),
-                      clipBehavior: Clip.antiAliasWithSaveLayer,
-                      child: CameraPreview(_frontCam!),
-                    ),
-                  ),
 
-                /// Bottom controls
-                if (_secondsRemaining == 0)
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: _buildBottomControls(),
+                      /// Countdown Overlay
+                      if (_secondsRemaining > 0) _buildCountdownOverlay(),
+
+                      /// PiP front camera
+                      if (_frontCam?.value.isInitialized == true)
+                        Positioned(
+                          top: 1,
+                          right: 1,
+                          child: Container(
+                            width: 129,
+                            height: 159,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.24),
+                              border: Border.all(
+                                color: const Color(0xFF383838),
+                                width: 4,
+                              ),
+                            ),
+                            clipBehavior: Clip.antiAliasWithSaveLayer,
+                            child: CameraPreview(_frontCam!),
+                          ),
+                        ),
+
+                      /// Bottom controls
+                      if (_secondsRemaining == 0)
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: _buildBottomControls(),
+                        ),
+                    ],
                   ),
+                ),
               ],
-            ),
-          ),
-        ],
-      )
+            )
           : const Center(child: CircularProgressIndicator()),
     );
   }
@@ -290,7 +296,10 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(8),
@@ -312,7 +321,10 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   }
 
   Widget _buildBottomControls() {
-    final total = _videoDuration.inMilliseconds.toDouble().clamp(1, double.infinity);
+    final total = _videoDuration.inMilliseconds.toDouble().clamp(
+      1,
+      double.infinity,
+    );
     final value = _position.inMilliseconds.toDouble().clamp(0, total);
 
     return Container(
@@ -320,8 +332,10 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       decoration: BoxDecoration(color: Colors.white.withOpacity(0.24)),
       child: Row(
         children: [
-          Text(_fmt(_position),
-              style: const TextStyle(color: Color(0xFF413E3E), fontSize: 14)),
+          Text(
+            _fmt(_position),
+            style: const TextStyle(color: Color(0xFF413E3E), fontSize: 14),
+          ),
           Expanded(
             child: Slider(
               value: double.parse(value.toString()),
@@ -330,11 +344,14 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
               activeColor: const Color(0xFF413E3E),
               inactiveColor: const Color(0xFF413E3E),
               thumbColor: const Color(0xFFD9D9D9),
-              onChanged: (v) => _video?.seekTo(Duration(milliseconds: v.toInt())),
+              onChanged: (v) =>
+                  _video?.seekTo(Duration(milliseconds: v.toInt())),
             ),
           ),
-          Text(_fmt(_videoDuration),
-              style: const TextStyle(color: Color(0xFF413E3E), fontSize: 14)),
+          Text(
+            _fmt(_videoDuration),
+            style: const TextStyle(color: Color(0xFF413E3E), fontSize: 14),
+          ),
           const SizedBox(width: 12),
           ValueListenableBuilder<bool>(
             valueListenable: _isPlaying,
@@ -361,7 +378,13 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
           const SizedBox(width: 18),
           InkWell(
             onTap: () {
-                Get.to(() => SendOrTrimVideoScreen(videoUrl: widget.videoUrl, userProfile: widget.userProfile, userName: widget.userName));
+              Get.to(
+                () => SendOrTrimVideoScreen(
+                  videoUrl: widget.videoUrl,
+                  userProfile: widget.userProfile,
+                  userName: widget.userName,
+                ),
+              );
             },
             child: Container(
               height: 40,
@@ -370,8 +393,11 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 shape: BoxShape.circle,
                 color: Colors.white,
               ),
-              child: Icon(Icons.navigate_next,
-                  size: 30, color: AppColors.primaryColor),
+              child: Icon(
+                Icons.navigate_next,
+                size: 30,
+                color: AppColors.primaryColor,
+              ),
             ),
           ),
         ],
