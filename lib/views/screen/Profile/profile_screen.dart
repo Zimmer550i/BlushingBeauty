@@ -36,7 +36,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               /// Profile Card
               Obx(() {
                 final imageUrl = userController.getImageUrl();
-                final userName = userController.userInfo.value?.name ?? "Unknown User";
+                final userName =
+                    userController.userInfo.value?.name ?? "Unknown User";
                 final userPhone = userController.userInfo.value?.email ?? "N/A";
                 final userEmail = userController.userInfo.value?.email ?? "N/A";
 
@@ -49,10 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     gradient: const LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0xFF56BBFF),
-                        Color(0xFFFFFFFF),
-                      ],
+                      colors: [Color(0xFF56BBFF), Color(0xFFFFFFFF)],
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -65,27 +63,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 40,
-                            backgroundImage: (imageUrl != null && imageUrl.isNotEmpty)
+                            backgroundImage:
+                                (imageUrl != null && imageUrl.isNotEmpty)
                                 ? NetworkImage(imageUrl)
-                                : const AssetImage("assets/images/demo1.png") as ImageProvider,
+                                : const AssetImage("assets/images/demo1.png")
+                                      as ImageProvider,
                           ),
-                          Container(
-                            height: 36,
-                            width: 46,
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                "re:",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
+                          SvgPicture.asset(
+                            "assets/icons/re.svg",
+                            height: 35,
+                            width: 45,
                           ),
                         ],
                       ),
@@ -124,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }),
               const SizedBox(height: 40),
 
-              // /// Push Notifications
+              /// Push Notifications
               // Row(
               //   children: [
               //     SvgPicture.asset('assets/icons/notification_fill.svg'),
@@ -144,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               //     ),
               //   ],
               // ),
-              // const SizedBox(height: 18),
+              const SizedBox(height: 18),
 
               /// Settings List
               _customRow(
@@ -172,19 +159,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 17),
               _customRow(
-                onTap: () => Get.to(() => AllDataScreen(title: "Terms of Service", endPoint: '/terms',)),
+                onTap: () => Get.to(
+                  () => AllDataScreen(
+                    title: "Terms of Service",
+                    endPoint: '/terms',
+                  ),
+                ),
                 title: 'Terms of service',
                 imagePath: 'assets/icons/terms.svg',
               ),
               const SizedBox(height: 17),
               _customRow(
-                onTap: () => Get.to(() => AllDataScreen(title: "Privacy Policy", endPoint: '/privacy',)),
+                onTap: () => Get.to(
+                  () => AllDataScreen(
+                    title: "Privacy Policy",
+                    endPoint: '/privacy',
+                  ),
+                ),
                 title: 'Privacy Policy',
                 imagePath: 'assets/icons/privacy.svg',
               ),
               const SizedBox(height: 17),
               _customRow(
-                onTap: () => Get.to(() => AllDataScreen(title: "About Us", endPoint: '/about',)),
+                onTap: () => Get.to(
+                  () => AllDataScreen(title: "About Us", endPoint: '/about'),
+                ),
 
                 title: 'About',
                 imagePath: 'assets/icons/about.svg',
@@ -259,16 +258,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const Text(
               "Are you sure you want to delete your account?",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 20),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            _dialogActions(context, onYes: () {
-              authController.deleteAccount();
-            }),
+            _dialogActions(
+              context,
+              onYes: () {
+                authController.deleteAccount();
+              },
+            ),
           ],
         ),
       ),
@@ -285,16 +284,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const Text(
               "Are you sure you want to log out?",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 20),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            _dialogActions(context, onYes: () {
-              authController.logout();
-            }),
+            _dialogActions(
+              context,
+              onYes: () {
+                authController.logout();
+              },
+            ),
           ],
         ),
       ),

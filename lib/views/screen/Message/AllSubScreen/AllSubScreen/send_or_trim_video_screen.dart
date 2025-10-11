@@ -10,6 +10,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 import '../../../Camera/AllSubScreen/video_trim_screen.dart';
+import 'fram_selection_screen.dart';
 
 class SendOrTrimVideoScreen extends StatefulWidget {
   final String videoUrl;
@@ -273,7 +274,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen>
                 InkWell(
                   onTap: () async {
                     await _safeStopBeforeNavigate(() {
-                      Get.to(() => VideoTrimAndSendScreen(videoUrl: widget.videoUrl));
+                      Get.to(() => FrameSelectionScreen(videoUrl: widget.videoUrl, userProfile: widget.userProfile, userName: widget.userName,));
                     });
                   },
                   child: _buildTrimButton(),

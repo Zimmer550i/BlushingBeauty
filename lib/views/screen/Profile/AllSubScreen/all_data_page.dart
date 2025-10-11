@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/profile_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -32,7 +33,7 @@ class _AllDataScreenState extends State<AllDataScreen> {
           children: [
             /// Top Bar
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
                   InkWell(
@@ -64,24 +65,7 @@ class _AllDataScreenState extends State<AllDataScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       /// Logo box
-                      Container(
-                        height: 36,
-                        width: 46,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            "re:",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
+                      SvgPicture.asset("assets/icons/re.svg",height: 35,width: 45),
                       const SizedBox(height: 20),
 
                       /// Terms Content from API (HTML)

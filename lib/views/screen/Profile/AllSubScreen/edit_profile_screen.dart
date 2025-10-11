@@ -98,24 +98,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onPressed: () => Get.back(),
                   icon: Icon(Icons.arrow_back, color: AppColors.textColor),
                 ),
-                Container(
-                  height: 36,
-                  width: 46,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "re:",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
+                SvgPicture.asset("assets/icons/re.svg",height: 35,width: 45),
               ],
             ),
 

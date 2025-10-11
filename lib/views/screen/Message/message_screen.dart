@@ -198,24 +198,7 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   Widget _logoBox() {
-    return Container(
-      height: 36,
-      width: 46,
-      decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Center(
-        child: Text(
-          "re:",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
+    return SvgPicture.asset("assets/icons/re.svg",height: 35,width: 45);
   }
 
   Widget _iconButton(String asset, {VoidCallback? onTap}) {
