@@ -290,13 +290,15 @@ class _MessageScreenState extends State<MessageScreen> {
 
                 // handle author safely
                 String authorName = "User";
+                String? authorImage;
                 if (story["author"] is Map) {
                   authorName = story["author"]["name"] ?? "User";
+                  authorImage = userController.addBaseUrl(story["author"]["image"]);
                 } else if (story["author"] is String) {
                   authorName = "User";
                 }
 
-                return _buildStoryCard(mediaUrl, authorName, isVideo);
+                return _buildStoryCard(mediaUrl, authorName,authorImage.toString(),isVideo);
               },
             );
           }),
@@ -386,14 +388,14 @@ class _MessageScreenState extends State<MessageScreen> {
     );
   }
 
-  Widget _buildStoryCard(String mediaUrl, String name, bool isVideo) {
+  Widget _buildStoryCard(String mediaUrl, String name, String image, bool isVideo) {
     const double cardW = 100;
     const double cardH = 132;
     const double barH = 32;
 
     return FutureBuilder<Widget>(
       future: isVideo
-          ? _buildVideoThumbnailWidget(mediaUrl, name)
+          ? _buildVideoThumbnailWidget(mediaUrl, name,image)
           : _buildImageStoryWidget(mediaUrl, name),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -481,6 +483,7 @@ class _MessageScreenState extends State<MessageScreen> {
   Future<Widget> _buildVideoThumbnailWidget(
     String videoUrl,
     String name,
+    String image,
   ) async {
     const double cardW = 100;
     const double cardH = 132;
@@ -503,7 +506,7 @@ class _MessageScreenState extends State<MessageScreen> {
           () => VideoPreviewScreen(
             videoUrl: localVideo.path,
             countdownSeconds: 3,
-            userProfile: "",
+            userProfile: image,
             userName: name,
           ),
         );

@@ -25,8 +25,7 @@ class SendMessageController extends GetxController {
     isLoading.value = true;
 
     try {
-      // // Dispose global camera safely before showing friend screen
-      // await GlobalCameraManager.dispose();
+      // await GlobalCameraManager.dispose(); // optional
 
       if (userController.userInfo.value == null) {
         await userController.getInfo();
@@ -38,22 +37,29 @@ class SendMessageController extends GetxController {
         return;
       }
 
-      // Watch for privateChats updates
+      // Fetch chats first
+      await messageController.fetchChats();
+
+      // Extract immediately
+      final newFriends = _extractFriends(currentUserId, messageController.privateChats);
+      friends.assignAll(newFriends);
+
+      // Now watch for live updates
       ever<List>(
         messageController.privateChats,
             (updatedChats) {
-          final newFriends = _extractFriends(currentUserId, updatedChats);
-          friends.assignAll(newFriends);
-          isLoading.value = false;
+          final updatedFriends = _extractFriends(currentUserId, updatedChats);
+          friends.assignAll(updatedFriends);
         },
       );
 
-      await messageController.fetchChats();
     } catch (e) {
       Get.snackbar("Error", "Initialization failed: $e");
+    } finally {
       isLoading.value = false;
     }
   }
+
 
   List<Map<String, dynamic>> _extractFriends(String currentUserId, List<dynamic> chats) {
     final List<Map<String, dynamic>> chatFriends = [];

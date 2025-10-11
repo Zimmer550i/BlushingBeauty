@@ -9,7 +9,7 @@ import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 
 import '../../../../controllers/send_message_controller.dart';
 
-class SendMessageWithFriendScreen extends StatelessWidget {
+class SendMessageWithFriendScreen extends StatefulWidget {
   final String filePath;
   final bool isVideo;
 
@@ -20,15 +20,34 @@ class SendMessageWithFriendScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.put(SendMessageController());
-    final userController = Get.put(UserController());
-    final searchController = TextEditingController();
+  State<SendMessageWithFriendScreen> createState() => _SendMessageWithFriendScreenState();
+}
+
+class _SendMessageWithFriendScreenState extends State<SendMessageWithFriendScreen> {
+  late final SendMessageController controller;
+  late final UserController userController;
+  late final TextEditingController searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(SendMessageController());
+    userController = Get.put(UserController());
+    searchController = TextEditingController();
 
     searchController.addListener(() {
       controller.searchQuery.value = searchController.text.trim().toLowerCase();
     });
+  }
 
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Obx(() {
@@ -52,8 +71,8 @@ class SendMessageWithFriendScreen extends StatelessWidget {
                     CustomButton(
                       text: "Send Now",
                       onTap: () => controller.sendMedia(
-                        filePath: filePath,
-                        isVideo: isVideo,
+                        filePath: widget.filePath,
+                        isVideo: widget.isVideo,
                       ),
                     ),
                   ],

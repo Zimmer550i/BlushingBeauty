@@ -67,7 +67,7 @@ class SeeAllStoryScreen extends StatelessWidget {
                     final story = homeController.stories[index];
                     final type = story["contentType"];
                     final name = story["author"]?["name"] ?? "Unknown";
-                    final userImage = story["author"]?["image"] ?? "Unknown";
+                    final userImage = userController.addBaseUrl(story["author"]["image"]);
 
                     // ✅ Determine media URL
                     String? mediaUrl;
@@ -81,7 +81,7 @@ class SeeAllStoryScreen extends StatelessWidget {
                       return const Center(child: Icon(Icons.error));
                     }
 
-                    return _buildStoryCard(context, mediaUrl, name,userImage,type == "video");
+                    return _buildStoryCard(context, mediaUrl, name,userImage.toString(),type == "video");
                   },
                 );
               }),

@@ -11,9 +11,9 @@ class ApiService {
   final String devUrl = "http://10.10.12.54:3000";
   final String devUrlWithVersion = "http://10.10.12.54:3000$version";
   static final String version = "/api/v1";
-  final String prodUrl = "$version";
+  final String prodUrl = "http://167.88.39.235:3000$version";
   static final String imgUrl = "";
-  final bool inDevelopment = true;
+  final bool inDevelopment = false;
   final bool showAPICalls = true;
 
   late final String baseUrl;

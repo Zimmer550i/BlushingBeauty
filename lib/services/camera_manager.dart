@@ -31,7 +31,15 @@ class GlobalCameraManager {
   /// 🔹 Dispose safely — no matter what screen or state you’re in
   static Future<void> dispose() async {
     try {
-      if (_controller != null && _controller!.value.isInitialized) {
+      if (_controller != null) {
+        // Stop image stream safely before disposing
+        if (_controller!.value.isStreamingImages) {
+          await _controller!.stopImageStream();
+        }
+
+        // Give a tiny delay to ensure CameraX detaches observers
+        await Future.delayed(const Duration(milliseconds: 100));
+
         await _controller!.dispose();
         debugPrint("🧹 Camera disposed successfully");
       }
@@ -41,6 +49,7 @@ class GlobalCameraManager {
       _controller = null;
     }
   }
+
 
   /// 🔹 Check if camera is initialized
   static bool get isInitialized => _controller?.value.isInitialized ?? false;

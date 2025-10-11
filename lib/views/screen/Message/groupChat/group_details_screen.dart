@@ -321,7 +321,25 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   Widget _buildMembersList() {
     return Padding(
       padding: const EdgeInsets.only(top: 10, bottom: 20),
-      child: CustomDropdown(items: members, chatId: widget.chatId),
+      child: Obx(() {
+        final members = controller.members.map((m) {
+          return {
+            "name": m["name"],
+            "image": userController.addBaseUrl(m["image"]),
+            "_id": m["_id"],
+          };
+        }).toList();
+
+        if (members.isEmpty) {
+          return const Text(
+            "No members yet.",
+            style: TextStyle(color: Colors.grey),
+          );
+        }
+
+        return CustomDropdown(items: members, chatId: widget.chatId);
+      }),
     );
   }
+
 }

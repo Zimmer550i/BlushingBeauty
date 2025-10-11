@@ -37,23 +37,24 @@ class _CustomDropdownState extends State<CustomDropdown> {
       textCancel: "No",
       textConfirm: "Yes",
       confirmTextColor: Colors.white,
+      onCancel: () => Get.back(),
       onConfirm: () async {
-        Get.back(); // close dialog
-
         final result = await controller.removeMemberFromGroup(
           groupId: widget.chatId,
           memberId: member["_id"],
         );
 
         if (result == "success") {
-          setState(() {
-            members.removeWhere((m) => m["_id"] == member["_id"]);
-          });
+          // 🔥 Re-fetch group details to refresh UI
+          await controller.fetchGroupDetails(widget.chatId);
+          Get.back();
           Get.snackbar("Removed", "${member['name']} removed from groupChat");
         }
       },
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {

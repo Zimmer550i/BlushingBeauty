@@ -105,6 +105,7 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
 
     if (result == "success") {
       Get.back();
+      await _groupChatController.fetchGroupDetails(widget.chatId);
       Get.snackbar("Success", "Members added successfully!",
           snackPosition: SnackPosition.BOTTOM);
     } else {

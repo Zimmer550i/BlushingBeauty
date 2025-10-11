@@ -185,7 +185,6 @@ class GroupChatController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
         // Refresh groupChat details after removal
         fetchGroupDetails(groupId);
         return "success";

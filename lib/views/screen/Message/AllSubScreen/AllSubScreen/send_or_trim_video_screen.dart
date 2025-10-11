@@ -27,7 +27,8 @@ class SendOrTrimVideoScreen extends StatefulWidget {
   State<SendOrTrimVideoScreen> createState() => _SendOrTrimVideoScreenState();
 }
 
-class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
+class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen>
+    with WidgetsBindingObserver {
   VideoPlayerController? _video;
   Duration _videoDuration = Duration.zero;
   Duration _position = Duration.zero;
@@ -36,42 +37,69 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initFlow();
   }
 
+  /// ================================
+  /// 🔹 Full Flow Initialization
+  /// ================================
   Future<void> _initFlow() async {
     await _requestPermissions();
-    await _initFrontCamera();
+    await _initCameraSafely();
     await _initVideo();
-    await _startBackgroundVideo();
+    await _startVideo();
   }
 
+  /// ================================
+  /// 🔹 Request Permissions
+  /// ================================
   Future<void> _requestPermissions() async {
-    final statuses = await [Permission.camera, Permission.microphone].request();
+    final statuses = await [
+      Permission.camera,
+      Permission.microphone,
+    ].request();
+
     if (statuses[Permission.camera] != PermissionStatus.granted ||
         statuses[Permission.microphone] != PermissionStatus.granted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Camera & Microphone permission required')),
         );
-        Navigator.pop(context);
+        Get.back();
       }
     }
   }
 
-  Future<void> _initFrontCamera() async {
-    final cameras = await availableCameras();
-    final front = cameras.firstWhere(
-          (c) => c.lensDirection == CameraLensDirection.front,
-      orElse: () => cameras.first,
-    );
+  /// ================================
+  /// 🔹 Initialize Camera Safely
+  /// ================================
+  Future<void> _initCameraSafely() async {
+    try {
+      await GlobalCameraManager.dispose(); // dispose old instances safely
+      await Future.delayed(const Duration(milliseconds: 150));
 
-    final controller = await GlobalCameraManager.initialize(front);
-    if (controller == null) return;
+      final cameras = await availableCameras();
+      final frontCamera = cameras.firstWhere(
+            (c) => c.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
 
-    if (mounted) setState(() {});
+      final controller = await GlobalCameraManager.initialize(frontCamera);
+      if (controller == null) {
+        debugPrint("⚠️ Failed to initialize camera");
+        return;
+      }
+
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint("❌ Camera init failed: $e");
+    }
   }
 
+  /// ================================
+  /// 🔹 Initialize Video Player
+  /// ================================
   Future<void> _initVideo() async {
     _video = widget.videoUrl.startsWith('http')
         ? VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
@@ -89,25 +117,76 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     });
   }
 
-  Future<void> _startBackgroundVideo() async {
+  Future<void> _startVideo() async {
     if (_video != null && _video!.value.isInitialized) {
       await _video!.play();
     }
   }
 
+  /// ================================
+  /// 🔹 Handle Lifecycle Changes
+  /// ================================
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    final controller = GlobalCameraManager.controller;
+    if (controller == null) return;
+
+    if (state == AppLifecycleState.inactive) {
+      await controller.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      await _initCameraSafely();
+    }
+  }
+
+  /// ================================
+  /// 🔹 Cleanup
+  /// ================================
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _video?.dispose();
     GlobalCameraManager.dispose();
+    _isPlaying.dispose();
     super.dispose();
   }
 
+  /// ================================
+  /// 🔹 Helpers
+  /// ================================
   String _fmt(Duration d) {
     final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final ss = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$mm:$ss';
   }
 
+  Future<void> _safeStopBeforeNavigate(Function onNavigate) async {
+    try {
+      // 1️⃣ Stop video playback
+      if (_video?.value.isPlaying == true) await _video?.pause();
+
+      // 2️⃣ Dispose camera safely
+      if (GlobalCameraManager.isInitialized) {
+        await GlobalCameraManager.dispose();
+        debugPrint("🎯 Camera fully disposed before navigating");
+      }
+
+      // 3️⃣ Wait for next frame to ensure native release
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // 4️⃣ Schedule navigation on next frame (safe for UI)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) onNavigate();
+      });
+    } catch (e) {
+      debugPrint("⚠️ Error before navigation: $e");
+      if (mounted) onNavigate(); // fallback
+    }
+  }
+
+
+  /// ================================
+  /// 🔹 UI
+  /// ================================
   @override
   Widget build(BuildContext context) {
     final camController = GlobalCameraManager.controller;
@@ -137,12 +216,11 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
       ),
       body: Column(
         children: [
-          /// ====== Video Area ======
           Expanded(
             child: Stack(
               alignment: Alignment.center,
               children: [
-                /// ==== Full-screen Front Camera ====
+                /// Front camera (background)
                 if (camController?.value.isInitialized == true)
                   Positioned.fill(
                     child: FittedBox(
@@ -155,7 +233,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                     ),
                   ),
 
-                /// ==== Sender Video as PiP ====
+                /// PiP video overlay
                 if (_video != null && _video!.value.isInitialized)
                   Positioned(
                     top: 0,
@@ -179,13 +257,13 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                     ),
                   ),
 
-                /// Bottom controls
+                /// Controls
                 Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomControls()),
               ],
             ),
           ),
 
-          /// ====== Bottom Buttons ======
+          /// Bottom actions
           Container(
             width: double.infinity,
             color: Colors.white,
@@ -218,23 +296,6 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _safeStopBeforeNavigate(Function onNavigate) async {
-    try {
-      // Stop video
-      if (_video?.value.isPlaying == true) await _video?.pause();
-
-      // Stop and release camera globally
-      await GlobalCameraManager.dispose();
-
-      // Let Android release buffers properly
-      await Future.delayed(const Duration(milliseconds: 300));
-    } catch (e) {
-      debugPrint("⚠️ Error before navigation: $e");
-    }
-
-    if (mounted) onNavigate();
   }
 
   Widget _buildTrimButton() => Container(
@@ -273,10 +334,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
       decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.24)),
       child: Row(
         children: [
-          Text(
-            _fmt(_position),
-            style: const TextStyle(color: Color(0xFF413E3E), fontSize: 14, fontWeight: FontWeight.w400),
-          ),
+          Text(_fmt(_position), style: const TextStyle(color: Color(0xFF413E3E))),
           Expanded(
             child: Slider(
               value: double.parse(value.toString()),
@@ -288,20 +346,14 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
               onChanged: (v) => _video?.seekTo(Duration(milliseconds: v.toInt())),
             ),
           ),
-          Text(
-            _fmt(_videoDuration),
-            style: const TextStyle(color: Color(0xFF413E3E), fontSize: 14, fontWeight: FontWeight.w400),
-          ),
+          Text(_fmt(_videoDuration), style: const TextStyle(color: Color(0xFF413E3E))),
           const SizedBox(width: 12),
           ValueListenableBuilder<bool>(
             valueListenable: _isPlaying,
             builder: (_, playing, __) => CircleAvatar(
               backgroundColor: Colors.white,
               child: IconButton(
-                icon: Icon(
-                  playing ? Icons.pause : Icons.play_arrow,
-                  color: AppColors.primaryColor,
-                ),
+                icon: Icon(playing ? Icons.pause : Icons.play_arrow, color: AppColors.primaryColor),
                 onPressed: () async {
                   if (playing) {
                     await _video?.pause();

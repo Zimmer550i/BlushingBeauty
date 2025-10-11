@@ -15,20 +15,30 @@ import 'helpers/di.dart' as di;
 import 'helpers/route.dart';
 List<CameraDescription> cameras = [];
 
-void main()async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  AppRoutes.cameras = await availableCameras();
+
+  // Dispose any previously active camera (important for hot restart)
+  await GlobalCameraManager.dispose();
+
+  // Give CameraX time to fully release before re-querying
+  await Future.delayed(const Duration(milliseconds: 200));
+
+  // Initialize DI
   Map<String, Map<String, String>> _languages = await di.init();
   Get.put(UserController(), permanent: true);
-  // ✅ Ensure previous camera instances are disposed before new init
-  await GlobalCameraManager.dispose();
+
   try {
+    // Load available cameras safely
     cameras = await availableCameras();
+    AppRoutes.cameras = cameras;
   } catch (e) {
-    debugPrint("Camera init error: $e");
+    debugPrint("❌ Camera init error: $e");
   }
-  runApp( MyApp(languages:_languages,));
+
+  runApp(MyApp(languages: _languages));
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.languages});
