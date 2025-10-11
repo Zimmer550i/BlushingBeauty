@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/chat_controller.dart';
@@ -80,7 +81,7 @@ class _ContactScreenState extends State<ContactScreen> {
   Widget _buildContactList() {
     return Obx(() {
       if (contactController.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0));
       }
 
       final matched = contactController.filteredMatchedContacts;

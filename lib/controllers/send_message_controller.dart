@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
+import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/services/camera_manager.dart';
 
 class SendMessageController extends GetxController {
@@ -103,7 +104,7 @@ class SendMessageController extends GetxController {
       );
 
       Get.snackbar("Success", "Media sent to ${selectedIds.length} friend${selectedIds.length > 1 ? 's' : ''}!");
-      Get.back();
+      Get.offAllNamed(AppRoutes.messageScreen);
     } catch (e) {
       Get.snackbar("Error", "Failed to send media: $e");
     }

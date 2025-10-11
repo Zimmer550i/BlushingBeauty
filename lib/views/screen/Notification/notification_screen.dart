@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/show_snackbar.dart';
@@ -69,7 +70,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             Expanded(
               child: Obx(() {
                 if (controller.isLoading.value) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0));
                 }
 
                 if (controller.notifications.isEmpty) {

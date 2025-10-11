@@ -13,7 +13,7 @@ class ApiService {
   static final String version = "/api/v1";
   final String prodUrl = "http://167.88.39.235:3000$version";
   static final String imgUrl = "";
-  final bool inDevelopment = false;
+  final bool inDevelopment = true;
   final bool showAPICalls = true;
 
   late final String baseUrl;

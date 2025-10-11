@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -8,6 +9,7 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../../../controllers/chat_controller.dart';
 import '../../../../controllers/user_controller.dart';
 import '../../../../services/shared_prefs_service.dart';
+import '../../../../utils/app_colors.dart';
 import '../../../../utils/media_store.dart';
 import 'AllSubScreen/video_preview_screen.dart';
 
@@ -96,7 +98,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 final msgs = chatController.messages;
 
                 if (chatController.isLoading.value && msgs.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0));
                 }
 
                 return NotificationListener<ScrollNotification>(
@@ -256,10 +258,10 @@ class _ChatScreenState extends State<ChatScreen> {
       future: _downloadVideoToLocal(videoUrl.toString()),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
+          return SizedBox(
             height: 180,
             width: 240,
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
           );
         }
         if (!snap.hasData) {
@@ -305,8 +307,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             height: 180,
                             width: 240,
                             color: Colors.black12,
-                            child: const Center(
-                                child: CircularProgressIndicator()),
+                            child: Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
                           );
                         }
                         return Image.file(
@@ -331,29 +332,61 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(height: 6),
+
+            msg['isMe'] ?
             InkWell(
               onTap: () async => await saveVideoToGallery(context, localVideo.path),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SvgPicture.asset(
-                    'assets/icons/download.svg',
-                    color: const Color(0xFF56BBFF),
-                    height: 18,
-                  ),
-                  const SizedBox(width: 6),
-                  const Text(
-                    "Save to gallery",
-                    style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    msg["time"] ?? "",
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.only(left: 50),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Spacer(),
+                    SvgPicture.asset(
+                      'assets/icons/download.svg',
+                      color: const Color(0xFF56BBFF),
+                      height: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      "Save to gallery",
+                      style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                    ),
+                    Spacer(),
+                    Text(
+                      msg["time"] ?? "",
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ) : InkWell(
+              onTap: () async => await saveVideoToGallery(context, localVideo.path),
+              child: Padding(
+                padding: const EdgeInsets.only(right: 50),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      msg["time"] ?? "",
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                    Spacer(),
+                    const Text(
+                      "Save to gallery",
+                      style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                    ),
+                    const SizedBox(width: 6),
+                    SvgPicture.asset(
+                      'assets/icons/download.svg',
+                      color: const Color(0xFF56BBFF),
+                      height: 18,
+                    ),
+                    Spacer(),
+                  ],
+                ),
+              ),
+            )
           ],
         );
       },

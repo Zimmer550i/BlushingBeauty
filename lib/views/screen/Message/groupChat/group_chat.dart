@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -88,7 +89,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             Expanded(
               child: Obx(() {
                 if (chatController.isLoading.value) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0));
                 }
 
                 final msgs = chatController.messages;

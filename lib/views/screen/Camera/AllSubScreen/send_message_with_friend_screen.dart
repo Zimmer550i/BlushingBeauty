@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
@@ -82,9 +83,7 @@ class _SendMessageWithFriendScreenState extends State<SendMessageWithFriendScree
               if (controller.chatController.isLoading.value)
                 Container(
                   color: Colors.black.withOpacity(0.4),
-                  child: const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
+                  child: Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
                 ),
             ],
           );

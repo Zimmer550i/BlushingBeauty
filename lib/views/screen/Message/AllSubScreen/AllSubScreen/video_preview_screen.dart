@@ -4,6 +4,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -257,7 +258,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 ),
               ],
             )
-          : const Center(child: CircularProgressIndicator()),
+          : Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
     );
   }
 

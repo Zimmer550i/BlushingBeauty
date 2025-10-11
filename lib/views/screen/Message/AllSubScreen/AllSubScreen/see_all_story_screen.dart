@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -62,6 +63,7 @@ class SeeAllStoryScreen extends StatelessWidget {
                     mainAxisSpacing: 8,
                     childAspectRatio: 0.9,
                   ),
+                  padding: EdgeInsets.zero,
                   itemCount: homeController.stories.length,
                   itemBuilder: (context, index) {
                     final story = homeController.stories[index];
@@ -108,7 +110,7 @@ class SeeAllStoryScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               color: Colors.black12,
             ),
-            child: const Center(child: CircularProgressIndicator()),
+            child: Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
           );
         }
         if (snap.hasError || !snap.hasData) {
