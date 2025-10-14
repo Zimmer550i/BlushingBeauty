@@ -43,7 +43,7 @@ class UserController extends GetxController {
   void setInfo(Map<String, dynamic>? json) {
     if (json != null) {
       userInfo.value = User.fromJson(json);
-      debugPrint("User Info:====> ${json}");
+      debugPrint("User Info:====> $json");
     }
   }
 

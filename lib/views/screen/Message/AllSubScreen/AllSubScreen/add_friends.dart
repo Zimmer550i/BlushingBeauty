@@ -132,10 +132,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
 
   // ✅ Friend already on app
   Widget _buildMatchedContactTile(Map<String, dynamic> c, List<dynamic> apiUsers) {
-    final matchedUser = apiUsers.firstWhereOrNull(
-          (u) => u.id == c["_id"] || u.phone == c["phone"],
-    );
-
+  
     final imageUrl = userController.addBaseUrl(c['image']);
     final name = c["name"] ?? "No Name";
     final phone = c["phone"] ?? "";

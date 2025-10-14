@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/views/base/custom_switch.dart';
+import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/change_password_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/edit_profile_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/report_problem_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/all_data_page.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../../controllers/user_controller.dart';
-import '../../base/bottom_menu..dart';
+import '../../base/bottom_menu.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -40,9 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     userController.userInfo.value?.name ?? "Unknown User";
                 final userPhone = userController.userInfo.value?.email ?? "N/A";
                 final userEmail = userController.userInfo.value?.email ?? "N/A";
-
-                debugPrint("User Image URL:===========> $imageUrl");
-
                 return Container(
                   padding: const EdgeInsets.all(20),
                   width: double.infinity,
@@ -69,12 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 : const AssetImage("assets/images/demo1.png")
                                       as ImageProvider,
                           ),
-                          SvgPicture.asset(
-                            "assets/icons/re.svg",
-                            height: 35,
-                            width: 45,
-                          ),
-                        ],
+                          ReeLogo()],
                       ),
                       const SizedBox(height: 8),
 

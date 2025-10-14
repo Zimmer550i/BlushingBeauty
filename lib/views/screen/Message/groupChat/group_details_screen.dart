@@ -46,8 +46,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       setState(() {
         imageUrl = controller.groupImage.value.isNotEmpty
             ? controller.groupImage.value.startsWith("http")
-            ? controller.groupImage.value
-            : userController.addBaseUrl(controller.groupImage.value)
+                  ? controller.groupImage.value
+                  : userController.addBaseUrl(controller.groupImage.value)
             : "";
       });
     });
@@ -57,17 +57,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       setState(() {
         members
           ..clear()
-          ..addAll(controller.members.map((m) {
-            return {
-              "name": m["name"],
-              "image": userController.addBaseUrl(m["image"]),
-              "_id": m["_id"],
-            };
-          }));
+          ..addAll(
+            controller.members.map((m) {
+              return {
+                "name": m["name"],
+                "image": userController.addBaseUrl(m["image"]),
+                "_id": m["_id"],
+              };
+            }),
+          );
       });
     });
   }
-
 
   Future<void> _chooseImageSource() async {
     final XFile? pickedFile = await showModalBottomSheet<XFile?>(
@@ -200,7 +201,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF56BBFF).withOpacity(0.2),
+                    color: const Color(0xFF56BBFF).withValues(alpha: .2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -275,20 +276,29 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 _optionTile(
                   "Add members",
                   onTap: () {
-                    Get.to(() => AddGroupMemberScreen(chatId: widget.chatId, existMembers: members,));
+                    Get.to(
+                      () => AddGroupMemberScreen(
+                        chatId: widget.chatId,
+                        existMembers: members,
+                      ),
+                    );
                   },
                 ),
                 _optionTile(
                   "Delete chat",
                   onTap: () {
-                    controller.deleteGroup(widget.chatId);
+                    confirm(context, () {
+                      controller.deleteGroup(widget.chatId);
+                    },"delete this group chat");
                   },
                 ),
 
                 _optionTile(
                   "Leave chat",
                   onTap: () {
-                    controller.leaveGroup(widget.chatId);
+                    confirm(context, () {
+                      controller.leaveGroup(widget.chatId);
+                    },"leave this group chat");
                   },
                 ),
               ],
@@ -342,4 +352,48 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     );
   }
 
+  void confirm(BuildContext context, VoidCallback onYes, String title) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFFC4C3C3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Are you sure you want to $title?",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            _dialogActions(context, onYes: () async {}),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: onYes,
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.white),
+            ),
+            child: const Text("Yes", style: TextStyle(color: Colors.white)),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () => Get.back(),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            child: const Text("No", style: TextStyle(color: Color(0xFF676565))),
+          ),
+        ),
+      ],
+    );
+  }
 }

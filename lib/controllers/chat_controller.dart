@@ -31,7 +31,7 @@ class ChatController extends GetxController {
   /// Session data
   late String _chatId;
   late String _currentUserId;
-  late String _token;
+  late String token;
 
   @override
   void onInit() {
@@ -61,7 +61,7 @@ class ChatController extends GetxController {
   }) async {
     _chatId = chatId;
     _currentUserId = currentUserId;
-    _token = token;
+    token = token;
 
     /// 1️⃣ Fetch initial messages
     await fetchMessages();

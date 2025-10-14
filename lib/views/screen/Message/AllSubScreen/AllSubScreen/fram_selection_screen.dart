@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:camera/camera.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +16,7 @@ import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 
 class FrameSelectionScreen extends StatefulWidget {
   final String videoUrl;
+  final String frontVideoUrl;
   final String userProfile;
   final String userName;
 
@@ -25,6 +25,7 @@ class FrameSelectionScreen extends StatefulWidget {
     required this.videoUrl,
     required this.userProfile,
     required this.userName,
+    required this.frontVideoUrl,
   });
 
   @override
@@ -33,10 +34,11 @@ class FrameSelectionScreen extends StatefulWidget {
 
 class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   final CreateStoryController createStoryController = Get.put(CreateStoryController());
-  VideoPlayerController? _video;
+  VideoPlayerController? _mainVideoController;
+  VideoPlayerController? _frontVideoController;
   bool _isInitialized = false;
 
-  final ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _isPlaying = ValueNotifier(false);
   final ScrollController _scrollController = ScrollController();
   final List<String> _thumbnailPaths = [];
 
@@ -46,7 +48,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   double _rightHandle = 80.0;
 
   final double _thumbnailWidth = 60.0;
-  final double _thumbnailHeight = 80.0;
+  final double thumbnailHeight = 80.0;
 
   @override
   void initState() {
@@ -56,15 +58,13 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
   Future<void> _initFlow() async {
     await _requestPermissions();
-    await _initFrontCamera();
-    await _initVideo();
+    await _initVideos();
     await _generateThumbnails();
     if (mounted) setState(() => _isInitialized = true);
   }
 
   Future<void> _requestPermissions() async {
     final statuses = await [Permission.camera, Permission.microphone].request();
-
     if (statuses[Permission.camera] != PermissionStatus.granted ||
         statuses[Permission.microphone] != PermissionStatus.granted) {
       if (mounted) {
@@ -76,66 +76,60 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     }
   }
 
-  Future<void> _initFrontCamera() async {
+  Future<void> _initVideos() async {
     try {
-      final cameras = await availableCameras();
-      if (cameras.isEmpty) return;
+      // 🎬 Main video (popup)
+      final mainPath = widget.videoUrl.trim();
+      _mainVideoController = mainPath.startsWith('http')
+          ? VideoPlayerController.networkUrl(Uri.parse(mainPath))
+          : VideoPlayerController.file(File(mainPath));
+      await _mainVideoController!.initialize();
 
-      final frontCamera = cameras.firstWhere(
-            (c) => c.lensDirection == CameraLensDirection.front,
-        orElse: () => cameras.first,
-      );
+      // 🤳 Front video (main fullscreen + trimming target)
+      final frontPath = widget.frontVideoUrl.trim();
+      _frontVideoController = frontPath.startsWith('http')
+          ? VideoPlayerController.networkUrl(Uri.parse(frontPath))
+          : VideoPlayerController.file(File(frontPath));
+      await _frontVideoController!.initialize();
 
-      await GlobalCameraManager.initialize(frontCamera);
-      debugPrint("🎥 Global camera initialized: ${frontCamera.lensDirection}");
+      _mainVideoController!.setLooping(true);
+      _frontVideoController!.setLooping(true);
+
+      _isPlaying.value = false;
+
+      debugPrint("✅ Both videos initialized successfully.");
     } catch (e) {
-      debugPrint("⚠️ Camera initialization failed: $e");
+      debugPrint("🚨 Video initialization failed: $e");
     }
   }
 
-  Future<void> _initVideo() async {
-    _video = widget.videoUrl.startsWith('http')
-        ? VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-        : VideoPlayerController.file(File(widget.videoUrl));
-
-    await _video!.initialize();
-    _video!.setLooping(false);
-    _video!.addListener(() {
-      if (!mounted) return;
-      setState(() {});
-      _isPlaying.value = _video!.value.isPlaying;
-    });
-  }
-
   Future<void> _generateThumbnails() async {
-    if (_video == null) return;
+    if (_frontVideoController == null) return;
     _thumbnailPaths.clear();
-    final totalDuration = _video!.value.duration.inMilliseconds;
+
+    final totalDuration = _frontVideoController!.value.duration.inMilliseconds;
     const int thumbnailCount = 10;
     final int interval = (totalDuration / thumbnailCount).floor();
 
-    final cam = GlobalCameraManager.controller;
-    await cam?.pausePreview(); // 🟢 Prevent buffer conflicts
-
     for (int i = 0; i < thumbnailCount; i++) {
       final thumbnailPath = await VideoThumbnail.thumbnailFile(
-        video: widget.videoUrl,
+        video: widget.frontVideoUrl,
         quality: 50,
         timeMs: i * interval,
       );
       if (thumbnailPath != null) _thumbnailPaths.add(thumbnailPath);
     }
 
-    await cam?.resumePreview(); // 🟢 Resume camera after generating
     if (mounted) setState(() {});
   }
 
-  Future<File?> _trimVideo(File inputFile) async {
+  Future<File?> _trimFrontVideo(File inputFile) async {
     try {
       final dir = await getTemporaryDirectory();
-      final outputPath = '${dir.path}/trimmed_${DateTime.now().millisecondsSinceEpoch}.mp4';
-      final totalDuration = _video!.value.duration.inMilliseconds;
+      final outputPath =
+          '${dir.path}/trimmed_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
+      final totalDuration = _frontVideoController!.value.duration.inMilliseconds;
       final startMs = (totalDuration * _trimStart).toInt();
       final endMs = (totalDuration * _trimEnd).toInt();
       final durationMs = endMs - startMs;
@@ -143,51 +137,21 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       final startSec = startMs / 1000.0;
       final durationSec = durationMs / 1000.0;
 
-      final safeInput = '"${inputFile.path}"';
-      final safeOutput = '"$outputPath"';
       final command =
-          '-y -ss $startSec -t $durationSec -i $safeInput -c:v libx264 -c:a aac -preset ultrafast $safeOutput';
-
-      debugPrint("🎬 Running FFmpeg command: $command");
+          '-y -ss $startSec -t $durationSec -i "${inputFile.path}" -c:v libx264 -c:a aac -preset ultrafast -movflags +faststart "$outputPath"';
 
       final session = await FFmpegKit.execute(command);
       final returnCode = await session.getReturnCode();
 
       if (ReturnCode.isSuccess(returnCode)) {
-        debugPrint("✅ FFmpeg success: $outputPath");
+        debugPrint("✅ Trimmed video: $outputPath");
         return File(outputPath);
       } else {
-        debugPrint("❌ FFmpeg failed");
+        debugPrint("❌ FFmpeg trim failed");
         return null;
       }
     } catch (e) {
       debugPrint("⚠️ Trim failed: $e");
-      return null;
-    }
-  }
-
-  Future<File?> ensureMp4Format(String inputPath) async {
-    if (inputPath.endsWith('.mp4')) return File(inputPath);
-
-    try {
-      final dir = await getTemporaryDirectory();
-      final outputPath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.mp4';
-      final safeInput = '"$inputPath"';
-      final safeOutput = '"$outputPath"';
-
-      final command = '-i $safeInput -c:v libx264 -c:a aac -strict experimental $safeOutput';
-      final session = await FFmpegKit.execute(command);
-      final returnCode = await session.getReturnCode();
-
-      if (ReturnCode.isSuccess(returnCode)) {
-        debugPrint('✅ Converted to mp4: $outputPath');
-        return File(outputPath);
-      } else {
-        debugPrint('❌ Conversion failed');
-        return null;
-      }
-    } catch (e) {
-      debugPrint('⚠️ Conversion error: $e');
       return null;
     }
   }
@@ -200,8 +164,9 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
   @override
   void dispose() {
-    _video?.dispose();
-    GlobalCameraManager.dispose(); // 🔥 ensures safe cleanup globally
+    _mainVideoController?.dispose();
+    _frontVideoController?.dispose();
+    GlobalCameraManager.dispose();
     super.dispose();
   }
 
@@ -218,7 +183,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       ),
       body: Column(
         children: [
-          Expanded(child: _buildCameraAndVideoPreview()),
+          Expanded(child: _buildDualVideoPreview()),
           _buildBottomControls(),
         ],
       ),
@@ -226,141 +191,250 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   }
 
   Widget _buildAppBarTitle() => Row(
-    children: [
-      InkWell(onTap: () => Get.back(), child: const Icon(Icons.arrow_back, color: Color(0xFF0D1C12))),
-      const SizedBox(width: 12),
-      CircleAvatar(radius: 22, backgroundImage: NetworkImage(widget.userProfile)),
-      const SizedBox(width: 12),
-      Text(widget.userName,
-          style: const TextStyle(color: Color(0xFF413E3E), fontSize: 24, fontWeight: FontWeight.w600)),
-    ],
-  );
+        children: [
+          InkWell(
+            onTap: () => Get.back(),
+            child: const Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
+          ),
+          const SizedBox(width: 12),
+          CircleAvatar(
+            radius: 22,
+            backgroundImage: NetworkImage(widget.userProfile),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            widget.userName,
+            style: const TextStyle(
+              color: Color(0xFF413E3E),
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
 
-  Widget _buildCameraAndVideoPreview() {
-    final cam = GlobalCameraManager.controller;
+  // ✅ Show front video fullscreen & main video in popup
+  Widget _buildDualVideoPreview() {
     return Stack(
       alignment: Alignment.center,
       children: [
-        if (cam != null && cam.value.isInitialized)
+        // Front camera (trim target)
+        if (_frontVideoController != null &&
+            _frontVideoController!.value.isInitialized)
           Positioned.fill(
             child: FittedBox(
               fit: BoxFit.cover,
               child: SizedBox(
-                width: cam.value.previewSize?.height ?? MediaQuery.of(context).size.width,
-                height: cam.value.previewSize?.width ?? MediaQuery.of(context).size.height,
-                child: CameraPreview(cam),
+                width: _frontVideoController!.value.size.width,
+                height: _frontVideoController!.value.size.height,
+                child: VideoPlayer(_frontVideoController!),
               ),
             ),
           ),
-        if (_video != null && _video!.value.isInitialized)
-          Positioned(top: 0, right: 0, child: _buildVideoPip()),
-        Positioned(left: 0, right: 0, bottom: 0, child: _buildVideoProgressBar()),
+
+        // Main (popup)
+        if (_mainVideoController != null &&
+            _mainVideoController!.value.isInitialized)
+          Positioned(
+            top: 20,
+            right: 20,
+            child: Container(
+              width: 140,
+              height: 180,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _mainVideoController!.value.size.width,
+                  height: _mainVideoController!.value.size.height,
+                  child: VideoPlayer(_mainVideoController!),
+                ),
+              ),
+            ),
+          ),
+
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: _buildVideoProgressBar(),
+        ),
       ],
     );
   }
 
-  Widget _buildVideoPip() => Container(
-    width: 105,
-    height: 130,
-    decoration: BoxDecoration(
-      color: Colors.black.withOpacity(0.24),
-      border: Border.all(color: const Color(0xFF383838), width: 4),
-    ),
-    clipBehavior: Clip.antiAliasWithSaveLayer,
-    child: FittedBox(
-      fit: BoxFit.cover,
-      child: SizedBox(
-        width: _video!.value.size.width,
-        height: _video!.value.size.height,
-        child: VideoPlayer(_video!),
-      ),
-    ),
-  );
+Widget _buildVideoProgressBar() {
+  final controller = _frontVideoController!;
+  return ValueListenableBuilder(
+    valueListenable: controller,
+    builder: (context, VideoPlayerValue value, _) {
+      final totalDuration = value.duration;
+      final current = value.position;
+      final totalMs = totalDuration.inMilliseconds.toDouble();
+      final currentMs = current.inMilliseconds.toDouble();
+      double progress = totalMs > 0 ? currentMs / totalMs : 0.0;
 
-  Widget _buildVideoProgressBar() {
-    final total = _video!.value.duration.inSeconds;
-    final current = _video!.value.position.inSeconds;
-    final progress = total > 0 ? current / total : 0.0;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      color: Colors.white.withOpacity(0.24),
-      child: Row(
-        children: [
-          Text("${_fmt(_video!.value.position)} sec", style: const TextStyle(color: Color(0xFF413E3E))),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Slider(
-              value: progress,
-              min: 0,
-              max: 1,
-              activeColor: const Color(0xFF413E3E),
-              onChanged: (v) {
-                final newPos =
-                Duration(milliseconds: (_video!.value.duration.inMilliseconds * v).toInt());
-                _video!.seekTo(newPos);
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text("${_fmt(_video!.value.duration)} sec", style: const TextStyle(color: Color(0xFF413E3E))),
-          const SizedBox(width: 12),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isPlaying,
-            builder: (_, playing, __) => InkWell(
-              onTap: () async {
-                if (playing) {
-                  await _video?.pause();
-                } else {
-                  await _video?.play();
-                }
-                _isPlaying.value = _video?.value.isPlaying ?? false;
-              },
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(playing ? Icons.pause : Icons.play_arrow, color: AppColors.primaryColor),
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.4),
+        ),
+        child: Row(
+          children: [
+            Text(
+              "${(current.inSeconds).toString()} sec",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+            const SizedBox(width: 8),
+            Expanded(
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 6,
+                  thumbShape:
+                      const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape:
+                      const RoundSliderOverlayShape(overlayRadius: 0),
+                  activeTrackColor: Colors.black,
+                  inactiveTrackColor: Colors.black.withOpacity(0.4),
+                  thumbColor: Colors.white,
+                ),
+                child: Slider(
+                  value: progress.clamp(0.0, 1.0),
+                  min: 0,
+                  max: 1,
+                  onChanged: (v) async {
+                    if (controller.value.duration == Duration.zero) return;
+                    final newPos = Duration(
+                      milliseconds:
+                          (totalDuration.inMilliseconds * v).toInt(),
+                    );
+                    await _frontVideoController?.seekTo(newPos);
+                    await _mainVideoController?.seekTo(newPos);
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              "${(totalDuration.inSeconds).toString()} sec",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 8),
+            ValueListenableBuilder<bool>(
+              valueListenable: _isPlaying,
+              builder: (_, playing, __) => InkWell(
+                onTap: () async {
+                  if (playing) {
+                    await _frontVideoController?.pause();
+                    await _mainVideoController?.pause();
+                  } else {
+                    await _frontVideoController?.play();
+                    await _mainVideoController?.play();
+                    _syncVideos();
+                  }
+                  _isPlaying.value = !playing;
+                },
+                child: CircleAvatar(
+                  radius: 12,
+                  backgroundColor: Colors.white.withOpacity(0.8),
+                  child: Icon(
+                    playing ? Icons.pause : Icons.play_arrow,
+                    size: 16,
+                    color: Colors.blueAccent,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+
+/// ✅ Add this sync function to prevent front camera auto-stop
+void _syncVideos() {
+  if (_frontVideoController == null || _mainVideoController == null) return;
+
+  // If either video pauses unintentionally, restart both
+  _frontVideoController!.addListener(() async {
+    final front = _frontVideoController!;
+    if (!front.value.isPlaying &&
+        !front.value.isBuffering &&
+        _isPlaying.value &&
+        front.value.position < front.value.duration) {
+      await front.play();
+    }
+  });
+
+  _mainVideoController!.addListener(() async {
+    final main = _mainVideoController!;
+    if (!main.value.isPlaying &&
+        !main.value.isBuffering &&
+        _isPlaying.value &&
+        main.value.position < main.value.duration) {
+      await main.play();
+    }
+  });
+
+  // Always loop both smoothly
+  _frontVideoController!.setLooping(true);
+  _mainVideoController!.setLooping(true);
+}
+
 
   Widget _buildBottomControls() => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.all(20),
-    child: Column(
-      children: [
-        _buildTrimsSlider(),
-        const SizedBox(height: 20),
-        InkWell(
-          onTap: () => Get.offAllNamed(AppRoutes.messageScreen),
-          child: _buildDiscardButton(),
+        color: Colors.white,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            _buildTrimSlider(),
+            const SizedBox(height: 20),
+            InkWell(
+              onTap: () => Get.offAllNamed(AppRoutes.messageScreen),
+              child: _buildDiscardButton(),
+            ),
+            const SizedBox(height: 10),
+            CustomButton(onTap: _handleTrimAndSend, text: "Trim & Send"),
+          ],
         ),
-        const SizedBox(height: 10),
-        CustomButton(onTap: _handleSendNow, text: "Send Now"),
-      ],
-    ),
-  );
+      );
 
   Widget _buildDiscardButton() => Container(
-    width: double.infinity,
-    height: 52,
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: const Color(0xFFC4C3C3), width: 0.5),
-    ),
-    child: const Center(
-      child: Text("Discard",
-          style: TextStyle(color: Color(0xFF676565), fontSize: 20, fontWeight: FontWeight.w600)),
-    ),
-  );
+        width: double.infinity,
+        height: 52,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFC4C3C3), width: 0.5),
+        ),
+        child: const Center(
+          child: Text(
+            "Discard",
+            style: TextStyle(
+              color: Color(0xFF676565),
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
 
-  Widget _buildTrimsSlider() {
-    final totalWidth = _thumbnailPaths.length * (_thumbnailWidth + 2);
-
+  Widget _buildTrimSlider() {
     return Container(
       height: 60,
       margin: const EdgeInsets.symmetric(vertical: 10),
@@ -400,8 +474,9 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
               onHorizontalDragUpdate: (details) {
                 setState(() {
                   _leftHandle += details.delta.dx;
-                  _leftHandle = (_leftHandle.clamp(0.0, _rightHandle - 30));
-                  final total = _thumbnailPaths.length * (_thumbnailWidth + 2);
+                  _leftHandle = _leftHandle.clamp(0.0, _rightHandle - 30);
+                  final total =
+                      _thumbnailPaths.length * (_thumbnailWidth + 2);
                   _trimStart = (_leftHandle / total).clamp(0.0, 1.0);
                 });
               },
@@ -416,8 +491,9 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
               onHorizontalDragUpdate: (details) {
                 setState(() {
                   _rightHandle += details.delta.dx;
-                  final total = _thumbnailPaths.length * (_thumbnailWidth + 2);
-                  _rightHandle = (_rightHandle.clamp(_leftHandle + 30, total));
+                  final total =
+                      _thumbnailPaths.length * (_thumbnailWidth + 2);
+                  _rightHandle = _rightHandle.clamp(_leftHandle + 30, total);
                   _trimEnd = (_rightHandle / total).clamp(0.0, 1.0);
                 });
               },
@@ -430,39 +506,41 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   }
 
   Widget _buildHandle() => Container(
-    width: 6,
-    decoration: BoxDecoration(
-      color: Colors.blue,
-      borderRadius: BorderRadius.circular(6),
-      boxShadow: [
-        BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 3, offset: const Offset(0, 2))
-      ],
-    ),
-  );
+        width: 6,
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 3,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      );
 
-  Future<void> _handleSendNow() async {
-    if (_video == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No video loaded!')));
-      return;
-    }
+  Future<void> _handleTrimAndSend() async {
+    if (_frontVideoController == null) return;
 
-    final original = File(widget.videoUrl);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trimming video...')));
+    final original = File(widget.frontVideoUrl);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Trimming your front camera video...')),
+    );
 
-    final trimmed = await _trimVideo(original);
+    final trimmed = await _trimFrontVideo(original);
     if (trimmed == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trim failed')));
-      return;
-    }
-
-    final mp4File = await ensureMp4Format(trimmed.path);
-    if (mp4File == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Conversion failed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Trim failed')),
+      );
       return;
     }
 
     await Get.to(
-          () => SendMessageWithFriendScreen(filePath: mp4File.path, isVideo: true),
+      () => SendMessageWithFriendScreen(
+        filePath: trimmed.path,
+        isVideo: true,
+      ),
       transition: Transition.rightToLeft,
       duration: const Duration(milliseconds: 300),
     );

@@ -103,7 +103,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         final message = await controller.deleteNotification(notif.id);
 
                         if (message == "success") {
-                          showSnackBar(message, false);
+                      
                           return;
                         }else{
                           showSnackBar("ERROR $message", true);

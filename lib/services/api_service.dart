@@ -9,6 +9,7 @@ import 'package:http_parser/http_parser.dart';
 
 class ApiService {
   final String devUrl = "http://10.10.12.54:3000";
+    // final String devUrl = "http://167.88.39.235:3000";
   final String devUrlWithVersion = "http://10.10.12.54:3000$version";
   static final String version = "/api/v1";
   final String prodUrl = "http://167.88.39.235:3000$version";

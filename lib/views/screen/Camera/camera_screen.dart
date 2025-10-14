@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/views/base/bottom_menu..dart';
+import 'package:ree_social_media_app/views/base/bottom_menu.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_edit_screen.dart';
 
 import '../../../services/camera_manager.dart';

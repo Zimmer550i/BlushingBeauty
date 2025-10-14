@@ -58,7 +58,7 @@ class ContactController extends GetxController {
 
   Future<void> sendInviteSms(String number, String name) async {
     final message =
-        "$name wants to connect with you on re: The app that makes sharing photos and videos more fun! Download here: https://yourappdownloadlink.com";
+        "Join $name  on re: The app that makes sharing photos and videos more fun by capturing real reactions. Download here - https://yourappdownloadlink.com";
 
     final smsUri = Uri(
       scheme: 'sms',
@@ -118,6 +118,29 @@ class ContactController extends GetxController {
         (c["name"] ?? "").toLowerCase().contains(lower) ||
             (c["phone"] ?? "").toLowerCase().contains(lower)),
       );
+    }
+  }
+
+Future<void> createPrivateChat(String memberId) async {
+    isLoading.value = true;
+    try {
+      final response = await api.post(
+        "/chat/create-private",
+        {"member": memberId},
+        authReq: true,
+      );
+
+      final body = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final chatId = body['data']['_id'];
+        debugPrint("✅ Private chat created with ID: $chatId");
+      } else {
+        debugPrint("⚠️ Failed: ${body['message']}");
+      }
+    } catch (e) {
+      debugPrint("❌ Error creating private chat: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 }

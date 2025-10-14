@@ -3,7 +3,6 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/profile_controller.dart';
-import 'package:ree_social_media_app/utils/app_colors.dart';
 import '../../../base/custom_loading.dart';
 
 class AllDataScreen extends StatefulWidget {

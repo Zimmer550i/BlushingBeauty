@@ -7,11 +7,9 @@ import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/send_message_with_friend_screen.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_trim_screen.dart';
 import 'package:video_player/video_player.dart';
-
 import '../../../../controllers/camera_controller.dart';
 import '../../../../helpers/route.dart';
 import '../../../../utils/file_utils.dart';
-import '../camera_screen.dart';
 
 class VideoEditScreen extends StatefulWidget {
   final String filePath;
@@ -28,7 +26,9 @@ class VideoEditScreen extends StatefulWidget {
 }
 
 class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
-  final CreateStoryController createStoryController = Get.put(CreateStoryController());
+  final CreateStoryController createStoryController = Get.put(
+    CreateStoryController(),
+  );
   CameraController? _frontCam;
   VideoPlayerController? _video;
 
@@ -46,7 +46,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
 
   Future<void> _initFlow() async {
     await _initVideo();
-    //await _startBackgroundVideo();
+    //await startBackgroundVideo();
   }
 
   Future<void> _initVideo() async {
@@ -69,7 +69,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _startBackgroundVideo() async {
+  Future<void> startBackgroundVideo() async {
     if (_video != null && _video!.value.isInitialized) {
       await _video!.play();
     }
@@ -179,7 +179,9 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                         InkWell(
                           onTap: () {
                             Get.to(
-                              () => VideoTrimAndSendScreen(videoUrl: widget.filePath),
+                              () => VideoTrimAndSendScreen(
+                                videoUrl: widget.filePath,
+                              ),
                             );
                           },
                           child: widget.isVideo
@@ -224,19 +226,24 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                   CustomButton(
                     onTap: () async {
                       try {
-                        if(widget.isVideo){
-                          final formattedFile = await ensureMp4Format(widget.filePath);
+                        if (widget.isVideo) {
+                          final formattedFile = await ensureMp4Format(
+                            widget.filePath,
+                          );
 
-                          Get.to(() => SendMessageWithFriendScreen(
-                            filePath: formattedFile.path,
-                            isVideo: widget.isVideo,
-                          ));
-                        }else{
-                          Get.to(() => SendMessageWithFriendScreen(
-                            filePath: widget.filePath,
-                            isVideo: widget.isVideo,
-                          ));
-
+                          Get.to(
+                            () => SendMessageWithFriendScreen(
+                              filePath: formattedFile.path,
+                              isVideo: widget.isVideo,
+                            ),
+                          );
+                        } else {
+                          Get.to(
+                            () => SendMessageWithFriendScreen(
+                              filePath: widget.filePath,
+                              isVideo: widget.isVideo,
+                            ),
+                          );
                         }
                       } catch (e) {
                         debugPrint('⚠️ Could not format video: $e');
@@ -245,13 +252,20 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                     text: "Send Message",
                   ),
                   const SizedBox(height: 20),
-                  CustomButton(onTap: () {
-                    if(widget.isVideo){
-                      createStoryController.addStory(videoPath: widget.filePath);
-                    }else{
-                      createStoryController.addStory(imagePath: widget.filePath);
-                    }
-                  }, text: "Create Story"),
+                  CustomButton(
+                    onTap: () {
+                      if (widget.isVideo) {
+                        createStoryController.addStory(
+                          videoPath: widget.filePath,
+                        );
+                      } else {
+                        createStoryController.addStory(
+                          imagePath: widget.filePath,
+                        );
+                      }
+                    },
+                    text: "Create Story",
+                  ),
                 ],
               ),
             ),

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/statusbar_color.dart';
-import 'package:ree_social_media_app/views/base/custom_button.dart';
 
 class OnboardScreen3 extends StatefulWidget {
   const OnboardScreen3({super.key});
@@ -99,7 +96,7 @@ class _OnboardScreen3State extends State<OnboardScreen3> {
               Center(
                 child: InkWell(
                   onTap: (){
-                    Get.offAllNamed(AppRoutes.loginScreen);
+                    
                   },
                   child: Container(
                     width: 200,

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
+// ignore: depend_on_referenced_packages
 import 'package:path/path.dart' as p;
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
@@ -41,7 +42,7 @@ class CreateStoryController extends GetxController {
         mediaFile = File(pickedFile.path);
       }
 
-      if (mediaFile == null || !(await mediaFile.exists())) {
+      if (!(await mediaFile.exists())) {
         Get.snackbar("Error", "No valid media file selected.");
         return;
       }
@@ -52,7 +53,7 @@ class CreateStoryController extends GetxController {
       }
 
       // 🟢 Step 3: Upload story to API
-      await _uploadStoryMedia(mediaFile, mediaType!);
+      await _uploadStoryMedia(mediaFile, mediaType);
 
     } catch (e) {
       debugPrint("❌ Error creating story: $e");
@@ -60,7 +61,7 @@ class CreateStoryController extends GetxController {
         "Error",
         "Something went wrong while uploading story.",
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withOpacity(0.2),
+        backgroundColor: Colors.redAccent.withValues(alpha: .2),
       );
     }
   }
@@ -145,14 +146,14 @@ class CreateStoryController extends GetxController {
             "Upload Failed",
             resData['message'] ?? "Server rejected upload.",
             snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.redAccent.withOpacity(0.2),
+            backgroundColor: Colors.redAccent.withValues(alpha: .2),
           );
         } catch (_) {
           Get.snackbar(
             "Upload Failed",
             "Server error: ${response.statusCode}",
             snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.redAccent.withOpacity(0.2),
+            backgroundColor: Colors.redAccent.withValues(alpha: .2),
           );
         }
       }
@@ -162,7 +163,7 @@ class CreateStoryController extends GetxController {
         "Error",
         "Could not upload story. Please try again.",
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withOpacity(0.2),
+        backgroundColor: Colors.redAccent.withValues(alpha: .2),
       );
     }
   }

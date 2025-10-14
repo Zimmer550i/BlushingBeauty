@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
@@ -26,23 +27,13 @@ class _OnboardScreen1State extends State<OnboardScreen1> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    height: 36,
-                    width: 45,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text("re:",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                      ),),
-                    ),
-                  ),
-                  Text("1 of 3",
+                    SvgPicture.asset(
+                            "assets/icons/re.svg",
+                            height: 35,
+                            width: 45,
+                          ),
+                        
+                  Text("1 of 2",
                   style: TextStyle(
                     color: Color(0xFF413E3E),
                     fontSize: 16,
@@ -79,7 +70,7 @@ class _OnboardScreen1State extends State<OnboardScreen1> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 50),
                 child: CustomButton(onTap: (){
-                  Get.to(()=> OnboardScreen2());
+                  Get.to(()=> OnboardScreen2(),transition: Transition.rightToLeft);
                 }, text: "Next"),
               )
 

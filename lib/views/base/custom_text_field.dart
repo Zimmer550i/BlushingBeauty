@@ -139,7 +139,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   }
 
-  _suffixIcon(IconData icon) {
+  Padding _suffixIcon(IconData icon) {
     return Padding(padding: const EdgeInsets.all(12.0), child: Icon(icon,
       color: Color(0xFF676565),));
   }

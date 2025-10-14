@@ -7,7 +7,6 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_checkbox_screen.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
-
 import '../../../../controllers/send_message_controller.dart';
 
 class SendMessageWithFriendScreen extends StatefulWidget {

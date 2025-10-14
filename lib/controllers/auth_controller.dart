@@ -110,12 +110,12 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<String> signup(String email, String password) async {
+  Future<String> signup(String email, String password, bool isPhone) async {
     isLoading.value = true;
 
     try {
       final response = await api.post("/user/create-user", {
-        "email": email.trim(),
+        isPhone ? "phone" : "email": email.trim(),
         "password": password.trim(),
       });
 

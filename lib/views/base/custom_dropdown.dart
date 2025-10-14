@@ -30,15 +30,48 @@ class _CustomDropdownState extends State<CustomDropdown> {
     members = List<Map<String, dynamic>>.from(widget.items);
   }
 
-  void _confirmRemove(Map<String, dynamic> member) async {
-    Get.defaultDialog(
-      title: "Remove Member",
-      middleText: "Are you sure you want to remove ${member['name']}?",
-      textCancel: "No",
-      textConfirm: "Yes",
-      confirmTextColor: Colors.white,
-      onCancel: () => Get.back(),
-      onConfirm: () async {
+  // void _confirmRemove(Map<String, dynamic> member) async {
+  //   Get.defaultDialog(
+  //     title: "Remove Member",
+  //     middleText: "Are you sure you want to remove ${member['name']}?",
+  //     textCancel: "No",
+  //     textConfirm: "Yes",
+  //     confirmTextColor: Colors.white,
+  //     onCancel: () => Get.back(),
+  //     onConfirm: () async {
+  //       final result = await controller.removeMemberFromGroup(
+  //         groupId: widget.chatId,
+  //         memberId: member["_id"],
+  //       );
+
+  //       if (result == "success") {
+  //         // 🔥 Re-fetch group details to refresh UI
+  //         await controller.fetchGroupDetails(widget.chatId);
+  //         Get.back();
+  //         Get.snackbar("Removed", "${member['name']} removed from groupChat");
+  //       }
+  //     },
+  //   );
+  // }
+
+
+  void _confirmRemove(BuildContext context,Map<String, dynamic> member) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFFC4C3C3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+             Text(
+              "Are you sure you want to remove ${member['name']}?",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            _dialogActions(
+              context,
+              onYes: () async {
         final result = await controller.removeMemberFromGroup(
           groupId: widget.chatId,
           memberId: member["_id"],
@@ -51,6 +84,34 @@ class _CustomDropdownState extends State<CustomDropdown> {
           Get.snackbar("Removed", "${member['name']} removed from groupChat");
         }
       },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: onYes,
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.white),
+            ),
+            child: const Text("Yes", style: TextStyle(color: Colors.white)),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () => Get.back(),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            child: const Text("No", style: TextStyle(color: Color(0xFF676565))),
+          ),
+        ),
+      ],
     );
   }
 
@@ -137,7 +198,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
                           // inside Row children
                           if (item["_id"] != myId)
                             InkWell(
-                              onTap: () => _confirmRemove(item),
+                              onTap: () => _confirmRemove(context,item),
                               child: Container(
                                 height: 24,
                                 width: 24,

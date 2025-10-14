@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
-import 'package:ree_social_media_app/services/camera_manager.dart';
+import 'package:path/path.dart' as p;
 
 class SendMessageController extends GetxController {
   final messageController = Get.put(MessageController());
@@ -39,7 +40,6 @@ class SendMessageController extends GetxController {
       }
 
       // Fetch chats first
-      await messageController.fetchChats();
 
       // Extract immediately
       final newFriends = _extractFriends(currentUserId, messageController.privateChats);
@@ -87,27 +87,72 @@ class SendMessageController extends GetxController {
   }
 
   Future<void> sendMedia({
-    required String filePath,
-    required bool isVideo,
-  }) async {
-    if (selectedIds.isEmpty) {
-      Get.snackbar("Error", "Please select at least one friend.");
-      return;
-    }
-
-    try {
-      await chatController.sendMediaToMultipleChats(
-        friends: friends,
-        selectedIds: selectedIds,
-        mediaFile: File(filePath),
-        contentType: isVideo ? 'video' : 'image',
-      );
-
-      Get.snackbar("Success", "Media sent to ${selectedIds.length} friend${selectedIds.length > 1 ? 's' : ''}!");
-      Get.offAllNamed(AppRoutes.messageScreen);
-    } catch (e) {
-      Get.snackbar("Error", "Failed to send media: $e");
-    }
+  required String filePath,
+  required bool isVideo,
+}) async {
+  if (selectedIds.isEmpty) {
+    Get.snackbar("Error", "Please select at least one friend.");
+    return;
   }
+
+  try {
+    // ✅ Ensure .mp4 extension or rename .temp file properly
+    final correctedPath = isVideo ? await ensureMp4File(filePath) : filePath;
+
+    final file = File(correctedPath);
+    if (!await file.exists()) {
+      throw Exception("File not found at path: $correctedPath");
+    }
+
+    await chatController.sendMediaToMultipleChats(
+      friends: friends,
+      selectedIds: selectedIds,
+      mediaFile: file,
+      contentType: isVideo ? 'video' : 'image',
+    );
+
+    Get.snackbar(
+      "Success",
+      "Media sent to ${selectedIds.length} friend${selectedIds.length > 1 ? 's' : ''}!",
+    );
+    Get.offAllNamed(AppRoutes.messageScreen);
+  } catch (e) {
+    Get.snackbar("Error", "Failed to send media: $e");
+  }
+}
+
+
+
+Future<String> ensureMp4File(String filePath) async {
+  try {
+    final file = File(filePath);
+
+    // If file doesn’t exist, throw an error early
+    if (!await file.exists()) {
+      throw Exception("File not found at $filePath");
+    }
+
+    // If already ends with .mp4 and not .temp, just return
+    if (filePath.toLowerCase().endsWith('.mp4') &&
+        !filePath.toLowerCase().contains('.temp')) {
+      return filePath;
+    }
+
+    // Otherwise, create a new .mp4 file in the same directory
+    final newPath = p.join(
+      p.dirname(filePath),
+      '${p.basenameWithoutExtension(filePath)}.mp4',
+    );
+
+    // Rename (move) or copy the file
+    final newFile = await file.rename(newPath);
+
+    return newFile.path;
+  } catch (e) {
+    debugPrint('❗ Error converting file to .mp4: $e');
+    rethrow;
+  }
+}
+
 }
 

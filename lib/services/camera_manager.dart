@@ -40,7 +40,7 @@ class GlobalCameraManager {
         // Give a tiny delay to ensure CameraX detaches observers
         await Future.delayed(const Duration(milliseconds: 100));
 
-        await _controller!.dispose();
+        // await _controller!.dispose();
         debugPrint("🧹 Camera disposed successfully");
       }
     } catch (e) {

@@ -118,22 +118,24 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
-            _buildSearchField(),
-            const SizedBox(height: 24),
-            _buildFriendList(),
-            const SizedBox(height: 16),
-            CustomButton(
-              onTap: _handleAddMembers,
-              text: "Add Now",
-            ),
-          ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 24),
+              _buildSearchField(),
+              const SizedBox(height: 24),
+              _buildFriendList(),
+              const SizedBox(height: 16),
+              CustomButton(
+                onTap: _handleAddMembers,
+                text: "Add Now",
+              ),
+            ],
+          ),
         ),
       ),
     );

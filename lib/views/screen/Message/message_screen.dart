@@ -9,7 +9,7 @@ import 'package:ree_social_media_app/services/api_service.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import '../../base/bottom_menu..dart';
+import '../../base/bottom_menu.dart';
 import '../Notification/notification_screen.dart';
 import 'AllSubScreen/AllSubScreen/add_friends.dart';
 import 'AllSubScreen/AllSubScreen/search_screen.dart';
@@ -81,12 +81,14 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: Obx(()=> BottomMenu(
-        0,
-        messageCount: int.parse(
-          notificationController.totalNotificationCount.toString(),
+      bottomNavigationBar: Obx(
+        () => BottomMenu(
+          0,
+          messageCount: int.parse(
+            notificationController.totalNotificationCount.toString(),
+          ),
         ),
-      ),),
+      ),
       body: RefreshIndicator(
         onRefresh: controller.refreshAll,
         child: Padding(
@@ -198,7 +200,7 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   Widget _logoBox() {
-    return SvgPicture.asset("assets/icons/re.svg",height: 35,width: 45);
+    return SvgPicture.asset("assets/icons/re.svg", height: 35, width: 45);
   }
 
   Widget _iconButton(String asset, {VoidCallback? onTap}) {
@@ -276,12 +278,19 @@ class _MessageScreenState extends State<MessageScreen> {
                   String? authorImage;
                   if (story["author"] is Map) {
                     authorName = story["author"]["name"] ?? "User";
-                    authorImage = userController.addBaseUrl(story["author"]["image"]);
+                    authorImage = userController.addBaseUrl(
+                      story["author"]["image"],
+                    );
                   } else if (story["author"] is String) {
                     authorName = "User";
                   }
 
-                  return _buildStoryCard(mediaUrl, authorName,authorImage.toString(),isVideo);
+                  return _buildStoryCard(
+                    mediaUrl,
+                    authorName,
+                    authorImage.toString(),
+                    isVideo,
+                  );
                 },
               ),
             );
@@ -325,7 +334,7 @@ class _MessageScreenState extends State<MessageScreen> {
                 ),
                 child: Container(
                   width: 56, // ~half width overlay
-                  color: AppColors.primaryColor.withOpacity(0.56),
+                  color: AppColors.primaryColor.withValues(alpha: 0.56),
                 ),
               ),
             ),
@@ -372,14 +381,18 @@ class _MessageScreenState extends State<MessageScreen> {
     );
   }
 
-  Widget _buildStoryCard(String mediaUrl, String name, String image, bool isVideo) {
+  Widget _buildStoryCard(
+    String mediaUrl,
+    String name,
+    String image,
+    bool isVideo,
+  ) {
     const double cardW = 100;
     const double cardH = 132;
-    const double barH = 32;
 
     return FutureBuilder<Widget>(
       future: isVideo
-          ? _buildVideoThumbnailWidget(mediaUrl, name,image)
+          ? _buildVideoThumbnailWidget(mediaUrl, name, image)
           : _buildImageStoryWidget(mediaUrl, name),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -391,7 +404,9 @@ class _MessageScreenState extends State<MessageScreen> {
               color: Colors.black12,
               borderRadius: BorderRadius.circular(8),
             ),
-            child:  Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
+            child: Center(
+              child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
+            ),
           );
         }
         if (snapshot.hasError || !snapshot.hasData) {
@@ -444,7 +459,7 @@ class _MessageScreenState extends State<MessageScreen> {
                 height: barH,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 alignment: Alignment.centerLeft,
-                color: Colors.black.withOpacity(0.42),
+                color: Colors.black.withValues(alpha: 0.42),
                 child: Text(
                   name,
                   maxLines: 1,
@@ -511,7 +526,12 @@ class _MessageScreenState extends State<MessageScreen> {
                   ? Image.file(File(thumbPath), fit: BoxFit.cover)
                   : Container(
                       color: Colors.black26,
-                      child: Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
+                      child: Center(
+                        child: SpinKitWave(
+                          color: AppColors.primaryColor,
+                          size: 30.0,
+                        ),
+                      ),
                     ),
               Center(
                 child: Container(
@@ -537,7 +557,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   height: barH,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   alignment: Alignment.centerLeft,
-                  color: Colors.black.withOpacity(0.42),
+                  color: Colors.black.withValues(alpha: 0.42),
                   child: Text(
                     name,
                     maxLines: 1,
@@ -642,7 +662,7 @@ class _MessageScreenState extends State<MessageScreen> {
           if (chat["type"] == "private") {
             final members = chat["members"] as List? ?? [];
             final other = members.firstWhere(
-                  (m) => m["_id"] != currentUserId,
+              (m) => m["_id"] != currentUserId,
               orElse: () => null,
             );
             if (other != null) {
@@ -664,12 +684,11 @@ class _MessageScreenState extends State<MessageScreen> {
                   dt.month == now.month &&
                   dt.year == now.year) {
                 formattedTime =
-                "${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
+                    "${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
               } else if (dt.difference(now).inDays == -1) {
                 formattedTime = "Yesterday";
               } else {
-                formattedTime =
-                "${dt.day} ${_monthName(dt.month)} ${dt.year}";
+                formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
               }
             }
           }
@@ -680,17 +699,21 @@ class _MessageScreenState extends State<MessageScreen> {
           return InkWell(
             onTap: () {
               if (isPrivate) {
-                Get.to(() => ChatScreen(
-                  chatId: chatId,
-                  receiverName: name,
-                  receiverImage: image,
-                ));
+                Get.to(
+                  () => ChatScreen(
+                    chatId: chatId,
+                    receiverName: name,
+                    receiverImage: image,
+                  ),
+                );
               } else {
-                Get.to(() => GroupChatScreen(
-                  chatId: chatId,
-                  groupName: name,
-                  groupImage: image,
-                ));
+                Get.to(
+                  () => GroupChatScreen(
+                    chatId: chatId,
+                    groupName: name,
+                    groupImage: image,
+                  ),
+                );
               }
             },
             child: Padding(
@@ -705,9 +728,9 @@ class _MessageScreenState extends State<MessageScreen> {
                         : null,
                     child: image.isEmpty
                         ? Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : "?",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    )
+                            name.isNotEmpty ? name[0].toUpperCase() : "?",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          )
                         : null,
                   ),
                   const SizedBox(width: 12),
@@ -743,12 +766,14 @@ class _MessageScreenState extends State<MessageScreen> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: lastMsg.contains("Video") ||
-                                lastMsg.contains("Image")
+                            fontWeight:
+                                lastMsg.contains("Video") ||
+                                    lastMsg.contains("Image")
                                 ? FontWeight.w600
                                 : FontWeight.normal,
-                            color: lastMsg.contains("Video") ||
-                                lastMsg.contains("Image")
+                            color:
+                                lastMsg.contains("Video") ||
+                                    lastMsg.contains("Image")
                                 ? Colors.black
                                 : Colors.grey.shade600,
                           ),

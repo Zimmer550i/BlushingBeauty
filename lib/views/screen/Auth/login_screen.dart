@@ -4,12 +4,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/auth_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
+import 'package:ree_social_media_app/views/base/custom_email_number_field.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Auth/forget_password.dart';
 import 'package:ree_social_media_app/views/screen/Auth/signup_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/message_screen.dart';
-
 import '../../../utils/show_snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -35,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SvgPicture.asset("assets/icons/re.svg",height: 35,width: 45),
+              ReeLogo(),
               SizedBox(height: 110),
               Text(
                 "Glad to See You \nAgain!",
@@ -46,10 +47,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 40),
-              CustomTextField(
+              CustomEmailNumberField(
                 controller: emailTextController,
                 hintText: 'Enter your phone number or email',
-                isEmail: true,
                 borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
                 prefixIcon: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -62,7 +62,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(4.0),
-                      child: SvgPicture.asset('assets/icons/phone.svg'),
+                      child: SvgPicture.asset(
+                        'assets/icons/phone.svg',
+                        height: 24,
+                        width: 24,
+                      ),
                     ),
                   ),
                 ),
@@ -107,24 +111,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 80),
-              Obx(()=> CustomButton(
-                onTap: () async {
-                  if(emailTextController.text.isEmpty || passwordTextController.text.isEmpty){
-                    showSnackBar("Please fill all the fields",true);
-                  }else{
-                    final message = await authController.login(emailTextController.text, passwordTextController.text);
-                    if (message == "success") {
-                      Get.offAll(() => MessageScreen());
-                    } else if (message == "verify") {
-                      showSnackBar("Please verify your email address", true);
+              Obx(
+                () => CustomButton(
+                  onTap: () async {
+                    if (emailTextController.text.isEmpty ||
+                        passwordTextController.text.isEmpty) {
+                      showSnackBar("Please fill all the fields", true);
                     } else {
-                      showSnackBar(message,true);
+                      final message = await authController.login(
+                        emailTextController.text,
+                        passwordTextController.text,
+                      );
+                      if (message == "success") {
+                        Get.offAll(() => MessageScreen());
+                      } else if (message == "verify") {
+                        showSnackBar("Please verify your email address", true);
+                      } else {
+                        showSnackBar(message, true);
+                      }
                     }
-                  }
-                },
-                text: "Log In",
-                loading: authController.isLoading.value,
-              ),),
+                  },
+                  text: "Log In",
+                  loading: authController.isLoading.value,
+                ),
+              ),
               SizedBox(height: 12),
               Center(
                 child: RichText(

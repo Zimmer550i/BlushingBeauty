@@ -69,13 +69,16 @@ class SeeAllStoryScreen extends StatelessWidget {
                     final story = homeController.stories[index];
                     final type = story["contentType"];
                     final name = story["author"]?["name"] ?? "Unknown";
-                    final userImage = userController.addBaseUrl(story["author"]["image"]);
+                    final userImage = userController.addBaseUrl(
+                      story["author"]["image"],
+                    );
 
                     // ✅ Determine media URL
                     String? mediaUrl;
                     if (type == "image" && (story["image"] ?? "").isNotEmpty) {
                       mediaUrl = userController.addBaseUrl(story["image"]);
-                    } else if (type == "video" && (story["video"] ?? "").isNotEmpty) {
+                    } else if (type == "video" &&
+                        (story["video"] ?? "").isNotEmpty) {
                       mediaUrl = userController.addBaseUrl(story["video"]);
                     }
 
@@ -83,7 +86,13 @@ class SeeAllStoryScreen extends StatelessWidget {
                       return const Center(child: Icon(Icons.error));
                     }
 
-                    return _buildStoryCard(context, mediaUrl, name,userImage.toString(),type == "video");
+                    return _buildStoryCard(
+                      context,
+                      mediaUrl,
+                      name,
+                      userImage.toString(),
+                      type == "video",
+                    );
                   },
                 );
               }),
@@ -95,12 +104,16 @@ class SeeAllStoryScreen extends StatelessWidget {
   }
 
   /// ✅ Handles both image & video stories
-  Widget _buildStoryCard(BuildContext context, String mediaUrl, String name,String userImage , bool isVideo) {
-    const double barH = 32;
-
+  Widget _buildStoryCard(
+    BuildContext context,
+    String mediaUrl,
+    String name,
+    String userImage,
+    bool isVideo,
+  ) {
     return FutureBuilder<Widget>(
       future: isVideo
-          ? _buildVideoThumbnailCard(context, mediaUrl, name,userImage)
+          ? _buildVideoThumbnailCard(context, mediaUrl, name, userImage)
           : _buildImageCard(mediaUrl, name),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
@@ -110,7 +123,9 @@ class SeeAllStoryScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               color: Colors.black12,
             ),
-            child: Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
+            child: Center(
+              child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
+            ),
           );
         }
         if (snap.hasError || !snap.hasData) {
@@ -138,7 +153,8 @@ class SeeAllStoryScreen extends StatelessWidget {
           Image.network(
             mediaUrl,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+            errorBuilder: (_, __, ___) =>
+                const Center(child: Icon(Icons.broken_image)),
           ),
           _buildBottomNameBar(name),
         ],
@@ -147,7 +163,12 @@ class SeeAllStoryScreen extends StatelessWidget {
   }
 
   /// 🎬 Video story card (download + thumbnail + open preview)
-  Future<Widget> _buildVideoThumbnailCard(BuildContext context, String videoUrl, String name, String userImage) async {
+  Future<Widget> _buildVideoThumbnailCard(
+    BuildContext context,
+    String videoUrl,
+    String name,
+    String userImage,
+  ) async {
     // Download video locally for thumbnail
     final localVideo = await _downloadVideoToLocal(videoUrl);
 
@@ -160,12 +181,14 @@ class SeeAllStoryScreen extends StatelessWidget {
     );
 
     return InkWell(
-      onTap: () => Get.to(() => VideoPreviewScreen(
-        videoUrl: localVideo.path,
-        countdownSeconds: 3,
-        userProfile: userImage,
-        userName: name,
-      )),
+      onTap: () => Get.to(
+        () => VideoPreviewScreen(
+          videoUrl: localVideo.path,
+          countdownSeconds: 3,
+          userProfile: userImage,
+          userName: name,
+        ),
+      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Stack(
@@ -174,7 +197,10 @@ class SeeAllStoryScreen extends StatelessWidget {
             if (thumbPath != null)
               Image.file(File(thumbPath), fit: BoxFit.cover)
             else
-              Container(color: Colors.black26, child: const Center(child: Icon(Icons.error))),
+              Container(
+                color: Colors.black26,
+                child: const Center(child: Icon(Icons.error)),
+              ),
             Center(
               child: Container(
                 width: 40,
@@ -184,7 +210,11 @@ class SeeAllStoryScreen extends StatelessWidget {
                   color: AppColors.primaryColor,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
-                child: const Icon(Icons.play_arrow, color: Colors.white, size: 26),
+                child: const Icon(
+                  Icons.play_arrow,
+                  color: Colors.white,
+                  size: 26,
+                ),
               ),
             ),
             _buildBottomNameBar(name),
@@ -204,7 +234,7 @@ class SeeAllStoryScreen extends StatelessWidget {
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         alignment: Alignment.centerLeft,
-        color: Colors.black.withOpacity(0.42),
+        color: Colors.black.withValues(alpha: 0.42),
         child: Text(
           name,
           maxLines: 1,
@@ -223,7 +253,9 @@ class SeeAllStoryScreen extends StatelessWidget {
   Future<File> _downloadVideoToLocal(String url) async {
     final response = await http.get(Uri.parse(url));
     final dir = await getTemporaryDirectory();
-    final file = File("${dir.path}/${DateTime.now().millisecondsSinceEpoch}.mp4");
+    final file = File(
+      "${dir.path}/${DateTime.now().millisecondsSinceEpoch}.mp4",
+    );
     await file.writeAsBytes(response.bodyBytes);
     return file;
   }

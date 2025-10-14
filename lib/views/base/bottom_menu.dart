@@ -1,9 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
-import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/app_icons.dart';
 
 class BottomMenu extends StatelessWidget {

@@ -10,7 +10,7 @@ import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Contact/create_group_screen.dart';
 
-import '../../base/bottom_menu..dart';
+import '../../base/bottom_menu.dart';
 
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
@@ -126,9 +126,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
   // ✅ Friend already on app
   Widget _buildMatchedContactTile(Map<String, dynamic> c, List<dynamic> apiUsers) {
-    final matchedUser = apiUsers.firstWhereOrNull(
-          (u) => u.id == c["_id"] || u.phone == c["phone"],
-    );
+    
 
     final imageUrl = userController.addBaseUrl(c['image']);
     final name = c["name"] ?? "No Name";

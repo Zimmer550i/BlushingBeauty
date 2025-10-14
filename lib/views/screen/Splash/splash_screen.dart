@@ -1,8 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/auth_controller.dart';
-import 'package:ree_social_media_app/views/screen/Auth/login_screen.dart';
 import 'package:ree_social_media_app/views/screen/Splash/Onboard/onboard_screen1.dart';
 
 import '../Message/message_screen.dart';

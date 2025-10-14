@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
-import '../services/socket_manager.dart';
 
 class MessageController extends GetxController {
   final ApiService _api = ApiService();
@@ -236,7 +235,7 @@ class MessageController extends GetxController {
           "Upload Failed",
           "Could not upload your $mediaType story.",
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withOpacity(0.2),
+          backgroundColor: Colors.redAccent.withValues(alpha: .2),
         );
       }
     } catch (e) {
@@ -245,7 +244,7 @@ class MessageController extends GetxController {
         "Error",
         "Something went wrong while uploading story.",
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withOpacity(0.2),
+        backgroundColor: Colors.redAccent.withValues(alpha: .2),
       );
     }
   }

@@ -5,13 +5,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:ree_social_media_app/views/base/blur_image_card.dart';
+import 'package:ree_social_media_app/views/base/blur_video_card.dart';
 import '../../../../controllers/chat_controller.dart';
 import '../../../../controllers/user_controller.dart';
 import '../../../../services/shared_prefs_service.dart';
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/media_store.dart';
-import 'AllSubScreen/video_preview_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String chatId;
@@ -30,7 +30,10 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final ChatController chatController = Get.put(ChatController(), permanent: true);
+  final ChatController chatController = Get.put(
+    ChatController(),
+    permanent: true,
+  );
   final UserController userController = Get.put(UserController());
   final TextEditingController messageController = TextEditingController();
 
@@ -75,12 +78,52 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // 🧠 Cache map for already downloaded videos
+  final Map<String, File> _videoCache = {};
+
   Future<File> _downloadVideoToLocal(String url) async {
-    final response = await http.get(Uri.parse(url));
-    final dir = await getTemporaryDirectory();
-    final file = File("${dir.path}/${DateTime.now().millisecondsSinceEpoch}.mp4");
-    await file.writeAsBytes(response.bodyBytes);
-    return file;
+    try {
+      // If already cached in memory
+      if (_videoCache.containsKey(url)) {
+        return _videoCache[url]!;
+      }
+
+      // Generate unique file name (based on url hash)
+      final fileName = "${url.hashCode}.mp4";
+
+      // Create a cache directory for videos
+      final dir = await getTemporaryDirectory();
+      final videoDir = Directory("${dir.path}/videos");
+      if (!await videoDir.exists()) {
+        await videoDir.create(recursive: true);
+      }
+
+      final filePath = "${videoDir.path}/$fileName";
+      final cachedFile = File(filePath);
+
+      // If file already exists locally, use it directly
+      if (await cachedFile.exists()) {
+        _videoCache[url] = cachedFile;
+        debugPrint("✅ Using cached video for: $url");
+        return cachedFile;
+      }
+
+      // Otherwise, download from network
+      debugPrint("⬇️ Downloading video from: $url");
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        await cachedFile.writeAsBytes(response.bodyBytes);
+        _videoCache[url] = cachedFile;
+        debugPrint("✅ Video downloaded & cached: ${cachedFile.path}");
+        return cachedFile;
+      } else {
+        throw Exception("Failed to download video: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("❌ Error downloading video: $e");
+      rethrow;
+    }
   }
 
   @override
@@ -98,7 +141,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 final msgs = chatController.messages;
 
                 if (chatController.isLoading.value && msgs.isEmpty) {
-                  return Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0));
+                  return Center(
+                    child: SpinKitWave(
+                      color: AppColors.primaryColor,
+                      size: 30.0,
+                    ),
+                  );
                 }
 
                 return NotificationListener<ScrollNotification>(
@@ -112,7 +160,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: ListView.builder(
                     reverse: true,
                     controller: chatController.scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     itemCount: msgs.length,
                     itemBuilder: (_, index) {
                       final msg = msgs[index];
@@ -187,8 +238,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildTextMessage(Map<String, dynamic> msg) {
     return Column(
-      crossAxisAlignment:
-      msg["isMe"] ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: msg["isMe"]
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(12),
@@ -227,33 +279,26 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildImageMessage(Map<String, dynamic> msg) {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
+    bool isMe = msg["isMe"] ?? false;
+
     return Column(
-      crossAxisAlignment:
-      msg["isMe"] ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: isMe
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            imageUrl.toString(),
-            height: 180,
-            width: 240,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Image.asset(
-              "assets/images/receiver.jpg",
-              height: 180,
-              width: 240,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
+        BlurImageCard(imageUrl: imageUrl.toString()),
         const SizedBox(height: 4),
-        Text(msg["time"] ?? "", style: const TextStyle(fontSize: 10)),
+        Text(
+          msg["time"] ?? "",
+          style: const TextStyle(fontSize: 10, color: Colors.grey),
+        ),
       ],
     );
   }
 
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
+
     return FutureBuilder<File>(
       future: _downloadVideoToLocal(videoUrl.toString()),
       builder: (context, snap) {
@@ -261,9 +306,12 @@ class _ChatScreenState extends State<ChatScreen> {
           return SizedBox(
             height: 180,
             width: 240,
-            child: Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
+            child: Center(
+              child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
+            ),
           );
         }
+
         if (!snap.hasData) {
           return const SizedBox(
             height: 180,
@@ -273,123 +321,78 @@ class _ChatScreenState extends State<ChatScreen> {
         }
 
         final localVideo = snap.data!;
+
         return Column(
-          crossAxisAlignment:
-          msg["isMe"] ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: msg["isMe"]
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
-            InkWell(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => VideoPreviewScreen(
-                    videoUrl: localVideo.path,
-                    countdownSeconds: 3,
-                    userProfile: _receiverImage ?? "",
-                    userName: widget.receiverName,
-                  ),
-                ),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: FutureBuilder<String?>(
-                      future: VideoThumbnail.thumbnailFile(
-                        video: localVideo.path,
-                        imageFormat: ImageFormat.JPEG,
-                        maxHeight: 180,
-                        quality: 75,
-                      ),
-                      builder: (_, thumbSnap) {
-                        if (!thumbSnap.hasData) {
-                          return Container(
-                            height: 180,
-                            width: 240,
-                            color: Colors.black12,
-                            child: Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
-                          );
-                        }
-                        return Image.file(
-                          File(thumbSnap.data!),
-                          height: 180,
-                          width: 240,
-                          fit: BoxFit.cover,
-                        );
-                      },
-                    ),
-                  ),
-                  Container(
-                    height: 50,
-                    width: 50,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF56BBFF),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.play_arrow, color: Colors.white),
-                  ),
-                ],
-              ),
+            BlurVideoCard(
+              videoFile: localVideo,
+              msg: msg,
+              receiverImage: _receiverImage,
+              receiverName: widget.receiverName,
             ),
             const SizedBox(height: 6),
 
-            msg['isMe'] ?
-            InkWell(
-              onTap: () async => await saveVideoToGallery(context, localVideo.path),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 50),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Spacer(),
-                    SvgPicture.asset(
-                      'assets/icons/download.svg',
-                      color: const Color(0xFF56BBFF),
-                      height: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      "Save to gallery",
-                      style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-                    ),
-                    Spacer(),
-                    Text(
-                      msg["time"] ?? "",
-                      style: const TextStyle(fontSize: 10, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            ) : InkWell(
-              onTap: () async => await saveVideoToGallery(context, localVideo.path),
-              child: Padding(
-                padding: const EdgeInsets.only(right: 50),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      msg["time"] ?? "",
-                      style: const TextStyle(fontSize: 10, color: Colors.grey),
-                    ),
-                    Spacer(),
-                    const Text(
-                      "Save to gallery",
-                      style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-                    ),
-                    const SizedBox(width: 6),
-                    SvgPicture.asset(
-                      'assets/icons/download.svg',
-                      color: const Color(0xFF56BBFF),
-                      height: 18,
-                    ),
-                    Spacer(),
-                  ],
-                ),
-              ),
-            )
+            // Footer (Save + Time)
+            _buildVideoFooter(msg, localVideo.path),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildVideoFooter(Map<String, dynamic> msg, String path) {
+    final isMe = msg['isMe'] ?? false;
+    final timeText = Text(
+      msg["time"] ?? "",
+      style: const TextStyle(fontSize: 10, color: Colors.grey),
+    );
+
+    final saveRow = InkWell(
+      onTap: () async => await saveVideoToGallery(context, path),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isMe) ...[
+            Spacer(),
+            SvgPicture.asset(
+              'assets/icons/download.svg',
+              color: const Color(0xFF56BBFF),
+              height: 18,
+            ),
+            SizedBox(width: 8),
+            const Text(
+              "Save to gallery",
+              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+            ),
+            Spacer(),
+            timeText,
+          ],
+
+          if (!isMe) ...[
+            timeText,
+            const Spacer(),
+            const Text(
+              "Save to gallery",
+              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+            ),
+            const SizedBox(width: 6),
+            SvgPicture.asset(
+              'assets/icons/download.svg',
+              color: const Color(0xFF56BBFF),
+              height: 18,
+            ),
+            const Spacer(),
+          ],
+        ],
+      ),
+    );
+
+    return Padding(
+      padding: EdgeInsets.only(left: isMe ? 50 : 0, right: isMe ? 0 : 50),
+      child: saveRow,
     );
   }
 

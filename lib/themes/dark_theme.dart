@@ -35,7 +35,7 @@ ThemeData dark({Color color = const Color(0xFF2683EB)}) => ThemeData(
     selectedLabelStyle: TextStyle(color:color),
     unselectedLabelStyle: TextStyle(color:AppColors.subTextColor),
   ),
-  textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: color)), colorScheme: ColorScheme.dark(primary: color, secondary: color).copyWith(background: Color(0xFF343636)).copyWith(error: Color(0xFFdd3135)),
+  textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: color)), colorScheme: ColorScheme.dark(primary: color, secondary: color).copyWith(surface: Color(0xFF343636)).copyWith(error: Color(0xFFdd3135)),
 );
 
 OutlineInputBorder enableBorder() {
