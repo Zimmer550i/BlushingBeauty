@@ -8,13 +8,13 @@ import 'shared_prefs_service.dart';
 import 'package:http_parser/http_parser.dart';
 
 class ApiService {
-  final String devUrl = "http://10.10.12.54:3000";
-    // final String devUrl = "http://167.88.39.235:3000";
+  // final String devUrl = "http://10.10.12.54:3000";
+    final String devUrl = "https://api.resocial.site";
   final String devUrlWithVersion = "http://10.10.12.54:3000$version";
   static final String version = "/api/v1";
-  final String prodUrl = "http://167.88.39.235:3000$version";
+  final String prodUrl = "https://api.resocial.site$version";
   static final String imgUrl = "";
-  final bool inDevelopment = true;
+  final bool inDevelopment = false;
   final bool showAPICalls = true;
 
   late final String baseUrl;

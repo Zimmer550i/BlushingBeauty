@@ -276,8 +276,10 @@ class _MessageScreenState extends State<MessageScreen> {
                   // handle author safely
                   String authorName = "User";
                   String? authorImage;
+                  String? authorId;
                   if (story["author"] is Map) {
                     authorName = story["author"]["name"] ?? "User";
+                    authorId = story["author"]["_id"] ?? "";
                     authorImage = userController.addBaseUrl(
                       story["author"]["image"],
                     );
@@ -290,6 +292,7 @@ class _MessageScreenState extends State<MessageScreen> {
                     authorName,
                     authorImage.toString(),
                     isVideo,
+                    authorId.toString(),
                   );
                 },
               ),
@@ -386,13 +389,14 @@ class _MessageScreenState extends State<MessageScreen> {
     String name,
     String image,
     bool isVideo,
+    String chatId,
   ) {
     const double cardW = 100;
     const double cardH = 132;
 
     return FutureBuilder<Widget>(
       future: isVideo
-          ? _buildVideoThumbnailWidget(mediaUrl, name, image)
+          ? _buildVideoThumbnailWidget(mediaUrl, name, image,chatId)
           : _buildImageStoryWidget(mediaUrl, name),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -483,6 +487,7 @@ class _MessageScreenState extends State<MessageScreen> {
     String videoUrl,
     String name,
     String image,
+    String chatId,
   ) async {
     const double cardW = 100;
     const double cardH = 132;
@@ -507,6 +512,7 @@ class _MessageScreenState extends State<MessageScreen> {
             countdownSeconds: 3,
             userProfile: image,
             userName: name,
+            chatId: chatId,
           ),
         );
       },
@@ -722,7 +728,8 @@ class _MessageScreenState extends State<MessageScreen> {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: Colors.grey.shade300,
+
+                    backgroundColor: AppColors.primaryColor,
                     backgroundImage: image.isNotEmpty
                         ? NetworkImage(imageWithBaseUrl.toString())
                         : null,

@@ -17,12 +17,13 @@ class VideoPreviewScreen extends StatefulWidget {
     required this.videoUrl,
     this.countdownSeconds = 3,
     required this.userProfile,
-    required this.userName,
+    required this.userName,this.chatId,
   });
 
   final String videoUrl;
   final String userProfile;
   final String userName;
+  final String? chatId;
   final int countdownSeconds;
 
   @override
@@ -341,6 +342,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                       videoUrl: widget.videoUrl,
                       userProfile: widget.userProfile,
                       userName: widget.userName,
+                      chatId: widget.chatId.toString(),
                     ));
               },
               child: CircleAvatar(

@@ -215,14 +215,38 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      const Text(
-                        "To start your first messages on re: invite 5 friends who matter most",
-                        style: TextStyle(
-                          color: Color(0xFF413E3E),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: "To start your first messages on",
+                              style: TextStyle(
+                                color: Color(0xFF676565),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            TextSpan(
+                              text: " re:",
+                              style: TextStyle(
+                                color: AppColors.primaryColor,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            TextSpan(
+                              text: " invite 5 friends who matter most",
+                              style: TextStyle(
+                                color: Color(0xFF676565),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+
                       const SizedBox(height: 24),
 
                       // Search bar

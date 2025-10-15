@@ -4,13 +4,10 @@ import 'package:flutter/material.dart';
 
 class BlurImageCard extends StatefulWidget {
   final String imageUrl;
-  const 
-BlurImageCard({super.key, required this.imageUrl});
+  const BlurImageCard({super.key, required this.imageUrl});
 
   @override
-  State<
-BlurImageCard> createState() => 
-BlurImageCardState();
+  State<BlurImageCard> createState() => BlurImageCardState();
 }
 
 class BlurImageCardState extends State<BlurImageCard> {
@@ -33,7 +30,11 @@ class BlurImageCardState extends State<BlurImageCard> {
             child: ImageFiltered(
               imageFilter: _isTapped || !_isLoaded
                   ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
-                  : ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                  : ImageFilter.blur(
+                      sigmaX: 20,
+                      sigmaY: 20,
+                      tileMode: TileMode.decal,
+                    ),
               child: Image.network(
                 widget.imageUrl,
                 height: 180,
@@ -76,7 +77,11 @@ class BlurImageCardState extends State<BlurImageCard> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Center(
-                child: Icon(Icons.visibility, color: Colors.transparent, size: 30),
+                child: Icon(
+                  Icons.visibility,
+                  color: Colors.transparent,
+                  size: 30,
+                ),
               ),
             ),
         ],

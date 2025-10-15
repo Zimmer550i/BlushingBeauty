@@ -66,8 +66,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   /// Save profile
   void _onSave() async {
     if (nameTextController.text.isEmpty) {
-      showSnackBar("Please enter your name", true);
-      return;
+      nameTextController.text = userController.userInfo.value!.name!;
     }
 
     if (userController.isLoading.value) return;

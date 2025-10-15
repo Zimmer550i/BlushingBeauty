@@ -14,12 +14,13 @@ class SendOrTrimVideoScreen extends StatefulWidget {
   final String videoUrl;
   final String userProfile;
   final String userName;
+  final String chatId;
 
   const SendOrTrimVideoScreen({
     super.key,
     required this.videoUrl,
     required this.userProfile,
-    required this.userName,
+    required this.userName, required this.chatId,
   });
 
   @override

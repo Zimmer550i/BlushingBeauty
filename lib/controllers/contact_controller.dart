@@ -40,8 +40,10 @@ class ContactController extends GetxController {
         await prefs.setString("saved_contacts", jsonEncode(contactList));
 
         await sendContactsToApi(contactList);
+        isLoading.value = false;
       }
     } catch (e) {
+      isLoading.value = false;
       debugPrint("🚨 Error fetching contacts: $e");
     } finally {
       isLoading.value = false;

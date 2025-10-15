@@ -60,7 +60,10 @@ class _SignupScreenState extends State<SignupScreen> {
               CustomNumberField(
                 controller: phoneTextController,
                 hintText: 'Enter your phone number',
-                borderSide: const BorderSide(color: Color(0xFFC4C3C3), width: 1),
+                borderSide: const BorderSide(
+                  color: Color(0xFFC4C3C3),
+                  width: 1,
+                ),
                 onCountryCodeChanged: (code) {
                   setState(() => selectedCountryCode = code);
                 },
@@ -70,7 +73,10 @@ class _SignupScreenState extends State<SignupScreen> {
               CustomTextField(
                 controller: passwordTextController,
                 hintText: 'Enter your Password',
-                borderSide: const BorderSide(color: Color(0xFFC4C3C3), width: 1),
+                borderSide: const BorderSide(
+                  color: Color(0xFFC4C3C3),
+                  width: 1,
+                ),
                 isPassword: true,
                 validator: (_) {
                   return authController.validatePassword()
@@ -122,7 +128,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                           ),
                           const TextSpan(
-                            text: " and\n acknowledge you have read the ",
+                            text: " and acknowledge you have read the ",
                             style: TextStyle(
                               color: Color(0xFF676565),
                               fontSize: 14,
@@ -130,7 +136,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                           ),
                           TextSpan(
-                            text: "Privacy Policy",
+                            text: "Privacy\nPolicy",
                             style: TextStyle(
                               color: AppColors.primaryColor,
                               fontSize: 14,
@@ -158,7 +164,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
                     if (!isCheck) {
                       showSnackBar(
-                          'Please agree to the terms and conditions', true);
+                        'Please agree to the terms and conditions',
+                        true,
+                      );
                       return;
                     }
 

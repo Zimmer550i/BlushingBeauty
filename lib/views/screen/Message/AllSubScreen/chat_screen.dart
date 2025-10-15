@@ -332,6 +332,7 @@ class _ChatScreenState extends State<ChatScreen> {
               msg: msg,
               receiverImage: _receiverImage,
               receiverName: widget.receiverName,
+              chatId: widget.chatId,
             ),
             const SizedBox(height: 6),
 

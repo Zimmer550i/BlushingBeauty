@@ -156,6 +156,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                     children: [
                       CircleAvatar(
                         radius: 60,
+                        backgroundColor: AppColors.primaryColor,
                         backgroundImage: (imageUrl?.isNotEmpty ?? false)
                             ? NetworkImage(imageUrl!)
                             : null,
@@ -289,7 +290,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   onTap: () {
                     confirm(context, () {
                       controller.deleteGroup(widget.chatId);
-                    },"delete this group chat");
+                    }, "delete this group chat");
                   },
                 ),
 
@@ -298,7 +299,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   onTap: () {
                     confirm(context, () {
                       controller.leaveGroup(widget.chatId);
-                    },"leave this group chat");
+                    }, "leave this group chat");
                   },
                 ),
               ],

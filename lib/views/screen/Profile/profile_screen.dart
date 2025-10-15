@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/change_password_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/edit_profile_screen.dart';
@@ -36,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Obx(() {
                 final imageUrl = userController.getImageUrl();
                 final userName =
-                    userController.userInfo.value?.name ?? "Unknown User";
+                    userController.userInfo.value?.name ?? "Loading...";
                 final userPhone = userController.userInfo.value?.phone ?? "N/A";
                 final userEmail = userController.userInfo.value?.email ?? "N/A";
                 return Container(
@@ -53,6 +54,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: Text(
+                          "re:",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
                       /// Avatar + Logo Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -65,9 +78,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 : const AssetImage("assets/images/demo1.png")
                                       as ImageProvider,
                           ),
-                          ReeLogo(),
+
+                          // ReeLogo(),
                         ],
                       ),
+
                       const SizedBox(height: 8),
 
                       /// User Info

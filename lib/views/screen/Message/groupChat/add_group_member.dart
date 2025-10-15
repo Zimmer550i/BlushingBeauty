@@ -48,26 +48,32 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
 
   /// Initialize contacts and filter out existing group members
   Future<void> _initializeContacts() async {
-    await _contactController.fetchContacts();
+  // ✅ Wait for contacts to be fetched first
+  await _contactController.fetchContacts();
 
-    final allContacts = _contactController.matchedContacts;
-    final existingIds = widget.existMembers.map((m) => m["_id"]).toSet();
+  // Now that data is loaded
+  final allContacts = _contactController.matchedContacts;
+  final existingIds = widget.existMembers.map((m) => m["_id"]).toSet();
 
-    final availableContacts = allContacts
-        .where((contact) => !existingIds.contains(contact["_id"]))
-        .map((contact) => {
-      "_id": contact["_id"],
-      "name": contact["name"] ?? "No Name",
-      "image": contact["image"] ?? "assets/images/dummy.jpg",
-      "isInvite": false,
-    })
-        .toList();
+  // Filter out already added members
+  final availableContacts = allContacts
+      .where((contact) => !existingIds.contains(contact["_id"]))
+      .map((contact) => {
+            "_id": contact["_id"],
+            "name": contact["name"] ?? "No Name",
+            "image": contact["image"] ?? "assets/images/dummy.jpg",
+            "isInvite": false,
+          })
+      .toList();
 
-    setState(() {
-      _allFriends = availableContacts;
-      _filteredFriends = List.from(_allFriends);
-    });
-  }
+  setState(() {
+    _allFriends = availableContacts;
+    _filteredFriends = List.from(_allFriends);
+  });
+
+  debugPrint("✅ Available friends: $_allFriends");
+}
+
 
   /// Handle search query filtering
   void _onSearchChanged() {
@@ -177,10 +183,6 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
 
   /// List of available friends (excluding existing members)
   Widget _buildFriendList() {
-    if (_contactController.isLoading.value) {
-      return const Expanded(child: Center(child: CircularProgressIndicator()));
-    }
-
     if (_filteredFriends.isEmpty) {
       return const Expanded(
         child: Center(child: Text("No available friends found")),

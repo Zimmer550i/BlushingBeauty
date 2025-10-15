@@ -19,13 +19,14 @@ class FrameSelectionScreen extends StatefulWidget {
   final String frontVideoUrl;
   final String userProfile;
   final String userName;
+  final bool? isInbox;
 
   const FrameSelectionScreen({
     super.key,
     required this.videoUrl,
     required this.userProfile,
     required this.userName,
-    required this.frontVideoUrl,
+    required this.frontVideoUrl, this.isInbox = false,
   });
 
   @override
@@ -533,11 +534,20 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       return;
     }
 
-    await Get.to(
+    ///TODO: if inbox then send to direct user else move to below screen.
+    if(widget.isInbox == true){
+      // Send to direct user inbox
+      
+    }else{
+      await Get.to(
       () => SendMessageWithFriendScreen(filePath: trimmed.path, isVideo: true),
       transition: Transition.rightToLeft,
       duration: const Duration(milliseconds: 300),
     );
+      return;
+    }
+
+    
   }
 
   // 🎞 Main Trim Slider

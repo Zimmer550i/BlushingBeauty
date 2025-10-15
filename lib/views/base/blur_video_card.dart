@@ -11,13 +11,14 @@ class BlurVideoCard extends StatefulWidget {
   final Map<String, dynamic> msg;
   final String? receiverImage;
   final String receiverName;
+  final String chatId;
 
   const BlurVideoCard({
     super.key,
     required this.videoFile,
     required this.msg,
     required this.receiverName,
-    this.receiverImage,
+    this.receiverImage, required this.chatId,
   });
 
   @override
@@ -81,6 +82,7 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
             countdownSeconds: 3,
             userProfile: widget.receiverImage ?? "",
             userName: widget.receiverName,
+            chatId: widget.chatId,
           ),
         ),
       ).then((_) {
@@ -111,28 +113,32 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
                     ),
                   )
                 : _thumbnailPath != null
-                    ? AnimatedOpacity(
-                        duration: const Duration(milliseconds: 500),
-                        opacity: _isTapped ? 1.0 : 0.6,
-                        child: ImageFiltered(
-                          imageFilter: _isTapped
-                              ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
-                              : ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                          child: Image.file(
-                            File(_thumbnailPath!),
-                            height: 180,
-                            width: 240,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      )
-                    : Container(
+                ? AnimatedOpacity(
+                    duration: const Duration(milliseconds: 500),
+                    opacity: _isTapped ? 1.0 : 0.6,
+                    child: ImageFiltered(
+                      imageFilter: _isTapped
+                          ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                          : ImageFilter.blur(
+                              sigmaX: 20,
+                              sigmaY: 20,
+                              tileMode: TileMode.decal,
+                            ),
+                      child: Image.file(
+                        File(_thumbnailPath!),
                         height: 180,
                         width: 240,
-                        color: Colors.grey.shade200,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.error, color: Colors.red),
+                        fit: BoxFit.cover,
                       ),
+                    ),
+                  )
+                : Container(
+                    height: 180,
+                    width: 240,
+                    color: Colors.grey.shade200,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.error, color: Colors.red),
+                  ),
           ),
 
           // ▶️ Play Button Overlay
@@ -147,7 +153,11 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
               ),
-              child: const Icon(Icons.play_arrow, color: Colors.white, size: 36),
+              child: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 36,
+              ),
             ),
           ),
         ],
