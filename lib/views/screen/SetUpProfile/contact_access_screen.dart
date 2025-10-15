@@ -47,7 +47,7 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
 
     // Example default: Bangladesh (+88). Change as needed.
     if (!cleaned.startsWith("+")) {
-      cleaned = "+88$cleaned";
+      cleaned = "+1$cleaned";
     }
     return cleaned;
   }

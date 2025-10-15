@@ -5,7 +5,6 @@ import 'package:ree_social_media_app/controllers/auth_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
-
 import '../../../../utils/show_snackbar.dart';
 
 class ReportProblemScreen extends StatefulWidget {
@@ -80,7 +79,7 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                   // SizedBox(height: 16),
                   // CustomTextField(
                   //   controller: passwordTextController,
-                  //   hintText: userController.userInfo.value!.email.toString(),
+                  //   hintText: userController.userInfo.value!.phone.toString(),
                   //   isRealOnly: true,
                   //   borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
                   //   prefixIcon: Padding(
@@ -97,7 +96,7 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                   Obx(
                     () => CustomTextField(
                       controller: passwordTextController,
-                      hintText: userController.userInfo.value!.email.toString(),
+                      hintText: userController.userInfo.value!.phone.toString(),
                       isRealOnly: true,
                       borderSide: BorderSide(
                         color: Color(0xFFC4C3C3),
@@ -153,26 +152,25 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                       loading: authController.isLoading.value,
                       onTap: () async {
                         if (reportController.text.trim().isEmpty) {
-                          showSnackBar("Please enter a report", true); // true = error
+                          showSnackBar("Please enter a report", true);
                           return;
                         }
 
                         final name = user?.name ?? "";
-                        final email = user?.email ?? "";
+                        final phone = user?.phone ?? "";
 
                         final message = await authController.reportSubmit(
                           name,
-                          email,
-                          null,
+                          phone,
                           reportController.text.trim(),
                         );
 
                         if (message == "success") {
-                          showSnackBar("Report submitted successfully", false); // false = success
+                          showSnackBar("Report submitted successfully", false);
                           reportController.clear();
-                          Get.back();
+                      
                         } else {
-                          showSnackBar(message, true); // true = error
+                          showSnackBar(message, true);
                         }
                       },
                       text: "Submit Now",

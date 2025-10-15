@@ -366,7 +366,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            _dialogActions(context, onYes: () async {}),
+            _dialogActions(context, onYes: onYes),
           ],
         ),
       ),

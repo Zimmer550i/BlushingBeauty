@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/utils/app_constants.dart';
 
-class CustomEmailNumberField extends StatefulWidget {
+class CustomNumberField extends StatefulWidget {
   final TextEditingController controller;
-  final TextInputType keyboardType;
   final bool isPassword;
-  final bool isEmail;
   final bool readOnly;
   final String initialCountryCode;
   final String? hintText;
   final String? labelText;
   final Widget? suffixIcon;
-  final Widget? prefixIcon;
   final Function(String)? onChanged;
   final Function()? onTap;
   final Function(CountryCode)? onCountryCodeChanged;
@@ -21,12 +17,10 @@ class CustomEmailNumberField extends StatefulWidget {
   final Color? fillColor;
   final BorderSide? borderSide;
 
-  const CustomEmailNumberField({
+  const CustomNumberField({
     super.key,
     required this.controller,
-    this.keyboardType = TextInputType.text,
     this.isPassword = false,
-    this.isEmail = false,
     this.readOnly = false,
     this.initialCountryCode = '+1',
     this.hintText,
@@ -38,16 +32,14 @@ class CustomEmailNumberField extends StatefulWidget {
     this.maxLines = 1,
     this.fillColor,
     this.borderSide,
-    this.prefixIcon,
   });
 
   @override
-  State<CustomEmailNumberField> createState() => _CustomEmailNumberFieldState();
+  State<CustomNumberField> createState() => _CustomNumberFieldState();
 }
 
-class _CustomEmailNumberFieldState extends State<CustomEmailNumberField> {
+class _CustomNumberFieldState extends State<CustomNumberField> {
   bool _obscureText = true;
-  bool _isNumberMode = false; // 👈 track whether user typing number
   CountryCode selectedCode = CountryCode.fromDialCode('+1');
 
   void _togglePassword() {
@@ -56,28 +48,16 @@ class _CustomEmailNumberFieldState extends State<CustomEmailNumberField> {
     });
   }
 
-  void _handleTextChange(String value) {
-    // Detect if input looks like a number (ignore spaces, +, and -)
-    bool looksLikeNumber = RegExp(r'^[0-9+\-\s]+$').hasMatch(value);
-    if (looksLikeNumber != _isNumberMode) {
-      setState(() => _isNumberMode = looksLikeNumber);
-    }
-
-    if (widget.onChanged != null) {
-      widget.onChanged!(value);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: widget.maxLines == 1 ? 48 : null,
       child: TextFormField(
         controller: widget.controller,
-        keyboardType: _isNumberMode ? TextInputType.phone : widget.keyboardType,
+        keyboardType: TextInputType.phone,
         readOnly: widget.readOnly,
         onTap: widget.onTap,
-        onChanged: _handleTextChange,
+        onChanged: widget.onChanged,
         obscureText: widget.isPassword ? _obscureText : false,
         obscuringCharacter: '*',
         maxLines: widget.maxLines,
@@ -118,11 +98,9 @@ class _CustomEmailNumberFieldState extends State<CustomEmailNumberField> {
                 widget.borderSide ?? const BorderSide(color: Color(0xFFC4C3C3)),
           ),
 
-          // ✅ Show Country Code Picker when user types number, else prefixIcon
-          prefixIcon: _isNumberMode
-              ? _buildCountryCodePicker()
-              : widget.prefixIcon,
-          prefixIconConstraints: BoxConstraints(minHeight: 24, minWidth: 24),
+          // ✅ Always show Country Code Picker
+          prefixIcon: _buildCountryCodePicker(),
+          prefixIconConstraints: const BoxConstraints(minHeight: 24, minWidth: 24),
 
           // ✅ Password toggle or custom suffix
           suffixIcon: widget.isPassword
@@ -144,21 +122,14 @@ class _CustomEmailNumberFieldState extends State<CustomEmailNumberField> {
     );
   }
 
-  /// ✅ Validation logic
+  /// ✅ Simple phone validator
   String? _validator(String? value) {
     if (value == null || value.isEmpty) {
-      return "Please enter ${widget.hintText?.toLowerCase() ?? 'value'}";
+      return "Please enter phone number";
     }
 
-    if (!_isNumberMode && widget.isEmail) {
-      bool validEmail = AppConstants.emailValidator.hasMatch(value);
-      if (!validEmail) return "Please check your email!";
-    }
-
-    if (widget.isPassword) {
-      bool validPass = AppConstants.passwordValidator.hasMatch(value);
-      if (!validPass) return "Insecure password detected.";
-    }
+    bool validPhone = RegExp(r'^[0-9]{6,15}$').hasMatch(value.replaceAll(RegExp(r'\s+'), ''));
+    if (!validPhone) return "Invalid phone number";
 
     return null;
   }

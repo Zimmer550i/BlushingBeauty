@@ -1,10 +1,11 @@
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
-import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/base/custom_email_number_field.dart';
 import 'package:ree_social_media_app/views/screen/Auth/otp_verification_screen.dart';
 
 import '../../../controllers/auth_controller.dart';
@@ -19,6 +20,7 @@ class ForgetPassword extends StatefulWidget {
 class _ForgetPasswordState extends State<ForgetPassword> {
   final AuthController authController = Get.put(AuthController());
   final emailTextController = TextEditingController();
+  CountryCode selectedCountryCode = CountryCode.fromDialCode('+1'); // ✅ Added
 
   @override
   Widget build(BuildContext context) {
@@ -41,46 +43,39 @@ class _ForgetPasswordState extends State<ForgetPassword> {
                 ),
               ),
               SizedBox(height: 40),
-              CustomTextField(
+              CustomNumberField(
                 controller: emailTextController,
-                hintText: 'Enter your phone number or email',
+                hintText: 'Enter your phone number',
                 borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    height: 24,
-                    width: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primaryColor,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: SvgPicture.asset('assets/icons/mobile.svg'),
-                    ),
-                  ),
-                ),
+                onCountryCodeChanged: (code) {
+                  setState(() => selectedCountryCode = code);
+                },
               ),
               SizedBox(height: 80),
-              Obx(()=> CustomButton(
-                loading: authController.isLoading.value,
-                onTap: () async {
-                  final message = await authController.forgotPassword(
-                    emailTextController.text,
-                  );
-                  if (message == "success") {
-                    Get.snackbar("Success", "Check your email");
-                    Get.offAll(
-                          () => OtpVerificationScreen(
-                        emailOrPhone: emailTextController.text,
-                      ),
+              Obx(
+                () => CustomButton(
+                  loading: authController.isLoading.value,
+                  onTap: () async {
+                    final String fullPhone =
+                        '${selectedCountryCode.dialCode}${emailTextController.text.replaceAll(RegExp(r'[^0-9]'), '')}';
+                    debugPrint("Full phone number: $fullPhone");
+                    final message = await authController.forgotPassword(
+                      fullPhone,
                     );
-                  } else {
-                    Get.snackbar("Error", message);
-                  }
-                },
-                text: "Send Code",
-              ),),
+                    if (message == "success") {
+                      Get.snackbar("Success", "Check your phone for OTP");
+                      Get.offAll(
+                        () => OtpVerificationScreen(
+                          emailOrPhone: fullPhone,
+                        ),
+                      );
+                    } else {
+                      Get.snackbar("Error", message);
+                    }
+                  },
+                  text: "Send Code",
+                ),
+              ),
               SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

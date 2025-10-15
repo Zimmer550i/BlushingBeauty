@@ -1,3 +1,4 @@
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -23,8 +24,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final AuthController authController = Get.put(AuthController());
 
-  final emailTextController = TextEditingController();
+  final phoneTextController = TextEditingController();
   final passwordTextController = TextEditingController();
+  CountryCode selectedCountryCode = CountryCode.fromDialCode('+1'); // ✅ Added
 
   @override
   Widget build(BuildContext context) {
@@ -47,29 +49,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 40),
-              CustomEmailNumberField(
-                controller: emailTextController,
-                hintText: 'Enter your phone number or email',
+              CustomNumberField(
+                controller: phoneTextController,
+                hintText: 'Enter your phone number',
                 borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    height: 24,
-                    width: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primaryColor,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: SvgPicture.asset(
-                        'assets/icons/phone.svg',
-                        height: 24,
-                        width: 24,
-                      ),
-                    ),
-                  ),
-                ),
+                onCountryCodeChanged: (code) {
+                  setState(() => selectedCountryCode = code);
+                },
               ),
               SizedBox(height: 12),
               CustomTextField(
@@ -114,12 +100,15 @@ class _LoginScreenState extends State<LoginScreen> {
               Obx(
                 () => CustomButton(
                   onTap: () async {
-                    if (emailTextController.text.isEmpty ||
+                    final String fullPhone =
+                        '${selectedCountryCode.dialCode}${phoneTextController.text.replaceAll(RegExp(r'[^0-9]'), '')}';
+                    debugPrint('📞 Full Phone: $fullPhone');
+                    if (phoneTextController.text.isEmpty ||
                         passwordTextController.text.isEmpty) {
                       showSnackBar("Please fill all the fields", true);
                     } else {
                       final message = await authController.login(
-                        emailTextController.text,
+                        fullPhone,
                         passwordTextController.text,
                       );
                       if (message == "success") {

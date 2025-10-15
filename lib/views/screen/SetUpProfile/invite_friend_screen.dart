@@ -272,19 +272,21 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                         final canProceed = addedFriends.length >= 5;
 
                         return CustomButton(
-                          onTap: canProceed
-                              ? () => Get.to(
-                                  () => const EnableNotificationScreen(),
-                                )
-                              : () {
-                                  Get.snackbar(
-                                    "Add More Friends",
-                                    "Please add at least 5 friends to continue.",
-                                    snackPosition: SnackPosition.BOTTOM,
-                                    backgroundColor: Colors.redAccent,
-                                    colorText: Colors.white,
-                                  );
-                                },
+                          // onTap: canProceed
+                          //     ? () => Get.to(
+                          //         () => const EnableNotificationScreen(),
+                          //       )
+                          //     : () {
+                          //         Get.snackbar(
+                          //           "Add More Friends",
+                          //           "Please add at least 5 friends to continue.",
+                          //           snackPosition: SnackPosition.BOTTOM,
+                          //           backgroundColor: Colors.redAccent,
+                          //           colorText: Colors.white,
+                          //         );
+                          //       },
+                          onTap: () =>
+                              Get.to(() => const EnableNotificationScreen()),
                           text: "Next",
                           color: canProceed
                               ? AppColors.primaryColor

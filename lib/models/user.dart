@@ -2,6 +2,7 @@ class User {
   final String? id;
   final String? name;
   final String? email;
+  final String? phone;
   final String? role;
   final String? image;
   final String? gender;
@@ -17,6 +18,7 @@ class User {
     this.id,
     this.name,
     this.email,
+    this.phone,
     this.role,
     this.image,
     this.gender,
@@ -35,6 +37,7 @@ class User {
       id: json["_id"] as String?,
       name: json["name"] as String?,
       email: json["email"] as String?,
+      phone: json["phone"] as String?,
       role: json["role"] as String?,
       image: json["image"] as String?,
       gender: json["gender"] as String?,
@@ -54,6 +57,7 @@ class User {
       "_id": id,
       "name": name,
       "email": email,
+      "phone": phone,
       "role": role,
       "image": image,
       "gender": gender,

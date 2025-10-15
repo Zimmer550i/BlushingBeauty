@@ -11,14 +11,14 @@ class AuthController extends GetxController {
   RxBool isLoggedIn = RxBool(false);
   final api = ApiService();
 
-  // Controller for email input
-  final emailController = TextEditingController();
+  // Controller for phone input
+  final phoneController = TextEditingController();
   final fullNameController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  // Observable for email error message (empty means no error)
-  final emailError = ''.obs;
+  // Observable for phone error message (empty means no error)
+  final phoneError = ''.obs;
   final fullNameError = ''.obs;
   final passwordError = ''.obs;
 
@@ -28,19 +28,16 @@ class AuthController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isSubscribed = false.obs;
 
-  // Validate email, returns true if valid
-  bool validateEmail() {
-    final email = emailController.text.trim();
+  // Validate phone, returns true if valid
+  bool validatephone() {
+    final phone = phoneController.text.trim();
 
-    if (email.isEmpty) {
-      emailError.value = 'Email cannot be empty';
-      return false;
-    } else if (!emailRegex.hasMatch(email)) {
-      emailError.value = 'Please enter a valid email';
+    if (phone.isEmpty) {
+      phoneError.value = 'phone cannot be empty';
       return false;
     }
 
-    emailError.value = '';
+    phoneError.value = '';
     return true;
   }
 
@@ -76,14 +73,14 @@ class AuthController extends GetxController {
   }
 
   Future<String> login(
-    String email,
+    String phone,
     String password, {
     bool rememberMe = true,
   }) async {
     isLoading.value = true;
     try {
       final response = await api.post("/auth/login", {
-        "email": email.trim(),
+        "phone": phone.trim(),
         "password": password.trim(),
       });
       var body = jsonDecode(response.body);
@@ -97,7 +94,7 @@ class AuthController extends GetxController {
 
         return "success";
       } else {
-        if (body['error'] == "Please verify your email address.") {
+        if (body['error'] == "Please verify your phone address.") {
           isLoading.value = false;
           return "verify";
         }
@@ -110,12 +107,12 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<String> signup(String email, String password, bool isPhone) async {
+  Future<String> signup(String phone, String password, bool isPhone) async {
     isLoading.value = true;
 
     try {
       final response = await api.post("/user/create-user", {
-        isPhone ? "phone" : "email": email.trim(),
+        isPhone ? "phone" : "phone": phone.trim(),
         "password": password.trim(),
       });
 
@@ -133,11 +130,11 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<String> sendOtp(String email) async {
+  Future<String> sendOtp(String phone) async {
     isLoading.value = true;
     try {
       final response = await api.post("/auth//resend-otp", {
-        "email": email.trim(),
+        "phone": phone.trim(),
       });
 
       if (response.statusCode == 200) {
@@ -153,11 +150,11 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<String> forgotPassword(String email) async {
+  Future<String> forgotPassword(String phone) async {
     isLoading.value = true;
     try {
       final response = await api.post("/auth/forgot-password", {
-        "email": email.trim(),
+        "phone": phone.trim(),
       });
 
       if (response.statusCode == 200) {
@@ -197,11 +194,11 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<String> verifyAccount(String email, String code) async {
+  Future<String> verifyAccount(String phone, String code) async {
     isLoading.value = true;
     try {
       final response = await api.post("/auth/verify-email", {
-        "email": email.trim(),
+        "phone": phone.trim(),
         "oneTimeCode": int.parse(code),
       });
 
@@ -274,12 +271,11 @@ class AuthController extends GetxController {
   }
 
 
-  Future<String> reportSubmit(String name, String? email, String? phone,String report) async {
+  Future<String> reportSubmit(String name, String? phone,String report) async {
     isLoading.value = true;
     try {
       final response = await api.post("/report/create-report", {
         "name": name.trim(),
-        "email": email?.trim() ?? '',
         "phone": phone?.trim() ?? '',
         "content": report.trim(),
       },
@@ -360,7 +356,7 @@ class AuthController extends GetxController {
   }
 
   void clean() {
-    emailController.clear();
+    phoneController.clear();
     fullNameController.clear();
     passwordController.clear();
   }
@@ -368,7 +364,7 @@ class AuthController extends GetxController {
   @override
   void dispose() {
     super.dispose();
-    emailController.dispose();
+    phoneController.dispose();
     fullNameController.dispose();
     passwordController.dispose();
   }

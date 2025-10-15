@@ -37,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 final imageUrl = userController.getImageUrl();
                 final userName =
                     userController.userInfo.value?.name ?? "Unknown User";
-                final userPhone = userController.userInfo.value?.email ?? "N/A";
+                final userPhone = userController.userInfo.value?.phone ?? "N/A";
                 final userEmail = userController.userInfo.value?.email ?? "N/A";
                 return Container(
                   padding: const EdgeInsets.all(20),
@@ -65,7 +65,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 : const AssetImage("assets/images/demo1.png")
                                       as ImageProvider,
                           ),
-                          ReeLogo()],
+                          ReeLogo(),
+                        ],
                       ),
                       const SizedBox(height: 8),
 
