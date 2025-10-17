@@ -1,9 +1,7 @@
+import 'dart:async';
 import 'dart:io';
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/camera_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -11,6 +9,8 @@ import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/send_message_with_friend_screen.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:video_trimmer/video_trimmer.dart';
+
 
 class VideoTrimAndSendScreen extends StatefulWidget {
   final String videoUrl;
@@ -29,9 +29,11 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
   late VideoPlayerController _videoController;
   final ValueNotifier<bool> _isPlaying = ValueNotifier(false);
   final ScrollController _scrollController = ScrollController();
+    VideoPlayerController? _frontVideoController;
   int _selectedTab = 0;
 
   final List<String> _thumbnailPaths = [];
+  final Trimmer _trimmer = Trimmer();
 
   bool _isInitialized = false;
   double _leftHandle = 0.0;
@@ -115,33 +117,46 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
   }
 
   /// ✂️ Trim the video using FFmpeg
-  Future<File?> _trimVideo(File inputFile) async {
+     Future<File?> _trimFrontVideo(File inputFile) async {
     try {
-      final dir = await getTemporaryDirectory();
-      final outputPath =
-          '${dir.path}/trimmed_${DateTime.now().millisecondsSinceEpoch}.mp4';
-
-      final totalMs = _videoController.value.duration.inMilliseconds;
-      final startMs = (totalMs * _trimStart).toInt();
-      final endMs = (totalMs * _trimEnd).toInt();
-      final durationMs = endMs - startMs;
-
-      final cmd =
-          '-y -ss ${startMs / 1000} -t ${durationMs / 1000} -i "${inputFile.path}" -c:v libx264 -c:a aac -preset ultrafast "$outputPath"';
-      debugPrint("🎬 FFmpeg command: $cmd");
-
-      final session = await FFmpegKit.execute(cmd);
-      final rc = await session.getReturnCode();
-
-      if (ReturnCode.isSuccess(rc)) {
-        debugPrint("✅ Trim success: $outputPath");
+      await _trimmer.loadVideo(videoFile: inputFile);
+  
+      final duration = _frontVideoController?.value.duration ?? Duration.zero;
+      final start = duration * _trimStart;
+      final end = duration * _trimEnd;
+  
+      debugPrint("🎬 Trimming from ${start.inSeconds}s → ${end.inSeconds}s");
+      // saveTrimmedVideo returns void in newer video_trimmer versions; use a Completer to capture the path from the onSave callback.
+      final Completer<String?> _completer = Completer<String?>();
+  
+      _trimmer.saveTrimmedVideo(
+        startValue: start.inMilliseconds / 1000,
+        endValue: end.inMilliseconds / 1000,
+        videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
+        onSave: (String? path) {
+          debugPrint("🔔 onSave callback: $path");
+          if (!_completer.isCompleted) _completer.complete(path);
+        },
+      );
+  
+      String? outputPath;
+      try {
+        // await the completer which will be completed by the onSave/onError callbacks
+        outputPath = await _completer.future.timeout(const Duration(seconds: 30));
+      } catch (e) {
+        debugPrint("❌ Trimming timed out or failed: $e");
+        outputPath = null;
+      }
+  
+      if (outputPath != null && outputPath.isNotEmpty) {
+        debugPrint("✅ Trimmed video saved at: $outputPath");
         return File(outputPath);
       } else {
-        debugPrint("❌ Trim failed: $rc");
+        debugPrint("❌ Trimming failed (outputPath is null or empty)");
         return null;
       }
     } catch (e) {
-      debugPrint("⚠️ Error trimming: $e");
+      debugPrint("❌ Trimming error: $e");
       return null;
     }
   }
@@ -441,7 +456,7 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
       snackPosition: SnackPosition.BOTTOM,
     );
 
-    final trimmedFile = await _trimVideo(originalFile);
+    final trimmedFile = await _trimFrontVideo(originalFile);
 
     if (trimmedFile != null) {
       Get.to(

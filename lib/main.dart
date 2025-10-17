@@ -58,7 +58,6 @@ class MyApp extends StatelessWidget {
                 return GetMaterialApp(
                   title: AppConstants.appName,
                   debugShowCheckedModeBanner: false,
-                  navigatorKey: Get.key,
                   // theme: themeController.darkTheme ? dark(): light(),
                   theme: light(),
                   defaultTransition: Transition.topLevel,

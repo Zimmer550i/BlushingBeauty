@@ -1,10 +1,8 @@
 import 'dart:io';
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:video_player/video_player.dart';
@@ -12,6 +10,7 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/controllers/camera_controller.dart';
+import 'package:video_trimmer/video_trimmer.dart';
 import '../../../../../services/camera_manager.dart';
 import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 
@@ -38,17 +37,15 @@ class FrameSelectionScreen extends StatefulWidget {
 }
 
 class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
-  final CreateStoryController createStoryController = Get.put(
-    CreateStoryController(),
-  );
+  final CreateStoryController createStoryController = Get.put(CreateStoryController());
   VideoPlayerController? _mainVideoController;
   VideoPlayerController? _frontVideoController;
   bool _isInitialized = false;
   final sendMessageController = Get.put(SendMessageController());
-
   final ValueNotifier<bool> _isPlaying = ValueNotifier(false);
   final ScrollController _scrollController = ScrollController();
   final List<String> _thumbnailPaths = [];
+  final Trimmer _trimmer = Trimmer();
 
   double _trimStart = 0.0;
   double _trimEnd = 1.0;
@@ -78,9 +75,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
         statuses[Permission.microphone] != PermissionStatus.granted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Camera & Microphone permission required'),
-          ),
+          const SnackBar(content: Text('Camera & Microphone permission required')),
         );
         Navigator.pop(context);
       }
@@ -105,10 +100,8 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
       _mainVideoController!.setLooping(true);
       _frontVideoController!.setLooping(true);
-
       _isPlaying.value = false;
-
-      _syncVideos(); // ✅ add this line here
+      _syncVideos();
 
       debugPrint("✅ Both videos initialized successfully.");
     } catch (e) {
@@ -147,39 +140,51 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     if (mounted) setState(() {});
   }
 
-  Future<File?> _trimFrontVideo(File inputFile) async {
+  /// ✅ Updated: Properly uses `video_trimmer ^5.0.0` API
+    Future<File?> _trimFrontVideo(File inputFile) async {
     try {
-      final dir = await getTemporaryDirectory();
-      final outputPath =
-          '${dir.path}/trimmed_${DateTime.now().millisecondsSinceEpoch}.mp4';
-
-      final totalDuration =
-          _frontVideoController!.value.duration.inMilliseconds;
-      final startMs = (totalDuration * _trimStart).toInt();
-      final endMs = (totalDuration * _trimEnd).toInt();
-      final durationMs = endMs - startMs;
-
-      final startSec = startMs / 1000.0;
-      final durationSec = durationMs / 1000.0;
-
-      final command =
-          '-y -ss $startSec -t $durationSec -i "${inputFile.path}" -c:v libx264 -c:a aac -preset ultrafast -movflags +faststart "$outputPath"';
-
-      final session = await FFmpegKit.execute(command);
-      final returnCode = await session.getReturnCode();
-
-      if (ReturnCode.isSuccess(returnCode)) {
-        debugPrint("✅ Trimmed video: $outputPath");
+      await _trimmer.loadVideo(videoFile: inputFile);
+  
+      final duration = _frontVideoController?.value.duration ?? Duration.zero;
+      final start = duration * _trimStart;
+      final end = duration * _trimEnd;
+  
+      debugPrint("🎬 Trimming from ${start.inSeconds}s → ${end.inSeconds}s");
+      // saveTrimmedVideo returns void in newer video_trimmer versions; use a Completer to capture the path from the onSave callback.
+      final Completer<String?> _completer = Completer<String?>();
+  
+      _trimmer.saveTrimmedVideo(
+        startValue: start.inMilliseconds / 1000,
+        endValue: end.inMilliseconds / 1000,
+        videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
+        onSave: (String? path) {
+          debugPrint("🔔 onSave callback: $path");
+          if (!_completer.isCompleted) _completer.complete(path);
+        },
+      );
+  
+      String? outputPath;
+      try {
+        // await the completer which will be completed by the onSave/onError callbacks
+        outputPath = await _completer.future.timeout(const Duration(seconds: 30));
+      } catch (e) {
+        debugPrint("❌ Trimming timed out or failed: $e");
+        outputPath = null;
+      }
+  
+      if (outputPath != null && outputPath.isNotEmpty) {
+        debugPrint("✅ Trimmed video saved at: $outputPath");
         return File(outputPath);
       } else {
-        debugPrint("❌ FFmpeg trim failed");
+        debugPrint("❌ Trimming failed (outputPath is null or empty)");
         return null;
       }
     } catch (e) {
-      debugPrint("⚠️ Trim failed: $e");
+      debugPrint("❌ Trimming error: $e");
       return null;
     }
   }
+
 
   String _fmt(Duration d) {
     final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -197,6 +202,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     super.dispose();
   }
 
+  // ✅ The rest of your UI remains 100% unchanged
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
@@ -204,10 +210,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: _buildAppBarTitle(),
-      ),
+      appBar: AppBar(automaticallyImplyLeading: false, title: _buildAppBarTitle()),
       body: Column(
         children: [
           Expanded(child: _buildDualVideoPreview()),
