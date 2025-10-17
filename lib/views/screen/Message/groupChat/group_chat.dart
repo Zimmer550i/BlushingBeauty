@@ -172,6 +172,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 );
               }),
             ),
+            Obx(
+              () => chatController.isLoading.value
+                  ? const LinearProgressIndicator(color: Color(0xFF56BBFF))
+                  : const SizedBox.shrink(),
+            ),
 
             _buildInputBar(),
           ],
@@ -313,7 +318,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           ? CrossAxisAlignment.end
           : CrossAxisAlignment.start,
       children: [
-        BlurImageCard(imageUrl: imageUrl.toString()),
+        BlurImageCard(
+          imageUrl: imageUrl.toString(),
+          receiverName: widget.groupName,
+          receiverImage: image,
+          chatId: widget.chatId,
+          isMe: isMe,
+        ),
         const SizedBox(height: 4),
         Text(
           msg["time"] ?? "",
@@ -355,6 +366,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
+              isMe: msg["isMe"] ?? false,
               videoFile: localVideo,
               msg: msg,
               receiverImage: image,

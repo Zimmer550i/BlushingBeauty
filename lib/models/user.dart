@@ -6,7 +6,7 @@ class User {
   final String? role;
   final String? image;
   final String? gender;
-  final String? dob;
+  final DateTime? dob;
   final bool? isDeleted;
   final bool? verified;
   final bool? isFirstLogin;
@@ -41,7 +41,7 @@ class User {
       role: json["role"] as String?,
       image: json["image"] as String?,
       gender: json["gender"] as String?,
-      dob: json["dob"]?.toString(),
+      dob: json["dob"] as DateTime?,
       isDeleted: json["isDeleted"] as bool?,
       verified: json["verified"] as bool?,
       isFirstLogin: json["isFirstLogin"] as bool?,

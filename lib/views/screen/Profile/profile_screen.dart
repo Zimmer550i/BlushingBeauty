@@ -39,7 +39,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 final userName =
                     userController.userInfo.value?.name ?? "Loading...";
                 final userPhone = userController.userInfo.value?.phone ?? "N/A";
-                final userEmail = userController.userInfo.value?.email ?? "N/A";
+                final userDob =
+                    userController.userInfo.value?.dob ?? DateTime.now();
                 return Container(
                   padding: const EdgeInsets.all(20),
                   width: double.infinity,
@@ -105,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        userEmail,
+                        "${userDob.day}/${userDob.month}/${userDob.year}",
                         style: const TextStyle(
                           color: Color(0xFF0957AA),
                           fontSize: 16,

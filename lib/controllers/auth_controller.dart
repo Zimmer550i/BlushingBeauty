@@ -304,6 +304,8 @@ class AuthController extends GetxController {
         debugPrint("🟡 Token:======> $token");
         isLoggedIn.value = true;
         return true;
+      }else{
+        return false;
       }
     }
     isLoggedIn.value = false;

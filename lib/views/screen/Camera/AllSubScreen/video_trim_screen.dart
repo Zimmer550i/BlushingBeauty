@@ -29,6 +29,7 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
   late VideoPlayerController _videoController;
   final ValueNotifier<bool> _isPlaying = ValueNotifier(false);
   final ScrollController _scrollController = ScrollController();
+  int _selectedTab = 0;
 
   final List<String> _thumbnailPaths = [];
 
@@ -216,59 +217,29 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
 
   /// ✂️ Trim Slider
   Widget _buildTrimSlider() {
-    final double totalWidth = _thumbnailPaths.length * (_thumbnailWidth + 2);
+    final total = _thumbnailPaths.length * (_thumbnailWidth + 2);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 🔘 Toggle row
-        Padding(
-          padding: const EdgeInsets.only(left: 24, bottom: 8),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.only(bottom: 2),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.blueAccent, width: 2),
-                  ),
+    return SizedBox(
+      height: 100,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 🟦 Outer blue rounded rail
+          Container(
+            height: 70,
+            decoration: BoxDecoration(
+              color: AppColors.primaryColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.primaryColor, width: 2),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryColor,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  "Use trim",
-                  style: TextStyle(
-                    color: Colors.blueAccent,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 20),
-              const Text(
-                "Use frame",
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // 🎞️ Filmstrip + Trim handles
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          height: 85,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Filmstrip thumbnails
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: ListView.builder(
@@ -286,95 +257,118 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
                   ),
                 ),
               ),
+            ),
+          ),
 
-              // Blue highlighted trim area
-              Positioned(
-                left: _leftHandle,
-                width: _rightHandle - _leftHandle,
-                top: 8,
-                bottom: 8,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.15),
-                    border: Border.all(color: Colors.blueAccent, width: 2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+          // 🌈 Light blue selected area
+          Positioned(
+            left: _leftHandle,
+            width: _rightHandle - _leftHandle,
+            top: 15,
+            bottom: 15,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor,
+                borderRadius: BorderRadius.circular(8),
               ),
+            ),
+          ),
 
-              // Left handle (blue circle)
-              Positioned(
-                left: _leftHandle - 10,
-                top: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) {
-                    setState(() {
-                      _leftHandle += details.delta.dx;
-                      _leftHandle = _leftHandle.clamp(0.0, _rightHandle - 40);
-                      _trimStart = (_leftHandle / totalWidth).clamp(0.0, 1.0);
-                    });
-                  },
-                  child: _buildCircularHandle(),
-                ),
-              ),
+          // ◀ Left arrow
+          Positioned(
+            left: 0,
+            child: GestureDetector(
+              onTap: () {
+                _scrollController.animateTo(
+                  (_scrollController.offset - 100).clamp(0, double.infinity),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              },
+              child: Icon(Icons.chevron_left, color: Colors.white, size: 32),
+            ),
+          ),
 
-              // Right handle (blue circle)
-              Positioned(
-                left: _rightHandle - 10,
-                top: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) {
-                    setState(() {
-                      _rightHandle += details.delta.dx;
-                      _rightHandle = _rightHandle.clamp(
-                        _leftHandle + 40,
-                        totalWidth,
-                      );
-                      _trimEnd = (_rightHandle / totalWidth).clamp(0.0, 1.0);
-                    });
-                  },
-                  child: _buildCircularHandle(),
-                ),
-              ),
+          // ▶ Right arrow
+          Positioned(
+            right: 0,
+            child: GestureDetector(
+              onTap: () {
+                _scrollController.animateTo(
+                  (_scrollController.offset + 100).clamp(0, double.infinity),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              },
+              child: Icon(Icons.chevron_right, color: Colors.white, size: 32),
+            ),
+          ),
 
-              // Subtle gradient fades on edges
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: 30,
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [Colors.white, Colors.transparent],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                bottom: 0,
-                width: 30,
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerRight,
-                        end: Alignment.centerLeft,
-                        colors: [Colors.white, Colors.transparent],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          // 🔹 Left handle
+          Positioned(
+            left: _leftHandle,
+            top: 8,
+            bottom: 8,
+            child: GestureDetector(
+              onHorizontalDragUpdate: (details) {
+                setState(() {
+                  _leftHandle += details.delta.dx;
+                  _leftHandle = _leftHandle.clamp(0.0, _rightHandle - 30);
+                  _trimStart = (_leftHandle / total).clamp(0.0, 1.0);
+                });
+              },
+              child: _buildTrimHandle(),
+            ),
+          ),
+
+          // 🔹 Right handle
+          Positioned(
+            left: _rightHandle - 8,
+            top: 8,
+            bottom: 8,
+            child: GestureDetector(
+              onHorizontalDragUpdate: (details) {
+                setState(() {
+                  _rightHandle += details.delta.dx;
+                  _rightHandle = _rightHandle.clamp(_leftHandle + 30, total);
+                  _trimEnd = (_rightHandle / total).clamp(0.0, 1.0);
+                });
+              },
+              child: _buildTrimHandle(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔹 Handle UI (Dot + Bar + Dot)
+  Widget _buildTrimHandle() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: AppColors.primaryColor,
+            shape: BoxShape.circle,
+          ),
+        ),
+        Container(
+          width: 5,
+          height: 60,
+          decoration: BoxDecoration(
+            color: AppColors.primaryColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: AppColors.primaryColor,
+            shape: BoxShape.circle,
           ),
         ),
       ],
@@ -482,10 +476,57 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
       body: Column(
         children: [
           Expanded(child: _buildVideoPreview()),
-          _buildTrimSlider(),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Column(
+              children: [
+                _buildTabs(),
+                // SizedBox(height: 10),
+                _buildTrimSlider(),
+              ],
+            ),
+          ),
+
           _buildVideoControls(),
           _buildActionButtons(),
         ],
+      ),
+    );
+  }
+
+  // 🔹 Tabs ("Use trim" / "Use frame")
+  Widget _buildTabs() {
+    return Row(
+      children: [
+        _buildTabButton("Use trim", 0),
+        const SizedBox(width: 18),
+        _buildTabButton("Use frame", 1),
+      ],
+    );
+  }
+
+  Widget _buildTabButton(String text, int index) {
+    bool isActive = _selectedTab == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedTab = index),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isActive ? Colors.lightBlue : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isActive ? Colors.lightBlue : Colors.grey[600],
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }

@@ -71,7 +71,6 @@ class MessageController extends GetxController {
           final totalPage = meta["totalPage"] ?? 1;
           hasMoreStories.value = storyPage.value < totalPage;
           if (hasMoreStories.value) storyPage.value++;
-
         } else {
           debugPrint("⚠️ Fetch stories failed: ${body["message"]}");
         }
@@ -102,10 +101,7 @@ class MessageController extends GetxController {
     try {
       final response = await _api.get(
         "/chat/private-chat-list",
-        queryParams: {
-          "limit": "10",
-          "page": chatPage.value.toString(),
-        },
+        queryParams: {"limit": "10", "page": chatPage.value.toString()},
         authReq: true,
       );
 
@@ -130,7 +126,6 @@ class MessageController extends GetxController {
           final totalPage = meta['totalPage'] ?? 1;
           hasMoreChats.value = chatPage.value < totalPage;
           if (hasMoreChats.value) chatPage.value++;
-
         } else {
           debugPrint("⚠️ Fetch chats failed: ${body["message"]}");
         }
@@ -170,10 +165,7 @@ class MessageController extends GetxController {
     groupChats.clear();
     stories.clear();
 
-    await Future.wait([
-      fetchChats(),
-      fetchStories(),
-    ]);
+    await Future.wait([fetchChats(), fetchStories()]);
   }
 
   /// =====================================================
@@ -262,8 +254,8 @@ class MessageController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final resData = jsonDecode(response.body);
-        debugPrint("✅ $type uploaded: ${resData['content']}");
-        return resData['content'];
+        debugPrint("✅ $type uploaded: ${resData['data']['contentType']}");
+        return resData['data']['contentType'];
       } else {
         debugPrint("❗ Upload failed: ${response.body}");
         return null;

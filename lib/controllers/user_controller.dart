@@ -49,12 +49,15 @@ class UserController extends GetxController {
 
   Future<String> updateInfo({
     required String name,
+    DateTime? dob,
+    bool? hasDate,
     File? image,
   }) async {
     isLoading.value = true;
     try {
       final body = {
         "name": name,
+        if (hasDate == true) "dob": dob,
       };
 
       // Files go here

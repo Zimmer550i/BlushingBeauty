@@ -23,6 +23,7 @@ class SetupProfileScreen extends StatefulWidget {
 class _SetupProfileScreenState extends State<SetupProfileScreen> {
   final UserController userController = Get.put(UserController());
   final nameTextController = TextEditingController();
+  final dobTextController = TextEditingController();
 
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
@@ -39,14 +40,20 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
               leading: const Icon(Icons.photo_library),
               title: const Text("Pick from Gallery"),
               onTap: () async {
-                Navigator.pop(ctx, await _picker.pickImage(source: ImageSource.gallery));
+                Navigator.pop(
+                  ctx,
+                  await _picker.pickImage(source: ImageSource.gallery),
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: const Text("Take a Photo"),
               onTap: () async {
-                Navigator.pop(ctx, await _picker.pickImage(source: ImageSource.camera));
+                Navigator.pop(
+                  ctx,
+                  await _picker.pickImage(source: ImageSource.camera),
+                );
               },
             ),
           ],
@@ -63,17 +70,25 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
   /// Handle Save button
   void _onSave() async {
-    if (nameTextController.text.isEmpty) {
-      showSnackBar("Please enter your name", true);
+    if (nameTextController.text.isEmpty || dobTextController.text.isEmpty) {
+      showSnackBar("Please fill all field", true);
       return;
     }
 
     // Prevent duplicate API calls while loading
     if (userController.isLoading.value) return;
 
+    // Parse DOB string to DateTime
+    final dobText = dobTextController.text.trim();
+    DateTime? dob;
+    if (dobText.isNotEmpty) {
+      dob = DateTime.tryParse(dobText);
+    }
+
     final result = await userController.updateInfo(
       name: nameTextController.text.trim(),
       image: _profileImage,
+      dob: dob,
     );
 
     if (result == "success") {
@@ -82,8 +97,6 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       showSnackBar(result, true);
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +159,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                         image: _profileImage != null
                             ? FileImage(_profileImage!)
                             : const AssetImage('assets/images/demo1.png')
-                        as ImageProvider,
+                                  as ImageProvider,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -180,12 +193,20 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 ),
               ),
 
+              SizedBox(height: 24),
+
+              /// Date of Birth Input
+              DateOfBirthField(controller: dobTextController),
+
               const SizedBox(height: 40),
 
               /// Save Button
-              CustomButton(
-                onTap: _onSave,
-                text: "Save",
+              Obx(
+                () => CustomButton(
+                  loading: userController.isLoading.value,
+                  onTap: _onSave,
+                  text: "Save",
+                ),
               ),
             ],
           ),

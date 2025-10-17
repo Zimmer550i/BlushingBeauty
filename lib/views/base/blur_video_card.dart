@@ -12,13 +12,16 @@ class BlurVideoCard extends StatefulWidget {
   final String? receiverImage;
   final String receiverName;
   final String chatId;
+  final bool isMe;
 
   const BlurVideoCard({
     super.key,
     required this.videoFile,
     required this.msg,
     required this.receiverName,
-    this.receiverImage, required this.chatId,
+    this.receiverImage,
+    required this.chatId,
+    required this.isMe,
   });
 
   @override
@@ -83,6 +86,7 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
             userProfile: widget.receiverImage ?? "",
             userName: widget.receiverName,
             chatId: widget.chatId,
+            isInbox: true,
           ),
         ),
       ).then((_) {
@@ -104,7 +108,7 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
                 ? Container(
                     height: 180,
                     width: 240,
-                    color: Colors.black12.withOpacity(0.1),
+                    color: Colors.black12.withValues(alpha: .1),
                     child: Center(
                       child: SpinKitWave(
                         color: AppColors.primaryColor,
@@ -113,32 +117,32 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
                     ),
                   )
                 : _thumbnailPath != null
-                ? AnimatedOpacity(
-                    duration: const Duration(milliseconds: 500),
-                    opacity: _isTapped ? 1.0 : 0.6,
-                    child: ImageFiltered(
-                      imageFilter: _isTapped
-                          ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
-                          : ImageFilter.blur(
-                              sigmaX: 20,
-                              sigmaY: 20,
-                              tileMode: TileMode.decal,
-                            ),
-                      child: Image.file(
-                        File(_thumbnailPath!),
+                    ? AnimatedOpacity(
+                        duration: const Duration(milliseconds: 500),
+                        opacity: _isTapped ? 1.0 : 0.6,
+                        child: ImageFiltered(
+                          imageFilter: widget.isMe
+                              ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                              : ImageFilter.blur(
+                                  sigmaX: 20,
+                                  sigmaY: 20,
+                                  tileMode: TileMode.decal,
+                                ),
+                          child: Image.file(
+                            File(_thumbnailPath!),
+                            height: 180,
+                            width: 240,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : Container(
                         height: 180,
                         width: 240,
-                        fit: BoxFit.cover,
+                        color: Colors.grey.shade200,
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.error, color: Colors.red),
                       ),
-                    ),
-                  )
-                : Container(
-                    height: 180,
-                    width: 240,
-                    color: Colors.grey.shade200,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.error, color: Colors.red),
-                  ),
           ),
 
           // ▶️ Play Button Overlay

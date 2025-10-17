@@ -1,8 +1,10 @@
 import 'dart:developer';
+import 'package:ree_social_media_app/services/api_service.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketService {
   static IO.Socket? _socket;
+  static final auth = ApiService();
 
   static void connect(String token) {
     if (_socket != null && _socket!.connected) {
@@ -11,7 +13,9 @@ class SocketService {
     }
 
     _socket = IO.io(
-      'http://10.10.12.54:3000',
+      'https://api.resocial.site',
+      // 'http://10.10.12.54:3000',
+      // auth.devUrl,
       IO.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()
@@ -39,7 +43,10 @@ class SocketService {
   static bool get isConnected => _socket?.connected ?? false;
 
   /// Listen to messages for a specific chatId (dynamic)
-  static void onChatMessage(String chatId, void Function(dynamic data) handler) {
+  static void onChatMessage(
+    String chatId,
+    void Function(dynamic data) handler,
+  ) {
     if (!isConnected) {
       log("⚠️ Cannot listen to chat, socket not connected");
       return;

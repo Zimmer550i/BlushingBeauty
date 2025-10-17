@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' show ImageFilter;
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -17,13 +16,16 @@ class VideoPreviewScreen extends StatefulWidget {
     required this.videoUrl,
     this.countdownSeconds = 3,
     required this.userProfile,
-    required this.userName,this.chatId,
+    required this.userName,
+    this.chatId,
+    this.isInbox,
   });
 
   final String videoUrl;
   final String userProfile;
   final String userName;
   final String? chatId;
+  final bool? isInbox;
   final int countdownSeconds;
 
   @override
@@ -36,14 +38,22 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   Timer? _countdownTimer;
 
   int _secondsRemaining = 3;
-  bool _isRecording = false;
-  XFile? _recordedFile;
+  bool isRecording = false;
+  XFile? recordedFile;
 
   Duration _videoDuration = Duration.zero;
   Duration _position = Duration.zero;
-
   late final ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   late final VoidCallback _videoListener;
+
+  bool get isVideo {
+    final ext = widget.videoUrl.toLowerCase();
+    return ext.endsWith('.mp4') ||
+        ext.endsWith('.mov') ||
+        ext.endsWith('.avi') ||
+        ext.endsWith('.mkv') ||
+        ext.contains('video');
+  }
 
   @override
   void initState() {
@@ -55,8 +65,32 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   Future<void> _initFlow() async {
     await _requestPermissions();
     await _initFrontCamera();
-    await _initVideo();
-    _startCountdown();
+
+    if (isVideo) {
+      await _initVideo();
+    }
+
+    // ✅ Start countdown only after everything is initialized
+    if (mounted) {
+      _startCountdown();
+    }
+  }
+
+  Future<void> _onCountdownComplete() async {
+    setState(() => _secondsRemaining = 0);
+
+    try {
+      // ✅ Play video if available
+      if (isVideo && _video != null && _video!.value.isInitialized) {
+        await _video!.play();
+        debugPrint("🎬 Main video playing...");
+      }
+
+      // ✅ Start recording reaction
+      await _startFrontRecording();
+    } catch (e) {
+      debugPrint("⚠️ Countdown complete but start failed: $e");
+    }
   }
 
   Future<void> _requestPermissions() async {
@@ -82,7 +116,11 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       (c) => c.lensDirection == CameraLensDirection.front,
       orElse: () => cameras.first,
     );
-    _frontCam = CameraController(front, ResolutionPreset.medium, enableAudio: true);
+    _frontCam = CameraController(
+      front,
+      ResolutionPreset.medium,
+      enableAudio: true,
+    );
     await _frontCam!.initialize();
     if (mounted) setState(() {});
   }
@@ -120,49 +158,59 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     });
   }
 
-  Future<void> _onCountdownComplete() async {
-    setState(() => _secondsRemaining = 0);
-    await _startBackgroundVideo();
-    await _startFrontRecording();
-  }
+  /// Stop and navigate when user presses “Next”
+  Future<void> _onNextPressed() async {
+    await _stopRecordingIfNeeded();
 
-  Future<void> _startBackgroundVideo() async {
-    if (_video != null && _video!.value.isInitialized) {
-      await _video!.play();
+    if (recordedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No reaction recorded. Please try again.'),
+        ),
+      );
+      return;
     }
+
+    if (!mounted) return;
+    Get.to(
+      () => SendOrTrimVideoScreen(
+        mainVideo: widget.videoUrl,
+        reactionVideo: recordedFile!.path,
+        userProfile: widget.userProfile,
+        userName: widget.userName,
+        chatId: widget.chatId.toString(),
+        isInbox: widget.isInbox ?? false,
+      ),
+    );
   }
 
   Future<void> _startFrontRecording() async {
-  if (_frontCam == null || !_frontCam!.value.isInitialized) return;
+    if (_frontCam == null || !_frontCam!.value.isInitialized) return;
+    if (_frontCam!.value.isRecordingVideo) return;
 
-  // Prevent multiple recordings
-  if (_frontCam!.value.isRecordingVideo) return;
-
-  try {
-    setState(() => _isRecording = true);
-    await _frontCam!.startVideoRecording();
-    debugPrint("🎬 Front camera recording started");
-  } catch (e) {
-    debugPrint("⚠️ Failed to start recording: $e");
-    setState(() => _isRecording = false);
-  }
-}
-
-
-  Future<void> _stopRecordingIfNeeded() async {
-  if (_frontCam?.value.isRecordingVideo == true) {
     try {
-      final file = await _frontCam?.stopVideoRecording();
-      _recordedFile = file;
-      debugPrint("🎥 Recording saved at: ${file?.path}");
+      setState(() => isRecording = true);
+      await _frontCam!.startVideoRecording();
+      debugPrint("🎬 Front camera recording started");
     } catch (e) {
-      debugPrint("⚠️ Stop recording failed: $e");
-    } finally {
-      setState(() => _isRecording = false);
+      debugPrint("⚠️ Failed to start recording: $e");
+      setState(() => isRecording = false);
     }
   }
-}
 
+  Future<void> _stopRecordingIfNeeded() async {
+    if (_frontCam?.value.isRecordingVideo == true) {
+      try {
+        final file = await _frontCam?.stopVideoRecording();
+        recordedFile = file;
+        debugPrint("🎥 Recording saved at: ${file?.path}");
+      } catch (e) {
+        debugPrint("⚠️ Stop recording failed: $e");
+      } finally {
+        setState(() => isRecording = false);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -182,7 +230,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final videoReady = _video?.value.isInitialized == true;
+    final videoReady = isVideo ? _video?.value.isInitialized == true : true;
 
     return Scaffold(
       appBar: AppBar(
@@ -191,7 +239,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
           children: [
             InkWell(
               onTap: () => Get.back(),
-              child: const Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
+              child: const Icon(Icons.arrow_back),
             ),
             const SizedBox(width: 12),
             CircleAvatar(
@@ -201,11 +249,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             const SizedBox(width: 12),
             Text(
               widget.userName,
-              style: const TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -214,21 +258,34 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
           ? Stack(
               alignment: Alignment.center,
               children: [
+                // 🎬 Background (video or image)
                 Positioned.fill(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _video!.value.size.width,
-                      height: _video!.value.size.height,
-                      child: VideoPlayer(_video!),
-                    ),
-                  ),
+                  child: isVideo
+                      ? FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _video!.value.size.width,
+                            height: _video!.value.size.height,
+                            child: VideoPlayer(_video!),
+                          ),
+                        )
+                      : Image.network(
+                          widget.videoUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.broken_image),
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return const Center(
+                              child: SpinKitWave(color: Colors.blue, size: 30),
+                            );
+                          },
+                        ),
                 ),
 
-                /// Countdown Overlay
                 if (_secondsRemaining > 0) _buildCountdownOverlay(),
 
-                /// PiP front camera
+                // 📸 Front camera PiP
                 if (_frontCam?.value.isInitialized == true)
                   Positioned(
                     top: 10,
@@ -237,7 +294,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                       width: 130,
                       height: 160,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.25),
+                        color: Colors.black.withValues(alpha: 0.25),
                         border: Border.all(color: Colors.white, width: 2),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -246,56 +303,57 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                     ),
                   ),
 
-                /// Bottom controls
-                if (_secondsRemaining == 0) _buildBottomControls(),
+                _buildBottomControls(),
               ],
             )
-          : Center(
-              child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
-            ),
+          : const Center(child: SpinKitWave(color: Colors.blue, size: 30.0)),
     );
   }
 
   Widget _buildCountdownOverlay() => Positioned.fill(
-        child: Stack(
-          alignment: Alignment.center,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(color: Colors.white.withValues(alpha: 0.5)),
+        ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(color: Colors.white.withOpacity(0.5)),
+            CircleAvatar(
+              radius: 60,
+              backgroundColor: const Color(0xFF383838),
+              child: Text(
+                '$_secondsRemaining',
+                style: const TextStyle(
+                  fontSize: 64,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 60,
-                  backgroundColor: const Color(0xFF383838),
-                  child: Text(
-                    '$_secondsRemaining',
-                    style: const TextStyle(
-                      fontSize: 64,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Starting in $_secondsRemaining...',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF383838),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 16),
+            Text(
+              'Starting in $_secondsRemaining...',
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF383838),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
-      );
+      ],
+    ),
+  );
 
   Widget _buildBottomControls() {
-    final total = _videoDuration.inMilliseconds.toDouble().clamp(1, double.infinity);
+    final isVid = isVideo;
+    final total = _videoDuration.inMilliseconds.toDouble().clamp(
+      1,
+      double.infinity,
+    );
     final value = _position.inMilliseconds.toDouble().clamp(0, total);
 
     return Positioned(
@@ -304,52 +362,78 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       right: 0,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
         child: Row(
           children: [
-            Text(_fmt(_position), style: const TextStyle(color: Colors.white)),
-            Expanded(
-              child: Slider(
-                value: double.parse(value.toStringAsFixed(0)),
-                min: 0,
-                max: double.parse(total.toStringAsFixed(0)),
-                activeColor: Colors.white,
-                onChanged: (v) => _video?.seekTo(Duration(milliseconds: v.toInt())),
+            if (isVid)
+              Text(
+                _fmt(_position),
+                style: const TextStyle(color: Colors.white),
               ),
-            ),
-            Text(_fmt(_videoDuration), style: const TextStyle(color: Colors.white)),
-            const SizedBox(width: 12),
-            ValueListenableBuilder<bool>(
-              valueListenable: _isPlaying,
-              builder: (_, playing, __) => IconButton(
-                icon: Icon(playing ? Icons.pause : Icons.play_arrow, color: Colors.white),
-                onPressed: () async {
-                  if (playing) {
-                    await _video?.pause();
-                  } else {
-                    await _video?.play();
-                  }
-                  _isPlaying.value = _video?.value.isPlaying ?? false;
-                },
+            if (isVid)
+              Expanded(
+                child: Slider(
+                  value: double.parse(value.toStringAsFixed(0)),
+                  min: 0,
+                  max: double.parse(total.toStringAsFixed(0)),
+                  activeColor: Colors.white,
+                  onChanged: (v) =>
+                      _video?.seekTo(Duration(milliseconds: v.toInt())),
+                ),
               ),
-            ),
-            const SizedBox(width: 18),
-            InkWell(
-              onTap: () async {
-                await _stopRecordingIfNeeded();
-                if (!mounted) return;
-                Get.to(() => SendOrTrimVideoScreen(
-                      videoUrl: widget.videoUrl,
-                      userProfile: widget.userProfile,
-                      userName: widget.userName,
-                      chatId: widget.chatId.toString(),
-                    ));
-              },
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.navigate_next, color: AppColors.primaryColor, size: 30),
+            if (isVid) ...[
+              Text(
+                _fmt(_videoDuration),
+                style: const TextStyle(color: Colors.white),
               ),
-            ),
+              const SizedBox(width: 12),
+              ValueListenableBuilder<bool>(
+                valueListenable: _isPlaying,
+                builder: (_, playing, __) => IconButton(
+                  icon: Icon(
+                    playing ? Icons.pause : Icons.play_arrow,
+                    color: Colors.white,
+                  ),
+                  onPressed: () async {
+                    if (playing) {
+                      await _video?.pause();
+                    } else {
+                      await _video?.play();
+                    }
+                    _isPlaying.value = _video?.value.isPlaying ?? false;
+                  },
+                ),
+              ),
+              const SizedBox(width: 18),
+              InkWell(
+                onTap: _onNextPressed,
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  radius: 28,
+                  child: Icon(
+                    Icons.navigate_next,
+                    color: AppColors.primaryColor,
+                    size: 34,
+                  ),
+                ),
+              ),
+            ],
+
+            if (!isVid) ...[
+              Spacer(),
+              InkWell(
+                onTap: _onNextPressed,
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  radius: 28,
+                  child: Icon(
+                    Icons.navigate_next,
+                    color: AppColors.primaryColor,
+                    size: 34,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

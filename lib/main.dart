@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/localization_controller.dart';
 import 'package:ree_social_media_app/controllers/theme_controller.dart';
 import 'package:ree_social_media_app/services/camera_manager.dart';
+import 'package:ree_social_media_app/services/shared_prefs_service.dart';
+import 'package:ree_social_media_app/services/socket_manager.dart';
 import 'package:ree_social_media_app/themes/light_theme.dart';
 import 'package:ree_social_media_app/utils/app_constants.dart';
 import 'package:ree_social_media_app/utils/message.dart';
@@ -26,8 +28,9 @@ void main() async {
   // Initialize DI
   Map<String, Map<String, String>> languages = await di.init();
   Get.put(UserController(), permanent: true);
-
   try {
+    final token = await SharedPrefsService.get('token');
+    SocketService.connect(token.toString());
     // Load available cameras safely
     cameras = await availableCameras();
     AppRoutes.cameras = cameras;

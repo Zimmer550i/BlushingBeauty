@@ -20,10 +20,12 @@ class SendMessageWithFriendScreen extends StatefulWidget {
   });
 
   @override
-  State<SendMessageWithFriendScreen> createState() => _SendMessageWithFriendScreenState();
+  State<SendMessageWithFriendScreen> createState() =>
+      _SendMessageWithFriendScreenState();
 }
 
-class _SendMessageWithFriendScreenState extends State<SendMessageWithFriendScreen> {
+class _SendMessageWithFriendScreenState
+    extends State<SendMessageWithFriendScreen> {
   late final SendMessageController controller;
   late final UserController userController;
   late final TextEditingController searchController;
@@ -58,7 +60,10 @@ class _SendMessageWithFriendScreenState extends State<SendMessageWithFriendScree
           return Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -81,8 +86,13 @@ class _SendMessageWithFriendScreenState extends State<SendMessageWithFriendScree
 
               if (controller.chatController.isLoading.value)
                 Container(
-                  color: Colors.black.withOpacity(0.4),
-                  child: Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
+                  color: Colors.black.withValues(alpha: 0.4),
+                  child: Center(
+                    child: SpinKitWave(
+                      color: AppColors.primaryColor,
+                      size: 30.0,
+                    ),
+                  ),
                 ),
             ],
           );
@@ -111,23 +121,28 @@ class _SendMessageWithFriendScreenState extends State<SendMessageWithFriendScree
   );
 
   // 🔍 Search Bar
-  Widget _buildSearchBar(TextEditingController searchController) => CustomTextField(
-    controller: searchController,
-    borderColor: Colors.transparent,
-    suffixIcon: Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: SvgPicture.asset('assets/icons/search.svg'),
-    ),
-    hintText: 'Search friends...',
-  );
+  Widget _buildSearchBar(TextEditingController searchController) =>
+      CustomTextField(
+        controller: searchController,
+        borderColor: Colors.transparent,
+        suffixIcon: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: SvgPicture.asset('assets/icons/search.svg'),
+        ),
+        hintText: 'Search friends...',
+      );
 
   // 👥 Friend List
-  Widget _buildFriendList(SendMessageController controller, UserController userController) {
+  Widget _buildFriendList(
+    SendMessageController controller,
+    UserController userController,
+  ) {
     return Expanded(
       child: Obx(() {
         final filtered = controller.friends.where((friend) {
           final name = (friend['name'] ?? '').toLowerCase();
-          return controller.searchQuery.value.isEmpty || name.contains(controller.searchQuery.value);
+          return controller.searchQuery.value.isEmpty ||
+              name.contains(controller.searchQuery.value);
         }).toList();
 
         if (filtered.isEmpty) {
@@ -158,7 +173,8 @@ class _SendMessageWithFriendScreenState extends State<SendMessageWithFriendScree
                     radius: 22,
                     backgroundImage: imageUrl != null
                         ? NetworkImage(imageUrl)
-                        : const AssetImage("assets/images/dummy.jpg") as ImageProvider,
+                        : const AssetImage("assets/images/dummy.jpg")
+                              as ImageProvider,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -171,16 +187,18 @@ class _SendMessageWithFriendScreenState extends State<SendMessageWithFriendScree
                       ),
                     ),
                   ),
-                  Obx(() => CustomCheckboxScreen(
-                    value: controller.selectedIds.contains(id),
-                    onChanged: (val) {
-                      if (val == true) {
-                        controller.selectedIds.add(id);
-                      } else {
-                        controller.selectedIds.remove(id);
-                      }
-                    },
-                  )),
+                  Obx(
+                    () => CustomCheckboxScreen(
+                      value: controller.selectedIds.contains(id),
+                      onChanged: (val) {
+                        if (val == true) {
+                          controller.selectedIds.add(id);
+                        } else {
+                          controller.selectedIds.remove(id);
+                        }
+                      },
+                    ),
+                  ),
                 ],
               ),
             );

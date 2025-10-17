@@ -103,7 +103,6 @@ class SendMessageController extends GetxController {
     if (!await file.exists()) {
       throw Exception("File not found at path: $correctedPath");
     }
-
     await chatController.sendMediaToMultipleChats(
       friends: friends,
       selectedIds: selectedIds,
@@ -120,6 +119,48 @@ class SendMessageController extends GetxController {
     Get.snackbar("Error", "Failed to send media: $e");
   }
 }
+
+
+Future<void> sendMediaToSingleChat({
+  required String chatId,
+  required String filePath,
+  required bool isVideo,
+}) async {
+  try {
+    isLoading.value = true;
+    // ✅ Fix temp extension or ensure valid .mp4 file
+    final correctedPath = isVideo ? await ensureMp4File(filePath) : filePath;
+
+    final file = File(correctedPath);
+    if (!await file.exists()) {
+      throw Exception("File not found at path: $correctedPath");
+    }
+
+    // ✅ Send media to single user chat
+    await chatController.sendVideoToSingleChat(
+      chatId: chatId,
+      mediaFile: file,
+      contentType: isVideo ? 'video' : 'image',
+    );
+
+    // Get.snackbar(
+    //   "Success",
+    //   "${isVideo ? 'Video' : 'Image'} sent successfully!",
+    //   backgroundColor: Colors.green.shade600,
+    //   colorText: Colors.white,
+    // );
+    // Optionally navigate back to the chat screen
+    Get.offAllNamed(AppRoutes.messageScreen);
+  } catch (e) {
+    Get.snackbar(
+      "Error",
+      "Failed to send ${isVideo ? 'video' : 'image'}: $e",
+      backgroundColor: Colors.red.shade600,
+      colorText: Colors.white,
+    );
+  }
+}
+
 
 
 

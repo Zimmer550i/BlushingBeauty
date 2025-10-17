@@ -38,6 +38,7 @@ dependencies:
   skeletonizer: ^2.1.0+1
   country_code_picker: ^3.4.1
   device_info_plus: ^12.1.0
+  intl: ^0.20.2
 
 
 

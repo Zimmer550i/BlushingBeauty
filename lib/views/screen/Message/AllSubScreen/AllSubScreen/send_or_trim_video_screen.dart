@@ -3,24 +3,31 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:video_player/video_player.dart';
-import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 import 'fram_selection_screen.dart';
 
 class SendOrTrimVideoScreen extends StatefulWidget {
-  final String videoUrl;
+  final String mainVideo;
+  final String reactionVideo;
   final String userProfile;
   final String userName;
   final String chatId;
+  final bool? isInbox;
+  final bool? isVideo;
 
   const SendOrTrimVideoScreen({
     super.key,
-    required this.videoUrl,
+    required this.mainVideo,
     required this.userProfile,
-    required this.userName, required this.chatId,
+    required this.userName,
+    required this.chatId,
+    required this.reactionVideo,
+    this.isInbox,
+    this.isVideo,
   });
 
   @override
@@ -33,6 +40,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen>
   Duration _videoDuration = Duration.zero;
   Duration _videoPosition = Duration.zero;
   final ValueNotifier<bool> _isPlaying = ValueNotifier(false);
+  final sendMessageController = Get.put(SendMessageController());
 
   bool _isRecording = false;
   String? _frontCameramainVideo;
@@ -102,9 +110,9 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen>
 
   Future<void> _initializeVideo() async {
     try {
-      _videoController = widget.videoUrl.startsWith('http')
-          ? VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-          : VideoPlayerController.file(File(widget.videoUrl));
+      _videoController = widget.mainVideo.startsWith('http')
+          ? VideoPlayerController.networkUrl(Uri.parse(widget.mainVideo))
+          : VideoPlayerController.file(File(widget.mainVideo));
 
       await _videoController!.initialize();
       _videoDuration = _videoController!.value.duration;
@@ -153,44 +161,42 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen>
   // 🔹 NAVIGATION HANDLER
   // ===============================
   Future<void> _stopRecordingAndNavigate(
-  Function(String mainVideo, String frontVideo) onNavigate,
-) async {
-  try {
-    // Pause background video playback
-    await _videoController?.pause();
+    Function(String mainVideo, String frontVideo) onNavigate,
+  ) async {
+    try {
+      // Pause background video playback
+      await _videoController?.pause();
 
-    final controller = GlobalCameraManager.controller;
+      final controller = GlobalCameraManager.controller;
 
-    // Stop front camera recording if active
-    if (_isRecording &&
-        controller != null &&
-        controller.value.isRecordingVideo) {
-      final XFile recordedFile = await controller.stopVideoRecording();
-      _frontCameramainVideo = recordedFile.path;
-      if (mounted) setState(() => _isRecording = false);
-      debugPrint("✅ Reaction video recorded: $_frontCameramainVideo");
+      // Stop front camera recording if active
+      if (_isRecording &&
+          controller != null &&
+          controller.value.isRecordingVideo) {
+        final XFile recordedFile = await controller.stopVideoRecording();
+        _frontCameramainVideo = recordedFile.path;
+        if (mounted) setState(() => _isRecording = false);
+        debugPrint("✅ Reaction video recorded: $_frontCameramainVideo");
+      }
+
+      final mainVideo = widget.mainVideo;
+      final frontVideo = _frontCameramainVideo ?? '';
+
+      // ✅ Safely navigate *after* build completes
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        onNavigate(mainVideo, frontVideo);
+      });
+    } catch (e) {
+      debugPrint("⚠️ Stop recording error: $e");
+
+      final mainVideo = widget.mainVideo;
+      final frontVideo = _frontCameramainVideo ?? '';
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        onNavigate(mainVideo, frontVideo);
+      });
     }
-
-    final mainVideo = widget.videoUrl;
-    final frontVideo = _frontCameramainVideo ?? '';
-
-    // ✅ Safely navigate *after* build completes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      onNavigate(mainVideo, frontVideo);
-    });
-  } catch (e) {
-    debugPrint("⚠️ Stop recording error: $e");
-
-    final mainVideo = widget.videoUrl;
-    final frontVideo = _frontCameramainVideo ?? '';
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      onNavigate(mainVideo, frontVideo);
-    });
   }
-}
-
-
 
   // ===============================
   // 🔹 LIFECYCLE HANDLING
@@ -318,45 +324,46 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen>
   // 🔹 BOTTOM ACTIONS
   // ===============================
   Widget _buildBottomActions() => Container(
-      width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
-      child: Column(
-        children: [
-          // 🎬 Frame Selection Button
-          InkWell(
-            onTap: () async {
-              await _stopRecordingAndNavigate((mainVideo, frontVideo) {
-                Get.to(() => FrameSelectionScreen(
-                      videoUrl: mainVideo,
-                      userProfile: widget.userProfile,
-                      userName: widget.userName,
-                      frontVideoUrl: frontVideo,
-                    ));
-              });
-            },
-            child: _buildTrimButton(),
-          ),
+    width: double.infinity,
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
+    child: Column(
+      children: [
+        // 🎬 Frame Selection Button
+        InkWell(
+          onTap: () async {
+            await _stopRecordingAndNavigate((mainVideo, frontVideo) {
+              Get.to(
+                () => FrameSelectionScreen(
+                  videoUrl: mainVideo,
+                  userProfile: widget.userProfile,
+                  userName: widget.userName,
+                  frontVideoUrl: frontVideo,
+                  chatId: widget.chatId,
+                  isInbox: widget.isInbox,
+                ),
+              );
+            });
+          },
+          child: _buildTrimButton(),
+        ),
 
-          const SizedBox(height: 20),
+        const SizedBox(height: 20),
 
-          // 🚀 Send Now Button
-          CustomButton(
-            onTap: () async {
-              await _stopRecordingAndNavigate((mainVideo, frontVideo) {
-                Get.to(() => SendMessageWithFriendScreen(
-                      isVideo: true,
-                      filePath: frontVideo,
-                    ));
-              });
-            },
-            text: "Send Now",
-          ),
-        ],
-      ),
-    );
-
-
+        // 🚀 Send Now Button
+        CustomButton(
+          onTap: () async {
+            await sendMessageController.sendMediaToSingleChat(
+              chatId: widget.chatId,
+              filePath: widget.reactionVideo,
+              isVideo: true,
+            );
+          },
+          text: "Send Now",
+        ),
+      ],
+    ),
+  );
 
   Widget _buildTrimButton() => Container(
     width: double.infinity,
@@ -367,7 +374,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen>
       border: Border.all(color: Colors.grey.shade300),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.07),
+          color: Colors.black.withValues(alpha: 0.07),
           offset: const Offset(0, 2),
           blurRadius: 4,
         ),
@@ -397,7 +404,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen>
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.24)),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.24)),
       child: Row(
         children: [
           Text(

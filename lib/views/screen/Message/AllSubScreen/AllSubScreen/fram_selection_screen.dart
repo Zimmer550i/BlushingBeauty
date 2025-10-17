@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -19,6 +20,7 @@ class FrameSelectionScreen extends StatefulWidget {
   final String frontVideoUrl;
   final String userProfile;
   final String userName;
+  final String? chatId;
   final bool? isInbox;
 
   const FrameSelectionScreen({
@@ -26,7 +28,9 @@ class FrameSelectionScreen extends StatefulWidget {
     required this.videoUrl,
     required this.userProfile,
     required this.userName,
-    required this.frontVideoUrl, this.isInbox = false,
+    required this.frontVideoUrl,
+    this.isInbox = false,
+    this.chatId,
   });
 
   @override
@@ -40,6 +44,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   VideoPlayerController? _mainVideoController;
   VideoPlayerController? _frontVideoController;
   bool _isInitialized = false;
+  final sendMessageController = Get.put(SendMessageController());
 
   final ValueNotifier<bool> _isPlaying = ValueNotifier(false);
   final ScrollController _scrollController = ScrollController();
@@ -264,7 +269,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
               width: 140,
               height: 180,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.white, width: 2),
               ),
@@ -303,7 +308,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(color: Colors.black.withOpacity(0.4)),
+          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.4)),
           child: Row(
             children: [
               Text(
@@ -326,7 +331,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                       overlayRadius: 0,
                     ),
                     activeTrackColor: Colors.black,
-                    inactiveTrackColor: Colors.black.withOpacity(0.4),
+                    inactiveTrackColor: Colors.black.withValues(alpha: 0.4),
                     thumbColor: Colors.white,
                   ),
                   child: Slider(
@@ -361,7 +366,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                   onTap: _togglePlayPause,
                   child: CircleAvatar(
                     radius: 12,
-                    backgroundColor: Colors.white.withOpacity(0.8),
+                    backgroundColor: Colors.white.withValues(alpha: 0.8),
                     child: Icon(
                       _isPlaying.value ? Icons.pause : Icons.play_arrow,
                       size: 16,
@@ -510,7 +515,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       borderRadius: BorderRadius.circular(6),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 0.3),
           blurRadius: 3,
           offset: const Offset(0, 2),
         ),
@@ -533,21 +538,21 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       ).showSnackBar(const SnackBar(content: Text('Trim failed')));
       return;
     }
-
-    ///TODO: if inbox then send to direct user else move to below screen.
-    if(widget.isInbox == true){
-      // Send to direct user inbox
-      
-    }else{
+    if (widget.isInbox == true) {
+      await sendMessageController.sendMediaToSingleChat(
+        chatId: widget.chatId.toString(),
+        filePath: trimmed.path,
+        isVideo: true,
+      );
+    } else {
       await Get.to(
-      () => SendMessageWithFriendScreen(filePath: trimmed.path, isVideo: true),
-      transition: Transition.rightToLeft,
-      duration: const Duration(milliseconds: 300),
-    );
+        () =>
+            SendMessageWithFriendScreen(filePath: trimmed.path, isVideo: true),
+        transition: Transition.rightToLeft,
+        duration: const Duration(milliseconds: 300),
+      );
       return;
     }
-
-    
   }
 
   // 🎞 Main Trim Slider

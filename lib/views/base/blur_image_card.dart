@@ -1,34 +1,67 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
 
 class BlurImageCard extends StatefulWidget {
   final String imageUrl;
-  const BlurImageCard({super.key, required this.imageUrl});
+  final String receiverName;
+  final String? receiverImage;
+  final String chatId;
+  final bool isMe; // 👈 new flag to control blur
+
+  const BlurImageCard({
+    super.key,
+    required this.imageUrl,
+    required this.receiverName,
+    required this.chatId,
+    this.receiverImage,
+    required this.isMe,
+  });
 
   @override
-  State<BlurImageCard> createState() => BlurImageCardState();
+  State<BlurImageCard> createState() => _BlurImageCardState();
 }
 
-class BlurImageCardState extends State<BlurImageCard> {
+class _BlurImageCardState extends State<BlurImageCard> {
   bool _isLoaded = false;
   bool _isTapped = false;
+
+  void _onTapImage() {
+    if (!_isLoaded || _isTapped) return;
+    setState(() => _isTapped = true);
+
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VideoPreviewScreen(
+            videoUrl: widget.imageUrl, // 👈 using same preview screen
+            countdownSeconds: 3,
+            userProfile: widget.receiverImage ?? "",
+            userName: widget.receiverName,
+            chatId: widget.chatId,
+          ),
+        ),
+      ).then((_) {
+        if (mounted) setState(() => _isTapped = false);
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (_isLoaded) {
-          setState(() => _isTapped = !_isTapped);
-        }
-      },
+      onTap: _onTapImage,
       child: Stack(
         alignment: Alignment.center,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: ImageFiltered(
-              imageFilter: _isTapped || !_isLoaded
+              imageFilter: widget.isMe
+                  ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                  : _isTapped || !_isLoaded
                   ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
                   : ImageFilter.blur(
                       sigmaX: 20,
@@ -50,40 +83,23 @@ class BlurImageCardState extends State<BlurImageCard> {
                     return Container(
                       height: 180,
                       width: 240,
-                      color: Colors.grey.shade200,
+                      color: Colors.black12.withValues(alpha: .1),
                       child: const Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     );
                   }
                 },
-                errorBuilder: (_, __, ___) => Image.asset(
-                  "assets/images/receiver.jpg",
+                errorBuilder: (_, __, ___) => Container(
                   height: 180,
                   width: 240,
-                  fit: BoxFit.cover,
+                  color: Colors.grey.shade200,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.error, color: Colors.red),
                 ),
               ),
             ),
           ),
-
-          // 👁️ Optional overlay icon
-          if (!_isTapped && _isLoaded)
-            Container(
-              height: 180,
-              width: 240,
-              decoration: BoxDecoration(
-                color: Colors.black26,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.visibility,
-                  color: Colors.transparent,
-                  size: 30,
-                ),
-              ),
-            ),
         ],
       ),
     );
