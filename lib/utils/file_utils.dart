@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 
 /// Ensures that a given video file has a .mp4 extension.
@@ -18,10 +19,10 @@ Future<File> ensureMp4Format(String originalPath) async {
     // copy file to new path (rename might fail on some devices)
     final newFile = await originalFile.copy(newPath);
 
-    print('✅ Video converted to MP4 format: $newPath');
+    debugPrint('✅ Video converted to MP4 format: $newPath');
     return newFile;
   } catch (e) {
-    print('❌ Failed to convert video to .mp4: $e');
+    debugPrint('❌ Failed to convert video to .mp4: $e');
     rethrow;
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
@@ -27,7 +28,7 @@ class VideoUtils {
 
       return generatedPath;
     } catch (e) {
-      print("Thumbnail error: $e");
+      debugPrint("Thumbnail error: $e");
       return null;
     }
   }

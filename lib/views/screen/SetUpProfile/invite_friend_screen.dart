@@ -125,11 +125,15 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                 )
               : GestureDetector(
                   onTap: () {
-                    contactController.sendInviteSms(
-                      contact["phone"],
-                      contact["name"],
-                    );
+                    if (!addedFriends.contains(id)) {
+                      addedFriends.add(id);
+                      contactController.sendInviteSms(
+                        contact["phone"],
+                        contact["name"],
+                      );
+                    }
                   },
+
                   child: Container(
                     height: 38,
                     width: 80,
@@ -295,26 +299,28 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                       Obx(() {
                         final canProceed = addedFriends.length >= 5;
 
-                        return CustomButton(
-                          // onTap: canProceed
-                          //     ? () => Get.to(
-                          //         () => const EnableNotificationScreen(),
-                          //       )
-                          //     : () {
-                          //         Get.snackbar(
-                          //           "Add More Friends",
-                          //           "Please add at least 5 friends to continue.",
-                          //           snackPosition: SnackPosition.BOTTOM,
-                          //           backgroundColor: Colors.redAccent,
-                          //           colorText: Colors.white,
-                          //         );
-                          //       },
-                          onTap: () =>
-                              Get.to(() => const EnableNotificationScreen()),
-                          text: "Next",
-                          color: canProceed
-                              ? AppColors.primaryColor
-                              : AppColors.primaryColor.withValues(alpha: .4),
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeInOut,
+                          child: CustomButton(
+                            onTap: canProceed
+                                ? () => Get.to(
+                                    () => const EnableNotificationScreen(),
+                                  )
+                                : () {
+                                    Get.snackbar(
+                                      "Invite More Friends",
+                                      "Please invite at least 5 friends to continue.",
+                                      snackPosition: SnackPosition.BOTTOM,
+                                      backgroundColor: Colors.redAccent,
+                                      colorText: Colors.white,
+                                    );
+                                  },
+                            text: "Next",
+                            color: canProceed
+                                ? AppColors.primaryColor
+                                : AppColors.primaryColor.withValues(alpha: .4),
+                          ),
                         );
                       }),
                     ],
