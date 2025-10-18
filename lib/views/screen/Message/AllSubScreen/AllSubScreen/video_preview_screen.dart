@@ -180,7 +180,8 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         userName: widget.userName,
         chatId: widget.chatId.toString(),
         isInbox: widget.isInbox ?? false,
-        isVideo: isVideo,
+        isVideo: true,
+        videoFile: recordedFile,
       ),
     ) : Get.to(
       () => SendOrTrimVideoScreen(
@@ -190,7 +191,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         userName: widget.userName,
         chatId: widget.chatId.toString(),
         isInbox: widget.isInbox ?? false,
-        isVideo: isVideo,
+        isVideo: false,
       ),
     );
   }

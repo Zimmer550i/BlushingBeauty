@@ -1,6 +1,6 @@
 import 'dart:io';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:gallery_saver_plus/files.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -16,6 +16,7 @@ class SendOrTrimVideoScreen extends StatefulWidget {
   final String chatId;
   final bool? isInbox;
   final bool? isVideo;
+  final XFile? videoFile;
 
   const SendOrTrimVideoScreen({
     super.key,
@@ -25,7 +26,7 @@ class SendOrTrimVideoScreen extends StatefulWidget {
     required this.chatId,
     required this.reactionVideo,
     this.isInbox,
-    this.isVideo,
+    this.isVideo, this.videoFile,
   });
 
   @override
@@ -87,15 +88,18 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
   }
 
   void _syncVideos() async {
-    if (_reactionVideoController == null || _mainVideoController == null) return;
+    if (_reactionVideoController == null || _mainVideoController == null)
+      return;
     if (!_reactionVideoController!.value.isInitialized ||
-        !_mainVideoController!.value.isInitialized) return;
+        !_mainVideoController!.value.isInitialized)
+      return;
 
     final front = _reactionVideoController!;
     final main = _mainVideoController!;
 
     // Sync main video position
-    final diff = (front.value.position - main.value.position).inMilliseconds.abs();
+    final diff = (front.value.position - main.value.position).inMilliseconds
+        .abs();
     if (diff > 100) {
       await main.seekTo(front.value.position);
     }
@@ -110,7 +114,8 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
   }
 
   void _togglePlayPause() async {
-    if (_reactionVideoController == null || _mainVideoController == null) return;
+    if (_reactionVideoController == null || _mainVideoController == null)
+      return;
     final front = _reactionVideoController!;
     final main = _mainVideoController!;
 
@@ -134,12 +139,24 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            InkWell(onTap: Get.back, child: const Icon(Icons.arrow_back, color: Colors.black)),
+            InkWell(
+              onTap: Get.back,
+              child: const Icon(Icons.arrow_back, color: Colors.black),
+            ),
             const SizedBox(width: 12),
-            CircleAvatar(backgroundImage: NetworkImage(widget.userProfile), radius: 22),
+            CircleAvatar(
+              backgroundImage: NetworkImage(widget.userProfile),
+              radius: 22,
+            ),
             const SizedBox(width: 12),
-            Text(widget.userName,
-                style: const TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.w600)),
+            Text(
+              widget.userName,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -158,14 +175,16 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                             fit: BoxFit.cover,
                             child: SizedBox(
                               width: _reactionVideoController!.value.size.width,
-                              height: _reactionVideoController!.value.size.height,
+                              height:
+                                  _reactionVideoController!.value.size.height,
                               child: VideoPlayer(_reactionVideoController!),
                             ),
                           ),
                         ),
 
                       // Main video mini preview
-                      if (_mainVideoController!.value.isInitialized && widget.isVideo == true)
+                      if (_mainVideoController!.value.isInitialized &&
+                          widget.isVideo == true)
                         Positioned(
                           top: 20,
                           right: 20,
@@ -175,13 +194,18 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                               width: 130,
                               height: 160,
                               decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.black, width: 2)),
+                                border: Border.all(
+                                  color: Colors.black,
+                                  width: 2,
+                                ),
+                              ),
                               clipBehavior: Clip.antiAliasWithSaveLayer,
                               child: FittedBox(
                                 fit: BoxFit.cover,
                                 child: SizedBox(
                                   width: _mainVideoController!.value.size.width,
-                                  height: _mainVideoController!.value.size.height,
+                                  height:
+                                      _mainVideoController!.value.size.height,
                                   child: VideoPlayer(_mainVideoController!),
                                 ),
                               ),
@@ -190,7 +214,12 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                         ),
 
                       // Playback controls
-                      Positioned(bottom: 0, left: 0, right: 0, child: _buildPlaybackControls()),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: _buildPlaybackControls(),
+                      ),
                     ],
                   ),
                 ),
@@ -201,7 +230,10 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
   }
 
   Widget _buildPlaybackControls() {
-    final totalMs = _videoDuration.inMilliseconds.toDouble().clamp(1, double.infinity);
+    final totalMs = _videoDuration.inMilliseconds.toDouble().clamp(
+      1,
+      double.infinity,
+    );
     return ValueListenableBuilder<bool>(
       valueListenable: _isPlaying,
       builder: (_, playing, __) {
@@ -210,10 +242,16 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
           decoration: BoxDecoration(color: Colors.white.withOpacity(0.24)),
           child: Row(
             children: [
-              Text(_formatDuration(_videoPosition), style: const TextStyle(color: Colors.black)),
+              Text(
+                _formatDuration(_videoPosition),
+                style: const TextStyle(color: Colors.black),
+              ),
               Expanded(
                 child: Slider(
-                  value: _videoPosition.inMilliseconds.toDouble().clamp(0, totalMs).toDouble(),
+                  value: _videoPosition.inMilliseconds
+                      .toDouble()
+                      .clamp(0, totalMs)
+                      .toDouble(),
                   min: 0,
                   max: totalMs.toDouble(),
                   activeColor: AppColors.primaryColor,
@@ -226,12 +264,18 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                   },
                 ),
               ),
-              Text(_formatDuration(_videoDuration), style: const TextStyle(color: Colors.black)),
+              Text(
+                _formatDuration(_videoDuration),
+                style: const TextStyle(color: Colors.black),
+              ),
               const SizedBox(width: 12),
               CircleAvatar(
                 backgroundColor: Colors.white,
                 child: IconButton(
-                  icon: Icon(playing ? Icons.pause : Icons.play_arrow, color: AppColors.primaryColor),
+                  icon: Icon(
+                    playing ? Icons.pause : Icons.play_arrow,
+                    color: AppColors.primaryColor,
+                  ),
                   onPressed: _togglePlayPause,
                 ),
               ),
@@ -243,54 +287,69 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
   }
 
   Widget _buildBottomActions() => Container(
-        width: double.infinity,
-        color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
-        child: Column(
-          children: [
-            InkWell(
-              onTap: () => Get.to(() => FrameSelectionScreen(
-                    videoUrl: widget.mainVideo,
-                    frontVideoUrl: widget.reactionVideo,
-                    userProfile: widget.userProfile,
-                    userName: widget.userName,
-                    chatId: widget.chatId,
-                    isInbox: widget.isInbox,
-                  )),
-              child: _buildTrimButton(),
+    width: double.infinity,
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
+    child: Column(
+      children: [
+        InkWell(
+          onTap: () => Get.to(
+            () => FrameSelectionScreen(
+              videoUrl: widget.mainVideo,
+              frontVideoUrl: widget.reactionVideo,
+              userProfile: widget.userProfile,
+              userName: widget.userName,
+              chatId: widget.chatId,
+              isInbox: widget.isInbox,
+              videoFile: widget.videoFile,
             ),
-            const SizedBox(height: 20),
-            Obx(()=> CustomButton(
-              loading: sendMessageController.isLoading.value,
-              onTap: () async {
-                await sendMessageController.sendMediaToSingleChat(
-                  chatId: widget.chatId,
-                  filePath: widget.reactionVideo,
-                  isVideo: true,
-                );
-              },
-              text: "Send Now",
-            ),),
-          ],
+          ),
+          child: _buildTrimButton(),
         ),
-      );
-
-  Widget _buildTrimButton() => Container(
-        width: double.infinity,
-        height: 52,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), offset: const Offset(0, 2), blurRadius: 4)],
-        ),
-        child: const Center(
-          child: Text(
-            "Trim or Select Frame",
-            style: TextStyle(color: Color(0xFF413E3E), fontSize: 16, fontWeight: FontWeight.w600),
+        const SizedBox(height: 20),
+        Obx(
+          () => CustomButton(
+            loading: sendMessageController.isLoading.value,
+            onTap: () async {
+              await sendMessageController.sendMediaToSingleChat(
+                chatId: widget.chatId,
+                filePath: widget.reactionVideo,
+                isVideo: true,
+              );
+            },
+            text: "Send Now",
           ),
         ),
-      );
+      ],
+    ),
+  );
+
+  Widget _buildTrimButton() => Container(
+    width: double.infinity,
+    height: 52,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey.shade300),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.07),
+          offset: const Offset(0, 2),
+          blurRadius: 4,
+        ),
+      ],
+    ),
+    child: const Center(
+      child: Text(
+        "Trim or Select Frame",
+        style: TextStyle(
+          color: Color(0xFF413E3E),
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+  );
 
   String _formatDuration(Duration d) {
     final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');

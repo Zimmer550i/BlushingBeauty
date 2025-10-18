@@ -136,9 +136,9 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
                   InkWell(
                     onTap: _secondsRemaining == 0
                         ? () {
-                      _startTimer();
-                      authController.sendOtp(widget.emailOrPhone);
-                    }
+                            _startTimer();
+                            authController.sendOtp(widget.emailOrPhone);
+                          }
                         : null,
                     child: Text(
                       _secondsRemaining == 0
@@ -163,9 +163,12 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
                 ],
               ),
               const SizedBox(height: 92),
-              CustomButton(
-                onTap: _verifyCode,
-                text: "Verify and Continue",
+              Obx(
+                () => CustomButton(
+                  loading: authController.isLoading.value,
+                  onTap: _verifyCode,
+                  text: "Verify and Continue",
+                ),
               ),
             ],
           ),
@@ -174,9 +177,12 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
     );
   }
 
-  void _verifyCode()async {
+  void _verifyCode() async {
     final code = controllers.map((c) => c.text).join();
-    final message =  await authController.verifyAccount(widget.emailOrPhone, code);
+    final message = await authController.verifyAccount(
+      widget.emailOrPhone,
+      code,
+    );
     if (message == "success") {
       Get.to(() => const ContactAccessScreen());
     } else {
@@ -200,12 +206,12 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
         ),
         boxShadow: filled
             ? [
-          BoxShadow(
-            color: AppColors.primaryColor.withValues(alpha: .35),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          )
-        ]
+                BoxShadow(
+                  color: AppColors.primaryColor.withValues(alpha: .35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
             : const [],
       ),
       alignment: Alignment.center,

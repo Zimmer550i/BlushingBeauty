@@ -5,7 +5,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/controllers/notification_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
+import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
 import 'package:ree_social_media_app/services/api_service.dart';
+import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -77,6 +79,14 @@ class _MessageScreenState extends State<MessageScreen> {
     await controller.fetchChats(loadMore: true);
     setState(() => _isFetchingMoreStories = false);
   }
+
+@override
+void dispose() {
+  GlobalCameraManager.dispose();
+  GlobalVideoPlayerManager.dispose();
+  super.dispose();
+}
+
 
   @override
   Widget build(BuildContext context) {

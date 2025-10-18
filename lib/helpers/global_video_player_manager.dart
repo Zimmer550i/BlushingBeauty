@@ -1,0 +1,41 @@
+import 'dart:io';
+
+import 'package:video_player/video_player.dart';
+import 'package:flutter/foundation.dart';
+
+class GlobalVideoPlayerManager {
+  static VideoPlayerController? _controller;
+
+  static VideoPlayerController? get controller => _controller;
+
+  static Future<VideoPlayerController?> initialize(String path) async {
+    await dispose();
+
+    try {
+      final controller = VideoPlayerController.file(File(path));
+      await controller.initialize();
+      _controller = controller;
+      debugPrint("🎬 Video player initialized");
+      return controller;
+    } catch (e) {
+      debugPrint("❌ Error initializing video player: $e");
+      return null;
+    }
+  }
+
+  static Future<void> dispose() async {
+    try {
+      if (_controller != null) {
+        await _controller!.pause();
+        await _controller!.dispose();
+        debugPrint("🧹 Video player disposed successfully");
+      }
+    } catch (e) {
+      debugPrint("⚠️ Video player dispose error: $e");
+    } finally {
+      _controller = null;
+    }
+  }
+
+  static bool get isInitialized => _controller?.value.isInitialized ?? false;
+}

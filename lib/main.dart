@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/localization_controller.dart';
 import 'package:ree_social_media_app/controllers/theme_controller.dart';
+import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
 import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/services/shared_prefs_service.dart';
 import 'package:ree_social_media_app/services/socket_manager.dart';
@@ -21,6 +22,7 @@ void main() async {
 
   // Dispose any previously active camera (important for hot restart)
   await GlobalCameraManager.dispose();
+  GlobalVideoPlayerManager.dispose();
 
   // Give CameraX time to fully release before re-querying
   await Future.delayed(const Duration(milliseconds: 200));

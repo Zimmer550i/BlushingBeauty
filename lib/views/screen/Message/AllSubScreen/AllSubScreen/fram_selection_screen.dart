@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/views/base/dot_trim_ui.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
@@ -21,6 +23,7 @@ class FrameSelectionScreen extends StatefulWidget {
   final String userName;
   final String? chatId;
   final bool? isInbox;
+  final XFile? videoFile;
 
   const FrameSelectionScreen({
     super.key,
@@ -30,6 +33,7 @@ class FrameSelectionScreen extends StatefulWidget {
     required this.frontVideoUrl,
     this.isInbox = false,
     this.chatId,
+    this.videoFile,
   });
 
   @override
@@ -37,7 +41,9 @@ class FrameSelectionScreen extends StatefulWidget {
 }
 
 class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
-  final CreateStoryController createStoryController = Get.put(CreateStoryController());
+  final CreateStoryController createStoryController = Get.put(
+    CreateStoryController(),
+  );
   VideoPlayerController? _mainVideoController;
   VideoPlayerController? _frontVideoController;
   bool _isInitialized = false;
@@ -75,7 +81,9 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
         statuses[Permission.microphone] != PermissionStatus.granted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Camera & Microphone permission required')),
+          const SnackBar(
+            content: Text('Camera & Microphone permission required'),
+          ),
         );
         Navigator.pop(context);
       }
@@ -84,13 +92,6 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
   Future<void> _initVideos() async {
     try {
-      final mainPath = widget.videoUrl.trim();
-      _mainVideoController = mainPath.startsWith('http')
-          ? VideoPlayerController.networkUrl(Uri.parse(mainPath))
-          : VideoPlayerController.file(File(mainPath));
-      await _mainVideoController!.initialize();
-      _mainVideoController!.addListener(_updatePlayState);
-
       final frontPath = widget.frontVideoUrl.trim();
       _frontVideoController = frontPath.startsWith('http')
           ? VideoPlayerController.networkUrl(Uri.parse(frontPath))
@@ -98,7 +99,6 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       await _frontVideoController!.initialize();
       _frontVideoController!.addListener(_updatePlayState);
 
-      _mainVideoController!.setLooping(true);
       _frontVideoController!.setLooping(true);
       _isPlaying.value = false;
       _syncVideos();
@@ -141,56 +141,80 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   }
 
   /// ✅ Updated: Properly uses `video_trimmer ^5.0.0` API
-    Future<File?> _trimFrontVideo(File inputFile) async {
-    try {
-      await _trimmer.loadVideo(videoFile: inputFile);
-  
-      final duration = _frontVideoController?.value.duration ?? Duration.zero;
-      final start = duration * _trimStart;
-      final end = duration * _trimEnd;
-  
-      debugPrint("🎬 Trimming from ${start.inSeconds}s → ${end.inSeconds}s");
-      // saveTrimmedVideo returns void in newer video_trimmer versions; use a Completer to capture the path from the onSave callback.
-      final Completer<String?> _completer = Completer<String?>();
-  
-      _trimmer.saveTrimmedVideo(
-        startValue: start.inMilliseconds / 1000,
-        endValue: end.inMilliseconds / 1000,
-        videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
-        onSave: (String? path) {
-          debugPrint("🔔 onSave callback: $path");
-          if (!_completer.isCompleted) _completer.complete(path);
-        },
-      );
-  
-      String? outputPath;
-      try {
-        // await the completer which will be completed by the onSave/onError callbacks
-        outputPath = await _completer.future.timeout(const Duration(seconds: 30));
-      } catch (e) {
-        debugPrint("❌ Trimming timed out or failed: $e");
-        outputPath = null;
-      }
-  
-      if (outputPath != null && outputPath.isNotEmpty) {
-        debugPrint("✅ Trimmed video saved at: $outputPath");
-        return File(outputPath);
-      } else {
-        debugPrint("❌ Trimming failed (outputPath is null or empty)");
-        return null;
-      }
-    } catch (e) {
-      debugPrint("❌ Trimming error: $e");
+  Future<File?> _trimFrontVideo(File inputFile) async {
+  try {
+    debugPrint("🎞 Loading video for trimming...");
+    await _trimmer.loadVideo(videoFile: inputFile);
+
+    // 🔹 Wait for the internal duration to be available
+    final duration = _trimmer.videoPlayerController?.value.duration;
+    if (duration == null || duration.inMilliseconds == 0) {
+      debugPrint("❌ Video duration invalid or not ready — retrying...");
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+
+    final totalDuration = _trimmer.videoPlayerController?.value.duration;
+    if (totalDuration == null || totalDuration.inMilliseconds == 0) {
+      debugPrint("❌ Could not fetch video duration");
       return null;
     }
-  }
 
+    // 🔹 Convert your fractional _trimStart/_trimEnd (0.0–1.0) into actual seconds
+    final startSeconds =
+        (totalDuration.inMilliseconds * _trimStart) / 1000.0; // convert to sec
+    final endSeconds =
+        (totalDuration.inMilliseconds * _trimEnd) / 1000.0; // convert to sec
 
-  String _fmt(Duration d) {
-    final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final ss = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$mm:$ss';
+    if (endSeconds <= startSeconds) {
+      debugPrint("⚠️ Invalid trim range, adjusting automatically");
+    }
+
+    final double safeStart = startSeconds.clamp(0.0, totalDuration.inSeconds.toDouble());
+    final double safeEnd = endSeconds > safeStart
+        ? endSeconds
+        : (safeStart + 1.0).clamp(0.0, totalDuration.inSeconds.toDouble());
+
+    debugPrint(
+      "🎬 Trimming from ${safeStart.toStringAsFixed(2)}s → ${safeEnd.toStringAsFixed(2)}s "
+      "(of total ${totalDuration.inSeconds}s)",
+    );
+
+    final Completer<String?> completer = Completer<String?>();
+
+    _trimmer.saveTrimmedVideo(
+      startValue: safeStart,
+      endValue: safeEnd,
+      videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
+      onSave: (String? outputPath) {
+        debugPrint("✅ onSave callback: $outputPath");
+        if (!completer.isCompleted) completer.complete(outputPath);
+      },
+    );
+
+    final outputPath = await completer.future.timeout(
+      const Duration(seconds: 60),
+      onTimeout: () {
+        debugPrint("⏰ Trimming timed out!");
+        return null;
+      },
+    );
+
+    if (outputPath == null || outputPath.isEmpty) {
+      debugPrint("❌ No output file returned");
+      return null;
+    }
+
+    final trimmedFile = File(outputPath);
+    final fileSize = await trimmedFile.length();
+    debugPrint("✅ Trim success: ${trimmedFile.path} (${fileSize ~/ 1024} KB)");
+
+    return trimmedFile;
+  } catch (e, st) {
+    debugPrint("❌ Trim error: $e\n$st");
+    return null;
   }
+}
+
 
   @override
   void dispose() {
@@ -202,7 +226,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     super.dispose();
   }
 
-  // ✅ The rest of your UI remains 100% unchanged
+  // ✅ UI
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
@@ -210,7 +234,10 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(automaticallyImplyLeading: false, title: _buildAppBarTitle()),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: _buildAppBarTitle(),
+      ),
       body: Column(
         children: [
           Expanded(child: _buildDualVideoPreview()),
@@ -511,25 +538,10 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     ),
   );
 
-  Widget _buildHandle() => Container(
-    width: 6,
-    decoration: BoxDecoration(
-      color: Colors.blue,
-      borderRadius: BorderRadius.circular(6),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.3),
-          blurRadius: 3,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-  );
-
   Future<void> _handleTrimAndSend() async {
     if (_frontVideoController == null) return;
 
-    final original = File(widget.frontVideoUrl);
+    final original = File(widget.videoFile!.path);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Trimming your front camera video...')),
     );
@@ -563,13 +575,13 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     final total = _thumbnailPaths.length * (_thumbnailWidth + 2);
 
     return SizedBox(
-      height: 100,
+      height: 120,
       child: Stack(
         alignment: Alignment.center,
         children: [
           // 🟦 Outer blue rounded rail
           Container(
-            height: 70,
+            height: 60,
             decoration: BoxDecoration(
               color: AppColors.primaryColor,
               borderRadius: BorderRadius.circular(10),
@@ -607,8 +619,8 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
           Positioned(
             left: _leftHandle,
             width: _rightHandle - _leftHandle,
-            top: 15,
-            bottom: 15,
+            top: 25,
+            bottom: 25,
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.primaryColor,
@@ -657,10 +669,12 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                 setState(() {
                   _leftHandle += details.delta.dx;
                   _leftHandle = _leftHandle.clamp(0.0, _rightHandle - 30);
-                  _trimStart = (_leftHandle / total).clamp(0.0, 1.0);
+                  _trimStart = double.parse(
+                    (_leftHandle / total).clamp(0.0, 1.0).toStringAsFixed(4),
+                  );
                 });
               },
-              child: _buildTrimHandle(),
+              child: DotBarUi(),
             ),
           ),
 
@@ -674,57 +688,17 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                 setState(() {
                   _rightHandle += details.delta.dx;
                   _rightHandle = _rightHandle.clamp(_leftHandle + 30, total);
-                  _trimEnd = (_rightHandle / total).clamp(0.0, 1.0);
+                  _trimEnd = double.parse(
+                    (_rightHandle / total).clamp(0.0, 1.0).toStringAsFixed(4),
+                  );
                 });
               },
-              child: _buildTrimHandle(),
+              child: DotBarUi(),
             ),
           ),
         ],
       ),
     );
   }
-
-  // 🔹 Handle UI (Dot + Bar + Dot)
-  Widget _buildTrimHandle() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor,
-            shape: BoxShape.circle,
-          ),
-        ),
-        Container(
-          width: 5,
-          height: 60,
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor,
-            shape: BoxShape.circle,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRoundHandle() => Container(
-    width: 12,
-    height: 60,
-    decoration: BoxDecoration(
-      color: Colors.blueAccent,
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: Colors.white, width: 2),
-    ),
-  );
 }
+
