@@ -124,16 +124,22 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                   ),
                 )
               : GestureDetector(
+                  // onTap: () {
+                  //   if (!addedFriends.contains(id)) {
+                  //     addedFriends.add(id);
+                  //     contactController.sendInviteSms(
+                  //       contact["phone"],
+                  //       contact["name"],
+                  //     );
+                  //   }
+                  // },
                   onTap: () {
-                    if (!addedFriends.contains(id)) {
-                      addedFriends.add(id);
-                      contactController.sendInviteSms(
-                        contact["phone"],
-                        contact["name"],
-                      );
-                    }
+                    contactController.sendInviteSms(
+                      context,
+                      contact["phone"],
+                      contact["name"],
+                    );
                   },
-
                   child: Container(
                     height: 38,
                     width: 80,

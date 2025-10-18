@@ -167,7 +167,7 @@ class _ContactScreenState extends State<ContactScreen> {
       title: Text(name),
       subtitle: Text(phone),
       trailing: InkWell(
-        onTap: () => contactController.sendInviteSms(phone, name),
+        onTap: () => contactController.sendInviteSms(context, phone, name),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
