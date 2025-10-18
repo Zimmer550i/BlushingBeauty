@@ -252,7 +252,8 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                     text: "Send Message",
                   ),
                   const SizedBox(height: 20),
-                  CustomButton(
+                  Obx(()=> CustomButton(
+                    loading: createStoryController.isLoading.value,
                     onTap: () {
                       if (widget.isVideo) {
                         createStoryController.addStory(
@@ -265,7 +266,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                       }
                     },
                     text: "Create Story",
-                  ),
+                  ),),
                 ],
               ),
             ),

@@ -12,9 +12,11 @@ import '../services/api_service.dart';
 class CreateStoryController extends GetxController {
   final ApiService _api = ApiService();
   final ImagePicker _picker = ImagePicker();
+  var isLoading = false.obs;
 
   /// Add story with optional image/video paths
   Future<void> addStory({String? imagePath, String? videoPath}) async {
+    isLoading.value = true;
     try {
       String? mediaType;
       File? mediaFile;
@@ -43,6 +45,7 @@ class CreateStoryController extends GetxController {
       }
 
       if (!(await mediaFile.exists())) {
+        isLoading.value = false;
         Get.snackbar("Error", "No valid media file selected.");
         return;
       }
@@ -54,8 +57,10 @@ class CreateStoryController extends GetxController {
 
       // 🟢 Step 3: Upload story to API
       await _uploadStoryMedia(mediaFile, mediaType);
+      isLoading.value = false;
 
     } catch (e) {
+      isLoading.value = false;
       debugPrint("❌ Error creating story: $e");
       Get.snackbar(
         "Error",

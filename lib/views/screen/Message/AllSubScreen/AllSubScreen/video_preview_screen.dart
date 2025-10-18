@@ -159,7 +159,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   }
 
   /// Stop and navigate when user presses “Next”
-  Future<void> _onNextPressed() async {
+  Future<void> _onNextPressed(bool isVideo) async {
     await _stopRecordingIfNeeded();
 
     if (recordedFile == null) {
@@ -172,7 +172,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     }
 
     if (!mounted) return;
-    Get.to(
+    isVideo ? Get.to(
       () => SendOrTrimVideoScreen(
         mainVideo: widget.videoUrl,
         reactionVideo: recordedFile!.path,
@@ -180,6 +180,17 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         userName: widget.userName,
         chatId: widget.chatId.toString(),
         isInbox: widget.isInbox ?? false,
+        isVideo: isVideo,
+      ),
+    ) : Get.to(
+      () => SendOrTrimVideoScreen(
+        mainVideo: recordedFile!.path,
+        reactionVideo: recordedFile!.path,
+        userProfile: widget.userProfile,
+        userName: widget.userName,
+        chatId: widget.chatId.toString(),
+        isInbox: widget.isInbox ?? false,
+        isVideo: isVideo,
       ),
     );
   }
@@ -406,7 +417,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
               ),
               const SizedBox(width: 18),
               InkWell(
-                onTap: _onNextPressed,
+                onTap: () {
+                  _onNextPressed(true);
+                },
                 child: CircleAvatar(
                   backgroundColor: Colors.white,
                   radius: 28,
@@ -422,7 +435,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             if (!isVid) ...[
               Spacer(),
               InkWell(
-                onTap: _onNextPressed,
+                onTap: () {
+                  _onNextPressed(false);
+                },
                 child: CircleAvatar(
                   backgroundColor: Colors.white,
                   radius: 28,
