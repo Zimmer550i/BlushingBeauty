@@ -17,38 +17,43 @@ class ContactController extends GetxController {
 
   /// Fetch contacts from device & send to API
   Future<void> fetchContacts() async {
-    try {
-      isLoading.value = true;
-      if (await FlutterContacts.requestPermission()) {
-        final rawContacts = await FlutterContacts.getContacts(withProperties: true);
+  try {
+    isLoading.value = true;
 
-        List<Map<String, dynamic>> contactList = [];
+    if (await FlutterContacts.requestPermission()) {
+      final rawContacts = await FlutterContacts.getContacts(withProperties: true);
 
-        for (var c in rawContacts) {
-          if (c.phones.isNotEmpty) {
-            for (var phone in c.phones) {
-              final cleanedNumber = _normalizePhoneNumber(phone.number);
-              contactList.add({
-                "name": c.displayName,
-                "phone": cleanedNumber,
-              });
-            }
+      List<Map<String, dynamic>> contactList = [];
+      int count = 0;
+      const int maxContacts = 50;
+
+      for (var c in rawContacts) {
+        if (c.phones.isNotEmpty) {
+          for (var phone in c.phones) {
+            if (count >= maxContacts) break; // stop after 50
+            final cleanedNumber = _normalizePhoneNumber(phone.number);
+            contactList.add({
+              "name": c.displayName,
+              "phone": cleanedNumber,
+            });
+            count++;
           }
         }
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("saved_contacts", jsonEncode(contactList));
-
-        await sendContactsToApi(contactList);
-        isLoading.value = false;
+        if (count >= maxContacts) break;
       }
-    } catch (e) {
-      isLoading.value = false;
-      debugPrint("🚨 Error fetching contacts: $e");
-    } finally {
-      isLoading.value = false;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("saved_contacts", jsonEncode(contactList));
+
+      await sendContactsToApi(contactList);
     }
+  } catch (e) {
+    debugPrint("🚨 Error fetching contacts: $e");
+  } finally {
+    isLoading.value = false;
   }
+}
+
 
   String _normalizePhoneNumber(String number) {
     String cleaned = number.replaceAll(RegExp(r'[^\d+]'), '');
