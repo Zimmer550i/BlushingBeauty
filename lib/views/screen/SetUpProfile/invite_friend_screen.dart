@@ -39,6 +39,17 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
     contactController.filterContacts(searchTextController.text);
   }
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "";
+    List<String> parts = name.trim().split(' ');
+    if (parts.length > 1 && parts.last.isNotEmpty) {
+      return (parts.first[0] + parts.last[0]).toUpperCase();
+    } else if (parts.isNotEmpty && parts.first.isNotEmpty) {
+      return parts.first[0].toUpperCase();
+    }
+    return "";
+  }
+
   Widget _buildContactTile(
     Map<String, dynamic> contact, {
     bool isMatched = true,
@@ -51,21 +62,25 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Profile Image
-          Container(
-            height: 48,
-            width: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image:
-                    (contact["image"] != null &&
-                        contact["image"].toString().isNotEmpty)
-                    ? NetworkImage(image.toString())
-                    : const AssetImage('assets/images/dummy.jpg')
-                          as ImageProvider,
-                fit: BoxFit.cover,
-              ),
-            ),
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: AppColors.primaryColor,
+            backgroundImage:
+                (contact["image"] != null &&
+                    contact["image"].toString().isNotEmpty)
+                ? NetworkImage(image.toString())
+                : null,
+            child:
+                (contact["image"] == null ||
+                    contact["image"].toString().isEmpty)
+                ? Text(
+                    _getInitials(contact["name"] ?? ""),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: 12),
 
@@ -246,7 +261,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                               ),
                             ),
                             TextSpan(
-                              text: " invite 5 friends who matter most",
+                              text: " invite 5 friends",
                               style: TextStyle(
                                 color: Color(0xFF676565),
                                 fontSize: 16,
@@ -325,7 +340,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                             text: "Next",
                             color: canProceed
                                 ? AppColors.primaryColor
-                                : AppColors.primaryColor.withValues(alpha: .4),
+                                : AppColors.greyColor,
                           ),
                         );
                       }),

@@ -127,7 +127,7 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
   
       debugPrint("🎬 Trimming from ${start.inSeconds}s → ${end.inSeconds}s");
       // saveTrimmedVideo returns void in newer video_trimmer versions; use a Completer to capture the path from the onSave callback.
-      final Completer<String?> _completer = Completer<String?>();
+      final Completer<String?> completer = Completer<String?>();
   
       _trimmer.saveTrimmedVideo(
         startValue: start.inMilliseconds / 1000,
@@ -135,14 +135,14 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
         videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
         onSave: (String? path) {
           debugPrint("🔔 onSave callback: $path");
-          if (!_completer.isCompleted) _completer.complete(path);
+          if (!completer.isCompleted) completer.complete(path);
         },
       );
   
       String? outputPath;
       try {
         // await the completer which will be completed by the onSave/onError callbacks
-        outputPath = await _completer.future.timeout(const Duration(seconds: 30));
+        outputPath = await completer.future.timeout(const Duration(seconds: 30));
       } catch (e) {
         debugPrint("❌ Trimming timed out or failed: $e");
         outputPath = null;
@@ -387,30 +387,6 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  /// 🔵 Circular handle builder (exactly like your screenshot)
-  Widget _buildCircularHandle() {
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: BoxDecoration(
-        color: Colors.blueAccent,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blueAccent.withValues(alpha: 0.4),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.drag_handle_rounded,
-        color: Colors.white,
-        size: 14,
-      ),
     );
   }
 

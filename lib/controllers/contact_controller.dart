@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
@@ -26,12 +25,12 @@ class ContactController extends GetxController {
 
       List<Map<String, dynamic>> contactList = [];
       int count = 0;
-      const int maxContacts = 50;
+      const int maxContacts = 20;
 
       for (var c in rawContacts) {
         if (c.phones.isNotEmpty) {
           for (var phone in c.phones) {
-            if (count >= maxContacts) break; // stop after 50
+            if (count >= maxContacts) break; // stop after 20
             final cleanedNumber = _normalizePhoneNumber(phone.number);
             contactList.add({
               "name": c.displayName,

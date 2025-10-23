@@ -90,6 +90,7 @@ class SendMessageController extends GetxController {
   required String filePath,
   required bool isVideo,
 }) async {
+  isLoading.value = true;
   if (selectedIds.isEmpty) {
     Get.snackbar("Error", "Please select at least one friend.");
     return;
@@ -110,13 +111,15 @@ class SendMessageController extends GetxController {
       contentType: isVideo ? 'video' : 'image',
     );
 
-    Get.snackbar(
-      "Success",
-      "Media sent to ${selectedIds.length} friend${selectedIds.length > 1 ? 's' : ''}!",
-    );
+    // Get.snackbar(
+    //   "Success",
+    //   "Media sent to ${selectedIds.length} friend${selectedIds.length > 1 ? 's' : ''}!",
+    // );
     Get.offAllNamed(AppRoutes.messageScreen);
   } catch (e) {
     Get.snackbar("Error", "Failed to send media: $e");
+  }finally{
+    isLoading.value = false;
   }
 }
 
@@ -158,6 +161,8 @@ Future<void> sendMediaToSingleChat({
       backgroundColor: Colors.red.shade600,
       colorText: Colors.white,
     );
+  }finally{
+    isLoading.value = false;
   }
 }
 

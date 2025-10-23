@@ -80,9 +80,23 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
     // Parse DOB string to DateTime
     final dobText = dobTextController.text.trim();
-    DateTime? dob;
-    if (dobText.isNotEmpty) {
-      dob = DateTime.tryParse(dobText);
+    final dob = DateTime.tryParse(dobText);
+
+    if (dob == null) {
+      showSnackBar("Invalid date format. Please use YYYY-MM-DD.", true);
+      return;
+    }
+
+    // Calculate age
+    final today = DateTime.now();
+    int age = today.year - dob.year;
+    if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
+      age--;
+    }
+
+    if (age < 13) {
+      showSnackBar("You must be at least 13 years old to use this app.", true);
+      return;
     }
 
     final result = await userController.updateInfo(

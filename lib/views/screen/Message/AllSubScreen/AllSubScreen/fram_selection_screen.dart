@@ -222,7 +222,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     _frontVideoController?.removeListener(_updatePlayState);
     _mainVideoController?.dispose();
     _frontVideoController?.dispose();
-    GlobalCameraManager.dispose();
+    // GlobalCameraManager.dispose();
     super.dispose();
   }
 

@@ -32,6 +32,17 @@ class _ContactScreenState extends State<ContactScreen> {
     contactController.fetchContacts();
   }
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "";
+    List<String> parts = name.trim().split(' ');
+    if (parts.length > 1 && parts.last.isNotEmpty) {
+      return (parts.first[0] + parts.last[0]).toUpperCase();
+    } else if (parts.isNotEmpty && parts.first.isNotEmpty) {
+      return parts.first[0].toUpperCase();
+    }
+    return "";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,7 +92,9 @@ class _ContactScreenState extends State<ContactScreen> {
   Widget _buildContactList() {
     return Obx(() {
       if (contactController.isLoading.value) {
-        return Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0));
+        return Center(
+          child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
+        );
       }
 
       final matched = contactController.filteredMatchedContacts;
@@ -125,9 +138,10 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   // ✅ Friend already on app
-  Widget _buildMatchedContactTile(Map<String, dynamic> c, List<dynamic> apiUsers) {
-    
-
+  Widget _buildMatchedContactTile(
+    Map<String, dynamic> c,
+    List<dynamic> apiUsers,
+  ) {
     final imageUrl = userController.addBaseUrl(c['image']);
     final name = c["name"] ?? "No Name";
     final phone = c["phone"] ?? "";
@@ -141,11 +155,8 @@ class _ContactScreenState extends State<ContactScreen> {
       title: Text(name),
       subtitle: Text(phone),
       trailing: InkWell(
-        onTap: () => chatController.createPrivateChat(
-          name,
-          c['image'],
-          c["_id"],
-        ),
+        onTap: () =>
+            chatController.createPrivateChat(name, c['image'], c["_id"]),
         child: SvgPicture.asset(
           "assets/icons/message.svg",
           color: AppColors.primaryColor,
@@ -161,22 +172,45 @@ class _ContactScreenState extends State<ContactScreen> {
     final phone = c["phone"] ?? "";
 
     return ListTile(
-      leading: const CircleAvatar(
-        backgroundImage: AssetImage("assets/images/dummy.jpg"),
+      leading: CircleAvatar(
+        radius: 24,
+        backgroundColor: AppColors.primaryColor,
+        child: Text(
+          _getInitials(c["name"] ?? ""),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
       ),
       title: Text(name),
       subtitle: Text(phone),
       trailing: InkWell(
         onTap: () => contactController.sendInviteSms(context, phone, name),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          height: 38,
+          width: 80,
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(6),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                offset: const Offset(0, 0),
+                blurRadius: 4,
+              ),
+            ],
+            border: Border.all(
+              color: Colors.grey.withValues(alpha: .5),
+              width: 1,
+            ),
           ),
-          child: const Text(
-            "Invite",
-            style: TextStyle(color: Colors.black87),
+          child: Center(
+            child: const Text(
+              "Invite",
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
           ),
         ),
       ),
@@ -189,7 +223,10 @@ class _ContactScreenState extends State<ContactScreen> {
       onTap: () {
         final matched = contactController.matchedContacts;
         if (matched.isEmpty) {
-          Get.snackbar("No Friends", "You don’t have any friends to create a groupChat with.");
+          Get.snackbar(
+            "No Friends",
+            "You don’t have any friends to create a groupChat with.",
+          );
           return;
         }
         Get.to(() => CreateGroupScreen(matchedContacts: matched));

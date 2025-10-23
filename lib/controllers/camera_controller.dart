@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path/path.dart' as p;
+import 'package:ree_social_media_app/helpers/route.dart';
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
 
@@ -57,10 +58,10 @@ class CreateStoryController extends GetxController {
 
       // 🟢 Step 3: Upload story to API
       await _uploadStoryMedia(mediaFile, mediaType);
-      isLoading.value = false;
+      
+      Get.offAndToNamed(AppRoutes.messageScreen);
 
     } catch (e) {
-      isLoading.value = false;
       debugPrint("❌ Error creating story: $e");
       Get.snackbar(
         "Error",
@@ -68,6 +69,8 @@ class CreateStoryController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent.withValues(alpha: .2),
       );
+    }finally{
+      isLoading.value = false;
     }
   }
 
@@ -138,11 +141,12 @@ class CreateStoryController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final resData = jsonDecode(response.body);
-        Get.snackbar(
-          "✅ Success",
-          resData['message'] ?? "Story uploaded successfully!",
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        // Get.snackbar(
+        //   "✅ Success",
+        //   resData['message'] ?? "Story uploaded successfully!",
+        //   snackPosition: SnackPosition.BOTTOM,
+        // );
+
       } else {
         // Handle backend validation error (Zod or server message)
         try {

@@ -73,13 +73,14 @@ class _SendMessageWithFriendScreenState
                     const SizedBox(height: 24),
                     _buildFriendList(controller, userController),
                     const SizedBox(height: 16),
-                    CustomButton(
+                    Obx(()=> CustomButton(
+                      loading: controller.isLoading.value,
                       text: "Send Now",
                       onTap: () => controller.sendMedia(
                         filePath: widget.filePath,
                         isVideo: widget.isVideo,
                       ),
-                    ),
+                    ),),
                   ],
                 ),
               ),

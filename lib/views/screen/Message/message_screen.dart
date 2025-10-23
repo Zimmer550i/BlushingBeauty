@@ -6,14 +6,16 @@ import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/controllers/notification_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
+import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/services/api_service.dart';
 import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/views/screen/Camera/camera_screen.dart';
+import 'package:ree_social_media_app/views/screen/Contact/contact_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../base/bottom_menu.dart';
 import '../Notification/notification_screen.dart';
-import 'AllSubScreen/AllSubScreen/add_friends.dart';
 import 'AllSubScreen/AllSubScreen/search_screen.dart';
 import 'AllSubScreen/AllSubScreen/video_preview_screen.dart';
 import 'AllSubScreen/chat_screen.dart';
@@ -80,13 +82,12 @@ class _MessageScreenState extends State<MessageScreen> {
     setState(() => _isFetchingMoreStories = false);
   }
 
-@override
-void dispose() {
-  GlobalCameraManager.dispose();
-  GlobalVideoPlayerManager.dispose();
-  super.dispose();
-}
-
+  @override
+  void dispose() {
+    // GlobalCameraManager.dispose();
+    GlobalVideoPlayerManager.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,9 +154,7 @@ void dispose() {
         const Spacer(),
         _iconButton(
           'assets/icons/add.svg',
-          onTap: () {
-            Get.to(() => AddFriendScreen());
-          },
+          onTap: () => Get.to(() => const ContactScreen()),
         ),
         const SizedBox(width: 12),
         _iconButton(
@@ -318,9 +317,7 @@ void dispose() {
     final image = userController.userInfo.value!.image;
     final userImage = userController.addBaseUrl(image.toString());
     return InkWell(
-      onTap: () {
-        controller.createStory();
-      },
+      onTap: () => Get.offAndToNamed(AppRoutes.cameraScreen),
       child: Container(
         margin: const EdgeInsets.only(left: 12, right: 8),
         width: 100,
@@ -406,7 +403,7 @@ void dispose() {
 
     return FutureBuilder<Widget>(
       future: isVideo
-          ? _buildVideoThumbnailWidget(mediaUrl, name, image,chatId)
+          ? _buildVideoThumbnailWidget(mediaUrl, name, image, chatId)
           : _buildImageStoryWidget(mediaUrl, name),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

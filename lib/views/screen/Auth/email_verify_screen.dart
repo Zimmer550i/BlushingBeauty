@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/auth_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/SetUpProfile/contact_access_screen.dart';
 
@@ -88,24 +89,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                height: 36,
-                width: 46,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Center(
-                  child: Text(
-                    "re:",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
+              ReeLogo(),
               const SizedBox(height: 110),
               const Text(
                 "Check Your \nInbox",
@@ -117,7 +101,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                "We've sent a 6-digit code ending in 56",
+                "We've sent a 6-digit code",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
                   fontSize: 16,
