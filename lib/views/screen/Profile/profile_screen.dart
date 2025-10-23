@@ -37,8 +37,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 final userName =
                     userController.userInfo.value?.name ?? "Loading...";
                 final userPhone = userController.userInfo.value?.phone ?? "N/A";
-                final userDob =
-                    userController.userInfo.value?.dob ?? DateTime.now();
                 return Container(
                   padding: const EdgeInsets.all(20),
                   width: double.infinity,

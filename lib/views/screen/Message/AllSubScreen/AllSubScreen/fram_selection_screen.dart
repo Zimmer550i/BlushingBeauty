@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
@@ -141,79 +142,84 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
   /// ✅ Updated: Properly uses `video_trimmer ^5.0.0` API
   Future<File?> _trimFrontVideo(File inputFile) async {
-  try {
-    debugPrint("🎞 Loading video for trimming...");
-    await _trimmer.loadVideo(videoFile: inputFile);
+    try {
+      debugPrint("🎞 Loading video for trimming...");
+      await _trimmer.loadVideo(videoFile: inputFile);
 
-    // 🔹 Wait for the internal duration to be available
-    final duration = _trimmer.videoPlayerController?.value.duration;
-    if (duration == null || duration.inMilliseconds == 0) {
-      debugPrint("❌ Video duration invalid or not ready — retrying...");
-      await Future.delayed(const Duration(milliseconds: 500));
-    }
+      // 🔹 Wait for the internal duration to be available
+      final duration = _trimmer.videoPlayerController?.value.duration;
+      if (duration == null || duration.inMilliseconds == 0) {
+        debugPrint("❌ Video duration invalid or not ready — retrying...");
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
 
-    final totalDuration = _trimmer.videoPlayerController?.value.duration;
-    if (totalDuration == null || totalDuration.inMilliseconds == 0) {
-      debugPrint("❌ Could not fetch video duration");
-      return null;
-    }
-
-    // 🔹 Convert your fractional _trimStart/_trimEnd (0.0–1.0) into actual seconds
-    final startSeconds =
-        (totalDuration.inMilliseconds * _trimStart) / 1000.0; // convert to sec
-    final endSeconds =
-        (totalDuration.inMilliseconds * _trimEnd) / 1000.0; // convert to sec
-
-    if (endSeconds <= startSeconds) {
-      debugPrint("⚠️ Invalid trim range, adjusting automatically");
-    }
-
-    final double safeStart = startSeconds.clamp(0.0, totalDuration.inSeconds.toDouble());
-    final double safeEnd = endSeconds > safeStart
-        ? endSeconds
-        : (safeStart + 1.0).clamp(0.0, totalDuration.inSeconds.toDouble());
-
-    debugPrint(
-      "🎬 Trimming from ${safeStart.toStringAsFixed(2)}s → ${safeEnd.toStringAsFixed(2)}s "
-      "(of total ${totalDuration.inSeconds}s)",
-    );
-
-    final Completer<String?> completer = Completer<String?>();
-
-    _trimmer.saveTrimmedVideo(
-      startValue: safeStart,
-      endValue: safeEnd,
-      videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
-      onSave: (String? outputPath) {
-        debugPrint("✅ onSave callback: $outputPath");
-        if (!completer.isCompleted) completer.complete(outputPath);
-      },
-    );
-
-    final outputPath = await completer.future.timeout(
-      const Duration(seconds: 60),
-      onTimeout: () {
-        debugPrint("⏰ Trimming timed out!");
+      final totalDuration = _trimmer.videoPlayerController?.value.duration;
+      if (totalDuration == null || totalDuration.inMilliseconds == 0) {
+        debugPrint("❌ Could not fetch video duration");
         return null;
-      },
-    );
+      }
 
-    if (outputPath == null || outputPath.isEmpty) {
-      debugPrint("❌ No output file returned");
+      // 🔹 Convert your fractional _trimStart/_trimEnd (0.0–1.0) into actual seconds
+      final startSeconds =
+          (totalDuration.inMilliseconds * _trimStart) /
+          1000.0; // convert to sec
+      final endSeconds =
+          (totalDuration.inMilliseconds * _trimEnd) / 1000.0; // convert to sec
+
+      if (endSeconds <= startSeconds) {
+        debugPrint("⚠️ Invalid trim range, adjusting automatically");
+      }
+
+      final double safeStart = startSeconds.clamp(
+        0.0,
+        totalDuration.inSeconds.toDouble(),
+      );
+      final double safeEnd = endSeconds > safeStart
+          ? endSeconds
+          : (safeStart + 1.0).clamp(0.0, totalDuration.inSeconds.toDouble());
+
+      debugPrint(
+        "🎬 Trimming from ${safeStart.toStringAsFixed(2)}s → ${safeEnd.toStringAsFixed(2)}s "
+        "(of total ${totalDuration.inSeconds}s)",
+      );
+
+      final Completer<String?> completer = Completer<String?>();
+
+      _trimmer.saveTrimmedVideo(
+        startValue: safeStart,
+        endValue: safeEnd,
+        videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
+        onSave: (String? outputPath) {
+          debugPrint("✅ onSave callback: $outputPath");
+          if (!completer.isCompleted) completer.complete(outputPath);
+        },
+      );
+
+      final outputPath = await completer.future.timeout(
+        const Duration(seconds: 60),
+        onTimeout: () {
+          debugPrint("⏰ Trimming timed out!");
+          return null;
+        },
+      );
+
+      if (outputPath == null || outputPath.isEmpty) {
+        debugPrint("❌ No output file returned");
+        return null;
+      }
+
+      final trimmedFile = File(outputPath);
+      final fileSize = await trimmedFile.length();
+      debugPrint(
+        "✅ Trim success: ${trimmedFile.path} (${fileSize ~/ 1024} KB)",
+      );
+
+      return trimmedFile;
+    } catch (e, st) {
+      debugPrint("❌ Trim error: $e\n$st");
       return null;
     }
-
-    final trimmedFile = File(outputPath);
-    final fileSize = await trimmedFile.length();
-    debugPrint("✅ Trim success: ${trimmedFile.path} (${fileSize ~/ 1024} KB)");
-
-    return trimmedFile;
-  } catch (e, st) {
-    debugPrint("❌ Trim error: $e\n$st");
-    return null;
   }
-}
-
 
   @override
   void dispose() {
@@ -229,7 +235,11 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(
+          child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
+        ),
+      );
     }
 
     return Scaffold(
@@ -701,4 +711,3 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     );
   }
 }
-

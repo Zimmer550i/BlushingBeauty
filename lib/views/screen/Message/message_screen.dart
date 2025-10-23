@@ -596,7 +596,7 @@ class _MessageScreenState extends State<MessageScreen> {
         barH,
       );
     } catch (e) {
-      print("⚠️ Thumbnail generation error: $e");
+      debugPrint("⚠️ Thumbnail generation error: $e");
       return Container(
         width: cardW,
         height: cardH,
