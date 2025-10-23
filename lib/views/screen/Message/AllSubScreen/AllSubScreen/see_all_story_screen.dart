@@ -3,7 +3,6 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'dart:io';
@@ -11,13 +10,14 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 class SeeAllStoryScreen extends StatelessWidget {
-  SeeAllStoryScreen({super.key});
+  final List<dynamic> stories;
+  final bool? isMe;
+  SeeAllStoryScreen({super.key, required this.stories, this.isMe = false});
+
   final UserController userController = Get.put(UserController());
 
   @override
   Widget build(BuildContext context) {
-    final MessageController homeController = Get.find<MessageController>();
-
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -46,56 +46,46 @@ class SeeAllStoryScreen extends StatelessWidget {
 
             /// ✅ Stories grid
             Expanded(
-              child: Obx(() {
-                if (homeController.isLoadingStories.value) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+              child: GridView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.9,
+                ),
+                padding: EdgeInsets.zero,
+                itemCount: stories.length,
+                itemBuilder: (context, index) {
+                  final story = stories[index];
+                  final type = story["contentType"];
+                  final name = story["author"]?["name"] ?? "Unknown";
+                  final userImage = userController.addBaseUrl(
+                    story["author"]["image"],
+                  );
 
-                if (homeController.stories.isEmpty) {
-                  return const Center(child: Text("No stories available"));
-                }
+                  // ✅ Determine media URL
+                  String? mediaUrl;
+                  if (type == "image" && (story["image"] ?? "").isNotEmpty) {
+                    mediaUrl = userController.addBaseUrl(story["image"]);
+                  } else if (type == "video" &&
+                      (story["video"] ?? "").isNotEmpty) {
+                    mediaUrl = userController.addBaseUrl(story["video"]);
+                  }
 
-                return GridView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                    childAspectRatio: 0.9,
-                  ),
-                  padding: EdgeInsets.zero,
-                  itemCount: homeController.stories.length,
-                  itemBuilder: (context, index) {
-                    final story = homeController.stories[index];
-                    final type = story["contentType"];
-                    final name = story["author"]?["name"] ?? "Unknown";
-                    final userImage = userController.addBaseUrl(
-                      story["author"]["image"],
-                    );
+                  if (mediaUrl == null || mediaUrl.isEmpty) {
+                    return const Center(child: Icon(Icons.error));
+                  }
 
-                    // ✅ Determine media URL
-                    String? mediaUrl;
-                    if (type == "image" && (story["image"] ?? "").isNotEmpty) {
-                      mediaUrl = userController.addBaseUrl(story["image"]);
-                    } else if (type == "video" &&
-                        (story["video"] ?? "").isNotEmpty) {
-                      mediaUrl = userController.addBaseUrl(story["video"]);
-                    }
-
-                    if (mediaUrl == null || mediaUrl.isEmpty) {
-                      return const Center(child: Icon(Icons.error));
-                    }
-
-                    return _buildStoryCard(
-                      context,
-                      mediaUrl,
-                      name,
-                      userImage.toString(),
-                      type == "video",
-                    );
-                  },
-                );
-              }),
+                  return _buildStoryCard(
+                    context,
+                    mediaUrl,
+                    name,
+                    userImage.toString(),
+                    type == "video",
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -153,10 +143,19 @@ class SeeAllStoryScreen extends StatelessWidget {
           Image.network(
             mediaUrl,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
+            errorBuilder: (_, _, _) =>
                 const Center(child: Icon(Icons.broken_image)),
           ),
           _buildBottomNameBar(name),
+          if (isMe == true)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(Icons.remove_circle, color: AppColors.primaryColor),
+              ),
+            ),
         ],
       ),
     );
@@ -218,6 +217,18 @@ class SeeAllStoryScreen extends StatelessWidget {
               ),
             ),
             _buildBottomNameBar(name),
+            if (isMe == true)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.remove_circle,
+                    color: AppColors.primaryColor,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

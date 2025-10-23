@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' show ImageFilter;
@@ -284,7 +286,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                       : Image.network(
                           widget.videoUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (_, _, _) =>
                               const Icon(Icons.broken_image),
                           loadingBuilder: (context, child, progress) {
                             if (progress == null) return child;
@@ -401,7 +403,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
               const SizedBox(width: 12),
               ValueListenableBuilder<bool>(
                 valueListenable: _isPlaying,
-                builder: (_, playing, __) => IconButton(
+                builder: (_, playing, _) => IconButton(
                   icon: Icon(
                     playing ? Icons.pause : Icons.play_arrow,
                     color: Colors.white,

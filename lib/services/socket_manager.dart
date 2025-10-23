@@ -1,3 +1,4 @@
+// ignore_for_file: library_prefixes
 import 'dart:developer';
 import 'package:ree_social_media_app/services/api_service.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;

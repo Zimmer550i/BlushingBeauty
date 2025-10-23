@@ -8,9 +8,7 @@ import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/services/api_service.dart';
-import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/views/screen/Camera/camera_screen.dart';
 import 'package:ree_social_media_app/views/screen/Contact/contact_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -102,6 +100,7 @@ class _MessageScreenState extends State<MessageScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: controller.refreshAll,
+        color: AppColors.primaryColor,
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -232,40 +231,51 @@ class _MessageScreenState extends State<MessageScreen> {
 
   /// Stories Section
   Widget _buildStoriesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () {
-            Get.to(() => SeeAllStoryScreen());
-          },
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              "See All",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
+    return Obx(() {
+      // ✅ Filter out stories from the logged-in user
+      final currentUserId = userController.userInfo.value!.id;
+      final filteredStories = controller.stories
+          .where(
+            (story) =>
+                story["author"] != null &&
+                (story["author"] is Map
+                    ? story["author"]["_id"] != currentUserId
+                    : true),
+          )
+          .toList();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () {
+              Get.to(() => SeeAllStoryScreen(stories: filteredStories));
+            },
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                "See All",
+                style: TextStyle(
+                  color: Color(0xFF413E3E),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 170, // taller cards
-          child: Obx(() {
-            return Skeletonizer(
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 170,
+            child: Skeletonizer(
               enabled: controller.isLoadingStories.value,
               enableSwitchAnimation: true,
               child: ListView.builder(
                 controller: _storyScrollController,
                 scrollDirection: Axis.horizontal,
-                itemCount: controller.stories.length + 1,
+                itemCount: filteredStories.length + 1, // +1 for "Add Story"
                 itemBuilder: (context, index) {
                   if (index == 0) return _buildAddStoryCard();
 
-                  if (index > controller.stories.length) {
+                  if (index > filteredStories.length) {
                     return _isFetchingMoreStories
                         ? const Center(
                             child: Padding(
@@ -276,7 +286,7 @@ class _MessageScreenState extends State<MessageScreen> {
                         : const SizedBox();
                   }
 
-                  var story = controller.stories[index - 1];
+                  var story = filteredStories[index - 1];
                   final isVideo = story["contentType"] == "video";
                   final mediaUrl = (story["image"] as String).isNotEmpty
                       ? "${ApiService().devUrl}${story["image"]}"
@@ -286,6 +296,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   String authorName = "User";
                   String? authorImage;
                   String? authorId;
+
                   if (story["author"] is Map) {
                     authorName = story["author"]["name"] ?? "User";
                     authorId = story["author"]["_id"] ?? "";
@@ -305,88 +316,123 @@ class _MessageScreenState extends State<MessageScreen> {
                   );
                 },
               ),
-            );
-          }),
-        ),
-      ],
-    );
+            ),
+          ),
+        ],
+      );
+    });
   }
 
   /// ✅ Add Story Card
   Widget _buildAddStoryCard() {
     final image = userController.userInfo.value!.image;
     final userImage = userController.addBaseUrl(image.toString());
-    return InkWell(
-      onTap: () => Get.offAndToNamed(AppRoutes.cameraScreen),
-      child: Container(
-        margin: const EdgeInsets.only(left: 12, right: 8),
-        width: 100,
-        height: 132,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topRight: Radius.circular(8),
-            topLeft: Radius.circular(8),
-          ),
-          image: DecorationImage(
-            image: NetworkImage(userImage.toString()),
-            fit: BoxFit.cover,
-          ),
+    final currentUserId = userController.userInfo.value!.id;
+
+    return Container(
+      margin: const EdgeInsets.only(left: 12, right: 8),
+      width: 100,
+      height: 132,
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(8),
+          topLeft: Radius.circular(8),
         ),
-        child: Stack(
-          children: [
-            // Left overlay
-            Align(
-              alignment: Alignment.centerLeft,
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  topLeft: Radius.circular(8),
-                ),
-                child: Container(
-                  width: 56, // ~half width overlay
-                  color: AppColors.primaryColor.withValues(alpha: 0.56),
-                ),
+        image: DecorationImage(
+          image: NetworkImage(userImage.toString()),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Left overlay with "Add Story" and camera button
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(8),
+                topLeft: Radius.circular(8),
               ),
-            ),
-
-            // Text
-            const Positioned(
-              left: 10,
-              top: 50,
-              bottom: 0,
-              child: Text(
-                "Add\nStory",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  height: 1.2,
-                ),
-              ),
-            ),
-
-            // Camera button
-            Positioned(
-              left: 15,
-              bottom: 50,
               child: Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: SvgPicture.asset(
-                    'assets/icons/camera.svg',
-                    color: AppColors.primaryColor,
-                  ),
+                width: 56, // left overlay
+                color: AppColors.primaryColor.withValues(alpha: 0.56),
+                child: Stack(
+                  children: [
+                    const Positioned(
+                      left: 10,
+                      top: 40,
+                      child: Text(
+                        "Add\nStory",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          height: 1.2,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 10,
+                      bottom: 60,
+                      child: InkWell(
+                        onTap: () => Get.offAndToNamed(AppRoutes.cameraScreen),
+                        child: Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: SvgPicture.asset(
+                              'assets/icons/camera.svg',
+                              // ignore: deprecated_member_use
+                              color: AppColors.primaryColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+
+          // ✅ Right side (background image) tap to open user's own stories
+          Positioned.fill(
+            left: 56, // only make the RIGHT side tappable
+            child: InkWell(
+              onTap: () {
+                // get only logged-in user's stories
+                final myStories = controller.stories
+                    .where(
+                      (story) =>
+                          story["author"] != null &&
+                          (story["author"] is Map
+                              ? story["author"]["_id"] == currentUserId
+                              : false),
+                    )
+                    .toList();
+
+                if (myStories.isEmpty) {
+                  Get.snackbar(
+                    "No Stories",
+                    "You haven't added any stories yet.",
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                  return;
+                }
+
+                Get.to(() => SeeAllStoryScreen(stories: myStories, isMe: true));
+              },
+              child: Container(
+                color: Colors.transparent, // needed for tap detection
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -458,7 +504,7 @@ class _MessageScreenState extends State<MessageScreen> {
             Image.network(
               mediaUrl,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Center(
+              errorBuilder: (_, _, _) => const Center(
                 child: Icon(Icons.broken_image, color: Colors.grey),
               ),
             ),
@@ -489,6 +535,9 @@ class _MessageScreenState extends State<MessageScreen> {
     );
   }
 
+  /// Cache for thumbnails to avoid regenerating repeatedly
+  final Map<String, String?> _thumbCache = {};
+
   /// Handles video story preview with thumbnail + play icon + navigation
   Future<Widget> _buildVideoThumbnailWidget(
     String videoUrl,
@@ -500,22 +549,83 @@ class _MessageScreenState extends State<MessageScreen> {
     const double cardH = 132;
     const double barH = 32;
 
-    // ✅ Download video to local (same logic as _downloadVideoToLocal)
-    final localVideo = await _downloadVideoToLocal(videoUrl);
+    try {
+      // ✅ 1. Use cached thumbnail if available
+      if (_thumbCache.containsKey(videoUrl)) {
+        final cachedThumb = _thumbCache[videoUrl];
+        return _buildVideoCardWidget(
+          cachedThumb,
+          name,
+          image,
+          chatId,
+          videoUrl,
+          cardW,
+          cardH,
+          barH,
+        );
+      }
 
-    // ✅ Generate thumbnail
-    final thumbPath = await VideoThumbnail.thumbnailFile(
-      video: localVideo.path,
-      imageFormat: ImageFormat.JPEG,
-      maxHeight: 200,
-      quality: 75,
-    );
+      // ✅ 2. Download video locally
+      final localVideo = await _downloadVideoToLocal(videoUrl);
 
+      // ✅ 3. Generate thumbnail safely
+      final thumbPath = await VideoThumbnail.thumbnailFile(
+        video: localVideo.path,
+        imageFormat: ImageFormat.JPEG,
+        maxHeight: 200,
+        quality: 75,
+      );
+
+      // ✅ 4. Cache result for reuse
+      _thumbCache[videoUrl] = thumbPath;
+
+      // ✅ 5. Clean up temp video to free memory
+      if (await localVideo.exists()) {
+        await localVideo.delete();
+      }
+
+      // ✅ 6. Build widget
+      return _buildVideoCardWidget(
+        thumbPath,
+        name,
+        image,
+        chatId,
+        videoUrl,
+        cardW,
+        cardH,
+        barH,
+      );
+    } catch (e) {
+      print("⚠️ Thumbnail generation error: $e");
+      return Container(
+        width: cardW,
+        height: cardH,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.black26,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(Icons.error, color: Colors.red),
+      );
+    }
+  }
+
+  /// Extracted reusable card builder (cleaner)
+  Widget _buildVideoCardWidget(
+    String? thumbPath,
+    String name,
+    String image,
+    String chatId,
+    String videoUrl,
+    double cardW,
+    double cardH,
+    double barH,
+  ) {
     return InkWell(
       onTap: () {
         Get.to(
           () => VideoPreviewScreen(
-            videoUrl: localVideo.path,
+            videoUrl: videoUrl,
             countdownSeconds: 3,
             userProfile: image,
             userName: name,
@@ -528,7 +638,7 @@ class _MessageScreenState extends State<MessageScreen> {
         width: cardW,
         height: cardH,
         child: ClipRRect(
-          borderRadius: BorderRadius.only(
+          borderRadius: const BorderRadius.only(
             topRight: Radius.circular(8),
             topLeft: Radius.circular(8),
           ),
@@ -590,7 +700,7 @@ class _MessageScreenState extends State<MessageScreen> {
     );
   }
 
-  /// Download video file locally (same helper you already use)
+  /// 🧩 Safe temp video downloader
   Future<File> _downloadVideoToLocal(String url) async {
     final response = await http.get(Uri.parse(url));
     final dir = await getTemporaryDirectory();
@@ -665,7 +775,7 @@ class _MessageScreenState extends State<MessageScreen> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: allChats.length,
         padding: EdgeInsets.zero,
-        separatorBuilder: (_, __) => const SizedBox(height: 1),
+        separatorBuilder: (_, _) => const SizedBox(height: 1),
         itemBuilder: (context, index) {
           var chat = allChats[index];
           String name = chat["name"] ?? "Unknown";

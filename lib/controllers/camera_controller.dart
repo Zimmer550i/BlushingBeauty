@@ -140,7 +140,7 @@ class CreateStoryController extends GetxController {
       debugPrint("📦 Body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final resData = jsonDecode(response.body);
+        // final resData = jsonDecode(response.body);
         // Get.snackbar(
         //   "✅ Success",
         //   resData['message'] ?? "Story uploaded successfully!",

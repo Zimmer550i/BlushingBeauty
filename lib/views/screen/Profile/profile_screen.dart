@@ -102,15 +102,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "${userDob.day}/${userDob.month}/${userDob.year}",
-                        style: const TextStyle(
-                          color: Color(0xFF0957AA),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
                     ],
                   ),
                 );

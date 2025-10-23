@@ -207,7 +207,7 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
           const SizedBox(width: 10),
           ValueListenableBuilder<bool>(
             valueListenable: _isPlaying,
-            builder: (_, playing, __) => InkWell(
+            builder: (_, playing, _) => InkWell(
               onTap: () async {
                 if (playing) {
                   await _videoController.pause();

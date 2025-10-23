@@ -326,7 +326,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
               const SizedBox(width: 12),
               ValueListenableBuilder<bool>(
                 valueListenable: _isPlaying,
-                builder: (_, playing, __) {
+                builder: (_, playing, _) {
                   return CircleAvatar(
                     backgroundColor: Colors.white,
                     child: IconButton(

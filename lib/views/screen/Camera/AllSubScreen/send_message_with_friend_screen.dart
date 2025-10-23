@@ -153,7 +153,7 @@ class _SendMessageWithFriendScreenState
         return ListView.separated(
           padding: EdgeInsets.zero,
           itemCount: filtered.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          separatorBuilder: (_, _) => const SizedBox(height: 16),
           itemBuilder: (_, index) {
             final friend = filtered[index];
             final imageUrl = userController.addBaseUrl(friend['image']);

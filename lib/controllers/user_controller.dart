@@ -136,5 +136,22 @@ class UserController extends GetxController {
     }
   }
 
+// Future<http.Response> deleteStory(String storyId) async {
+//   try {
+//     final response = await api.delete('/story/delete/$storyId', authReq: true);
+
+//     if (response.statusCode == 200) {
+//       debugPrint('🗑️ Story deleted successfully');
+//     } else {
+//       debugPrint('⚠️ Failed to delete story: ${response.body}');
+//     }
+
+//     return response;
+//   } catch (e) {
+//     debugPrint('❗ deleteStory Error: $e');
+//     throw Exception('Failed to delete the story. Please try again.');
+//   }
+// }
+
 
 }

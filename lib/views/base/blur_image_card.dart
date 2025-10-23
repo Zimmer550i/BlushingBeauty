@@ -90,7 +90,7 @@ class _BlurImageCardState extends State<BlurImageCard> {
                     );
                   }
                 },
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (_, _, _) => Container(
                   height: 180,
                   width: 240,
                   color: Colors.grey.shade200,

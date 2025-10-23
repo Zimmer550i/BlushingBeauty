@@ -13,7 +13,6 @@ import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/controllers/camera_controller.dart';
 import 'package:video_trimmer/video_trimmer.dart';
-import '../../../../../services/camera_manager.dart';
 import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 
 class FrameSelectionScreen extends StatefulWidget {
@@ -392,7 +391,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
               const SizedBox(width: 8),
               ValueListenableBuilder<bool>(
                 valueListenable: _isPlaying,
-                builder: (_, playing, __) => InkWell(
+                builder: (_, playing, _) => InkWell(
                   onTap: _togglePlayPause,
                   child: CircleAvatar(
                     radius: 12,
@@ -549,6 +548,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     final trimmed = await _trimFrontVideo(original);
     if (trimmed == null) {
       ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(const SnackBar(content: Text('Trim failed')));
       return;

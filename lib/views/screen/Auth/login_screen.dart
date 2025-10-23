@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ReeLogo(),
               SizedBox(height: 110),
               Text(
-                "Glad to See You \nAgain!",
+                "Welcome!",
                 style: TextStyle(
                   color: AppColors.textColor,
                   fontSize: 28,

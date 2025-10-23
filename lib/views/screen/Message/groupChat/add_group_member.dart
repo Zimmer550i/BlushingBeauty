@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -193,7 +195,7 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
       child: ListView.separated(
         padding: EdgeInsets.zero,
         itemCount: _filteredFriends.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
+        separatorBuilder: (_, _) => const SizedBox(height: 16),
         itemBuilder: (_, index) {
           final friend = _filteredFriends[index];
           final imageUrl = _userController.addBaseUrl(friend['image']);

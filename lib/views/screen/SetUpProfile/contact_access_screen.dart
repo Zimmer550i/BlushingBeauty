@@ -39,7 +39,7 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("saved_contacts", jsonEncode(contactList));
 
-    print("✅ Contacts saved locally: ${contactList.length}");
+    debugPrint("✅ Contacts saved locally: ${contactList.length}");
   }
 
   /// Normalize phone numbers to always include country code

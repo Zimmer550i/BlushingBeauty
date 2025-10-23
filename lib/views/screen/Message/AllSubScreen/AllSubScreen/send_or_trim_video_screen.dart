@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures
+
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -236,7 +238,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     );
     return ValueListenableBuilder<bool>(
       valueListenable: _isPlaying,
-      builder: (_, playing, __) {
+      builder: (_, playing, _) {
         return Container(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
           decoration: BoxDecoration(color: Colors.white.withOpacity(0.24)),

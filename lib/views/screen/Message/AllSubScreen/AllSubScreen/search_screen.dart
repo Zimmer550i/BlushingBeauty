@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -128,7 +130,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 return ListView.separated(
                   itemCount: filteredContacts.length,
                   padding: EdgeInsets.zero,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  separatorBuilder: (_, _) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final c = filteredContacts[index];
                     final imageUrl = userController.addBaseUrl(c['image']);
