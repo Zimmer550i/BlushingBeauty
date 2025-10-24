@@ -174,28 +174,30 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     }
 
     if (!mounted) return;
-    isVideo ? Get.to(
-      () => SendOrTrimVideoScreen(
-        mainVideo: widget.videoUrl,
-        reactionVideo: recordedFile!.path,
-        userProfile: widget.userProfile,
-        userName: widget.userName,
-        chatId: widget.chatId.toString(),
-        isInbox: widget.isInbox ?? false,
-        isVideo: true,
-        videoFile: recordedFile,
-      ),
-    ) : Get.to(
-      () => SendOrTrimVideoScreen(
-        mainVideo: recordedFile!.path,
-        reactionVideo: recordedFile!.path,
-        userProfile: widget.userProfile,
-        userName: widget.userName,
-        chatId: widget.chatId.toString(),
-        isInbox: widget.isInbox ?? false,
-        isVideo: false,
-      ),
-    );
+    isVideo
+        ? Get.to(
+            () => SendOrTrimVideoScreen(
+              mainVideo: widget.videoUrl,
+              reactionVideo: recordedFile!.path,
+              userProfile: widget.userProfile,
+              userName: widget.userName,
+              chatId: widget.chatId.toString(),
+              isInbox: widget.isInbox ?? false,
+              isVideo: true,
+              videoFile: recordedFile,
+            ),
+          )
+        : Get.to(
+            () => SendOrTrimVideoScreen(
+              mainVideo: recordedFile!.path,
+              reactionVideo: recordedFile!.path,
+              userProfile: widget.userProfile,
+              userName: widget.userName,
+              chatId: widget.chatId.toString(),
+              isInbox: widget.isInbox ?? false,
+              isVideo: false,
+            ),
+          );
   }
 
   Future<void> _startFrontRecording() async {
@@ -258,6 +260,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             const SizedBox(width: 12),
             CircleAvatar(
               radius: 22,
+              backgroundColor: AppColors.primaryColor,
               backgroundImage: NetworkImage(widget.userProfile),
             ),
             const SizedBox(width: 12),
@@ -302,15 +305,18 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 // 📸 Front camera PiP
                 if (_frontCam?.value.isInitialized == true)
                   Positioned(
-                    top: 10,
-                    right: 10,
+                    top: 0,
+                    right: 0,
                     child: Container(
                       width: 130,
                       height: 160,
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.25),
-                        border: Border.all(color: Colors.white, width: 2),
-                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.frameColors,
+                          width: 2,
+                        ),
+                        // borderRadius: BorderRadius.circular(12),
                       ),
                       clipBehavior: Clip.antiAliasWithSaveLayer,
                       child: CameraPreview(_frontCam!),

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
-
 import '../../utils/app_colors.dart';
 import '../../utils/style.dart';
 
@@ -14,8 +12,8 @@ class CustomButton extends StatelessWidget {
     required this.onTap,
     required this.text,
     this.loading = false,
-    this.width,
-    this.height,
+    this.width = double.infinity,
+    this.height = 52,
   });
 
   final Function() onTap;
@@ -31,30 +29,33 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: padding,
-      child: ElevatedButton(
-        onPressed: loading ? () {} : onTap,
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.r),
+      child: InkWell(
+        onTap: loading ? null : onTap,
+        child: Container(
+          height: height,
+          width: width,
+          decoration: BoxDecoration(
+            color: color ?? AppColors.primaryColor,
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          backgroundColor: color ?? AppColors.primaryColor,
-          minimumSize: Size(width ?? Get.width, height ?? 52.h),
+          child: Center(
+            child: loading
+                ? SizedBox(
+                    height: 20.h,
+                    width: 20.h,
+                    child: const CircularProgressIndicator(color: Colors.white),
+                  )
+                : Text(
+                    text,
+                    style:
+                        textStyle ??
+                        AppStyles.h3(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                  ),
+          ),
         ),
-        child: loading
-            ? SizedBox(
-                height: 20.h,
-                width: 20.h,
-                child: const CircularProgressIndicator(color: Colors.white),
-              )
-            : Text(
-                text,
-                style:
-                    textStyle ??
-                    AppStyles.h3(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-              ),
       ),
     );
   }

@@ -450,7 +450,7 @@ class _MessageScreenState extends State<MessageScreen> {
     return FutureBuilder<Widget>(
       future: isVideo
           ? _buildVideoThumbnailWidget(mediaUrl, name, image, chatId)
-          : _buildImageStoryWidget(mediaUrl, name),
+          : _buildImageStoryWidget(mediaUrl, name, image, chatId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -484,52 +484,70 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   /// Handles image story preview
-  Future<Widget> _buildImageStoryWidget(String mediaUrl, String name) async {
+  Future<Widget> _buildImageStoryWidget(
+    String mediaUrl,
+    String name,
+    String image,
+    String chatId,
+  ) async {
     const double cardW = 100;
     const double cardH = 132;
     const double barH = 32;
 
-    return Container(
-      margin: const EdgeInsets.only(right: 12),
-      width: cardW,
-      height: cardH,
-      child: ClipRRect(
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(8),
-          topLeft: Radius.circular(8),
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.network(
-              mediaUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const Center(
-                child: Icon(Icons.broken_image, color: Colors.grey),
+    return InkWell(
+      onTap: () {
+        Get.to(
+          () => VideoPreviewScreen(
+            videoUrl: mediaUrl,
+            countdownSeconds: 3,
+            userProfile: image,
+            userName: name,
+            chatId: chatId,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
+        width: cardW,
+        height: cardH,
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(8),
+            topLeft: Radius.circular(8),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(
+                mediaUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const Center(
+                  child: Icon(Icons.broken_image, color: Colors.grey),
+                ),
               ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                height: barH,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                alignment: Alignment.centerLeft,
-                color: Colors.black.withValues(alpha: 0.42),
-                child: Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  height: barH,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  alignment: Alignment.centerLeft,
+                  color: Colors.black.withValues(alpha: 0.42),
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

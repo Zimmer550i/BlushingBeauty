@@ -7,7 +7,7 @@ class BlurImageCard extends StatefulWidget {
   final String receiverName;
   final String? receiverImage;
   final String chatId;
-  final bool isMe; // 👈 new flag to control blur
+  final bool isMe;
 
   const BlurImageCard({
     super.key,
@@ -36,7 +36,7 @@ class _BlurImageCardState extends State<BlurImageCard> {
         context,
         MaterialPageRoute(
           builder: (_) => VideoPreviewScreen(
-            videoUrl: widget.imageUrl, // 👈 using same preview screen
+            videoUrl: widget.imageUrl,
             countdownSeconds: 3,
             userProfile: widget.receiverImage ?? "",
             userName: widget.receiverName,

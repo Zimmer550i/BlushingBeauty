@@ -28,7 +28,8 @@ class SendOrTrimVideoScreen extends StatefulWidget {
     required this.chatId,
     required this.reactionVideo,
     this.isInbox,
-    this.isVideo, this.videoFile,
+    this.isVideo,
+    this.videoFile,
   });
 
   @override
@@ -185,35 +186,35 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                         ),
 
                       // Main video mini preview
-                      if (_mainVideoController!.value.isInitialized &&
-                          widget.isVideo == true)
-                        Positioned(
-                          top: 20,
-                          right: 20,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: 130,
-                              height: 160,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.black,
-                                  width: 2,
-                                ),
-                              ),
-                              clipBehavior: Clip.antiAliasWithSaveLayer,
-                              child: FittedBox(
-                                fit: BoxFit.cover,
-                                child: SizedBox(
-                                  width: _mainVideoController!.value.size.width,
-                                  height:
-                                      _mainVideoController!.value.size.height,
-                                  child: VideoPlayer(_mainVideoController!),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      // if (_mainVideoController!.value.isInitialized &&
+                      //     widget.isVideo == true)
+                      //   Positioned(
+                      //     top: 20,
+                      //     right: 20,
+                      //     child: ClipRRect(
+                      //       borderRadius: BorderRadius.circular(12),
+                      //       child: Container(
+                      //         width: 130,
+                      //         height: 160,
+                      //         decoration: BoxDecoration(
+                      //           border: Border.all(
+                      //             color: Colors.black,
+                      //             width: 2,
+                      //           ),
+                      //         ),
+                      //         clipBehavior: Clip.antiAliasWithSaveLayer,
+                      //         child: FittedBox(
+                      //           fit: BoxFit.cover,
+                      //           child: SizedBox(
+                      //             width: _mainVideoController!.value.size.width,
+                      //             height:
+                      //                 _mainVideoController!.value.size.height,
+                      //             child: VideoPlayer(_mainVideoController!),
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
 
                       // Playback controls
                       Positioned(
@@ -288,41 +289,43 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     );
   }
 
-  Widget _buildBottomActions() => Container(
-    width: double.infinity,
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 56),
-    child: Column(
-      children: [
-        InkWell(
-          onTap: () => Get.to(
-            () => FrameSelectionScreen(
-              videoUrl: widget.mainVideo,
-              frontVideoUrl: widget.reactionVideo,
-              userProfile: widget.userProfile,
-              userName: widget.userName,
-              chatId: widget.chatId,
-              isInbox: widget.isInbox,
-              videoFile: widget.videoFile,
+  Widget _buildBottomActions() => SafeArea(
+    child: Container(
+      width: double.infinity,
+      color: Colors.transparent,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => Get.to(
+              () => FrameSelectionScreen(
+                videoUrl: widget.mainVideo,
+                frontVideoUrl: widget.reactionVideo,
+                userProfile: widget.userProfile,
+                userName: widget.userName,
+                chatId: widget.chatId,
+                isInbox: widget.isInbox,
+                videoFile: widget.videoFile,
+              ),
+            ),
+            child: _buildTrimButton(),
+          ),
+          const SizedBox(height: 20),
+          Obx(
+            () => CustomButton(
+              loading: sendMessageController.isLoading.value,
+              onTap: () async {
+                await sendMessageController.sendMediaToSingleChat(
+                  chatId: widget.chatId,
+                  filePath: widget.reactionVideo,
+                  isVideo: true,
+                );
+              },
+              text: "Send Now",
             ),
           ),
-          child: _buildTrimButton(),
-        ),
-        const SizedBox(height: 20),
-        Obx(
-          () => CustomButton(
-            loading: sendMessageController.isLoading.value,
-            onTap: () async {
-              await sendMessageController.sendMediaToSingleChat(
-                chatId: widget.chatId,
-                filePath: widget.reactionVideo,
-                isVideo: true,
-              );
-            },
-            text: "Send Now",
-          ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 
@@ -343,7 +346,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     ),
     child: const Center(
       child: Text(
-        "Trim or Select Frame",
+        "Edit Reaction",
         style: TextStyle(
           color: Color(0xFF413E3E),
           fontSize: 16,

@@ -15,6 +15,7 @@ class AppColors {
   static Color shadowColor = const Color(0xFF2B2A2A);
   static Color bottomBarColor = const Color(0xFF343434);
   static Color black100 = const Color(0xFFC4C3C3);
+  static Color frameColors = const Color(0xFF383838);
 
   static BoxShadow shadow = BoxShadow(
     blurRadius: 4,
