@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:ui';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -58,6 +59,9 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   double _leftHandle = 0.0;
   double _rightHandle = 80.0;
   int _selectedTab = 0;
+  double _frameHandle = 40; // initial position of selector
+  final double _selectorWidth = 60; // width of selection window
+  int _selectedFrameIndex = 0;
 
   final double _thumbnailWidth = 60.0;
   final double thumbnailHeight = 80.0;
@@ -472,20 +476,34 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   }
 
   Widget _buildBottomControls() => Container(
-    color: Colors.white,
+    color: Colors.white.withValues(alpha: 0.4),
     padding: const EdgeInsets.all(20),
     child: Column(
       children: [
         _buildTabs(),
         const SizedBox(height: 6),
-        _buildTrimSlider(),
-        const SizedBox(height: 20),
-        InkWell(
-          onTap: () => Get.offAllNamed(AppRoutes.messageScreen),
-          child: _buildDiscardButton(),
+
+        // 🔹 Show different content based on selected tab
+        if (_selectedTab == 0) _buildTrimSlider() else _buildFrameSelector(),
+
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            InkWell(
+              onTap: () => Get.offAllNamed(AppRoutes.messageScreen),
+              child: _buildDiscardButton(),
+            ),
+            const SizedBox(width: 10),
+            CustomButton(
+              width: MediaQuery.of(context).size.width / 2.5,
+              onTap: _selectedTab == 0
+                  ? _handleTrimAndSend
+                  : _handleFrameAndSend,
+              text: "Send now",
+            ),
+          ],
         ),
-        const SizedBox(height: 10),
-        CustomButton(onTap: _handleTrimAndSend, text: "Trim & Send"),
       ],
     ),
   );
@@ -494,9 +512,9 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   Widget _buildTabs() {
     return Row(
       children: [
-        _buildTabButton("Use trim", 0),
+        _buildTabButton("Trim video", 0),
         const SizedBox(width: 18),
-        _buildTabButton("Use frame", 1),
+        _buildTabButton("Select image", 1),
       ],
     );
   }
@@ -527,8 +545,128 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     );
   }
 
+  Widget _buildFrameSelector() {
+    return SizedBox(
+      height: 120,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 🟦 Outer rail background
+          Container(
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.primaryColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.primaryColor, width: 2),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _thumbnailPaths.length,
+                  itemBuilder: (_, i) {
+                    final isSelected = i == _selectedFrameIndex;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedFrameIndex = i;
+                          _frameHandle = i * (_thumbnailWidth + 2);
+                        });
+                      },
+                      child: Stack(
+                        children: [
+                          // 🖼 Thumbnail image
+                          Container(
+                            width: _thumbnailWidth,
+                            margin: const EdgeInsets.symmetric(horizontal: 1),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: Image.file(
+                                File(_thumbnailPaths[i]),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+
+                          // 💠 Blur overlay when selected
+                          if (isSelected)
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 4,
+                                    sigmaY: 4,
+                                  ),
+                                  child: Container(
+                                    color: Colors.black.withOpacity(0.015),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.circle,
+                                        color: AppColors.primaryColor,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+
+          // ◀ Left scroll arrow
+          Positioned(
+            left: -5,
+            child: GestureDetector(
+              onTap: () {
+                _scrollController.animateTo(
+                  (_scrollController.offset - 100).clamp(0, double.infinity),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              },
+              child: const Icon(
+                Icons.chevron_left,
+                color: Colors.white,
+                size: 32,
+              ),
+            ),
+          ),
+
+          // ▶ Right scroll arrow
+          Positioned(
+            right: -5,
+            child: GestureDetector(
+              onTap: () {
+                _scrollController.animateTo(
+                  (_scrollController.offset + 100).clamp(0, double.infinity),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              },
+              child: const Icon(
+                Icons.chevron_right,
+                color: Colors.white,
+                size: 32,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDiscardButton() => Container(
-    width: double.infinity,
+    width: MediaQuery.of(context).size.width / 2.5,
     height: 52,
     decoration: BoxDecoration(
       color: Colors.white,
@@ -580,6 +718,27 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     }
   }
 
+  void _handleFrameAndSend() async {
+    final selectedFrame = _thumbnailPaths[_selectedFrameIndex];
+    if (widget.isInbox == true) {
+      await sendMessageController.sendMediaToSingleChat(
+        chatId: widget.chatId.toString(),
+        filePath: selectedFrame,
+        isVideo: false,
+      );
+    } else {
+      await Get.to(
+        () => SendMessageWithFriendScreen(
+          filePath: selectedFrame,
+          isVideo: false,
+        ),
+        transition: Transition.rightToLeft,
+        duration: const Duration(milliseconds: 300),
+      );
+      return;
+    }
+  }
+
   // 🎞 Main Trim Slider
   Widget _buildTrimSlider() {
     final total = _thumbnailPaths.length * (_thumbnailWidth + 2);
@@ -598,15 +757,15 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
               border: Border.all(color: AppColors.primaryColor, width: 2),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
                 margin: const EdgeInsets.symmetric(vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(4),
                   child: ListView.builder(
                     controller: _scrollController,
                     scrollDirection: Axis.horizontal,
@@ -629,19 +788,19 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
           Positioned(
             left: _leftHandle,
             width: _rightHandle - _leftHandle,
-            top: 25,
-            bottom: 25,
+            top: 30,
+            bottom: 30,
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.primaryColor,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
           ),
 
           // ◀ Left arrow
           Positioned(
-            left: 0,
+            left: -5,
             child: GestureDetector(
               onTap: () {
                 _scrollController.animateTo(
@@ -656,7 +815,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
           // ▶ Right arrow
           Positioned(
-            right: 0,
+            right: -5,
             child: GestureDetector(
               onTap: () {
                 _scrollController.animateTo(

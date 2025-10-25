@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/utils/style.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:video_player/video_player.dart';
 import 'fram_selection_screen.dart';
@@ -218,15 +219,20 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
 
                       // Playback controls
                       Positioned(
-                        bottom: 0,
+                        bottom: 100,
                         left: 0,
                         right: 0,
                         child: _buildPlaybackControls(),
                       ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 10,
+                        child: _buildBottomActions(),
+                      ),
                     ],
                   ),
                 ),
-                _buildBottomActions(),
               ],
             ),
     );
@@ -290,47 +296,43 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
   }
 
   Widget _buildBottomActions() => SafeArea(
-    child: Container(
-      width: double.infinity,
-      color: Colors.transparent,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () => Get.to(
-              () => FrameSelectionScreen(
-                videoUrl: widget.mainVideo,
-                frontVideoUrl: widget.reactionVideo,
-                userProfile: widget.userProfile,
-                userName: widget.userName,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        InkWell(
+          onTap: () => Get.to(
+            () => FrameSelectionScreen(
+              videoUrl: widget.mainVideo,
+              frontVideoUrl: widget.reactionVideo,
+              userProfile: widget.userProfile,
+              userName: widget.userName,
+              chatId: widget.chatId,
+              isInbox: widget.isInbox,
+              videoFile: widget.videoFile,
+            ),
+          ),
+          child: _buildTrimButton(),
+        ),
+        Obx(
+          () => CustomButton(
+            width: MediaQuery.of(context).size.width / 2.5,
+            loading: sendMessageController.isLoading.value,
+            onTap: () async {
+              await sendMessageController.sendMediaToSingleChat(
                 chatId: widget.chatId,
-                isInbox: widget.isInbox,
-                videoFile: widget.videoFile,
-              ),
-            ),
-            child: _buildTrimButton(),
+                filePath: widget.reactionVideo,
+                isVideo: true,
+              );
+            },
+            text: "Send Now",
           ),
-          const SizedBox(height: 20),
-          Obx(
-            () => CustomButton(
-              loading: sendMessageController.isLoading.value,
-              onTap: () async {
-                await sendMessageController.sendMediaToSingleChat(
-                  chatId: widget.chatId,
-                  filePath: widget.reactionVideo,
-                  isVideo: true,
-                );
-              },
-              text: "Send Now",
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     ),
   );
 
   Widget _buildTrimButton() => Container(
-    width: double.infinity,
+    width: MediaQuery.of(context).size.width / 2.5,
     height: 52,
     decoration: BoxDecoration(
       color: Colors.white,
@@ -344,14 +346,10 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
         ),
       ],
     ),
-    child: const Center(
+    child: Center(
       child: Text(
         "Edit Reaction",
-        style: TextStyle(
-          color: Color(0xFF413E3E),
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        style: AppStyles.h3(fontWeight: FontWeight.w600, color: Colors.grey),
       ),
     ),
   );

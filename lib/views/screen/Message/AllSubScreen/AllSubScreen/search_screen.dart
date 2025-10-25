@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/contact_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -67,24 +68,7 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(height: 20),
             Row(
               children: [
-                Container(
-                  height: 36,
-                  width: 46,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "re:",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
+                ReeLogo(),
                 const Spacer(),
                 InkWell(
                   onTap: () => Get.back(),
@@ -93,8 +77,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     width: 32,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
-                      border:
-                      Border.all(color: const Color(0xFFC4C3C3), width: 0.5),
+                      border: Border.all(
+                        color: const Color(0xFFC4C3C3),
+                        width: 0.5,
+                      ),
                     ),
                     child: const Icon(Icons.close),
                   ),
@@ -123,8 +109,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
                 if (filteredContacts.isEmpty) {
                   return const Center(
-                      child: Text("No contacts found",
-                          style: TextStyle(color: Colors.grey)));
+                    child: Text(
+                      "No contacts found",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  );
                 }
 
                 return ListView.separated(
@@ -144,7 +133,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           backgroundImage: imageUrl != null
                               ? NetworkImage(imageUrl)
                               : const AssetImage("assets/images/dummy.jpg")
-                          as ImageProvider,
+                                    as ImageProvider,
                         ),
                         const SizedBox(width: 12),
                         Column(

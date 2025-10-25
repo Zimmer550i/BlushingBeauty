@@ -8,40 +8,42 @@ import 'package:ree_social_media_app/utils/app_icons.dart';
 
 class BottomMenu extends StatelessWidget {
   final int menuIndex;
-  final int messageCount; // badge count
+  final int messageCount;
 
   const BottomMenu(this.menuIndex, {this.messageCount = 0, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFd4eeff),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(16),
-          topLeft: Radius.circular(16),
+    return SafeArea(
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFd4eeff),
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(16),
+            topLeft: Radius.circular(16),
+          ),
+          boxShadow: const [
+            BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 1),
+          ],
         ),
-        boxShadow: const [
-          BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 1),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildMenuItemWithBadge(AppIcons.messageIcon, 0, menuIndex, () {
-            Get.offAndToNamed(AppRoutes.messageScreen);
-          }, badgeCount: messageCount), //
-          _buildMenuItem(AppIcons.cameraIcon, 1, menuIndex, () {
-            Get.offAndToNamed(AppRoutes.cameraScreen);
-          }),
-          _buildMenuItem(AppIcons.contactIcon, 2, menuIndex, () {
-            Get.offAndToNamed(AppRoutes.contactScreen);
-          }),
-          _buildMenuItem(AppIcons.profileIcon, 3, menuIndex, () {
-            Get.offAndToNamed(AppRoutes.profileScreen);
-          }),
-        ],
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildMenuItemWithBadge(AppIcons.messageIcon, 0, menuIndex, () {
+              Get.offAndToNamed(AppRoutes.messageScreen);
+            }, badgeCount: messageCount), //
+            _buildMenuItem(AppIcons.cameraIcon, 1, menuIndex, () {
+              Get.offAndToNamed(AppRoutes.cameraScreen);
+            }),
+            _buildMenuItem(AppIcons.contactIcon, 2, menuIndex, () {
+              Get.offAndToNamed(AppRoutes.contactScreen);
+            }),
+            _buildMenuItem(AppIcons.profileIcon, 3, menuIndex, () {
+              Get.offAndToNamed(AppRoutes.profileScreen);
+            }),
+          ],
+        ),
       ),
     );
   }
