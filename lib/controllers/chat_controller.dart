@@ -29,7 +29,7 @@ class ChatController extends GetxController {
   bool _hasMore = true;
 
   /// Session data
-  late String _chatId;
+  String _chatId = '';
   late String _currentUserId;
   late String token;
 

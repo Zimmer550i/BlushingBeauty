@@ -13,7 +13,7 @@ class DotBarUi extends StatelessWidget {
         Container(
           width: 2.5, // thinner line
           height: 60, // longer connector
-          color: AppColors.primaryColor.withOpacity(0.7),
+          color: AppColors.primaryColor.withValues(alpha: .7),
         ),
         _dot(),
       ],

@@ -9,12 +9,24 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
-class SeeAllStoryScreen extends StatelessWidget {
+class SeeAllStoryScreen extends StatefulWidget {
   final List<dynamic> stories;
   final bool? isMe;
-  SeeAllStoryScreen({super.key, required this.stories, this.isMe = false});
+  const SeeAllStoryScreen({super.key, required this.stories, this.isMe = false});
 
+  @override
+  State<SeeAllStoryScreen> createState() => _SeeAllStoryScreenState();
+}
+
+class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
   final UserController userController = Get.put(UserController());
+  late List<dynamic> storiesList;
+
+  @override
+  void initState() {
+    super.initState();
+    storiesList = List.from(widget.stories); // copy of stories for local updates
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,16 +67,17 @@ class SeeAllStoryScreen extends StatelessWidget {
                   childAspectRatio: 0.9,
                 ),
                 padding: EdgeInsets.zero,
-                itemCount: stories.length,
+                itemCount: storiesList.length,
                 itemBuilder: (context, index) {
-                  final story = stories[index];
+                  final story = storiesList[index];
                   final type = story["contentType"];
+                  final storyId = story["_id"];
                   final name = story["author"]?["name"] ?? "Unknown";
                   final userImage = userController.addBaseUrl(
                     story["author"]["image"],
                   );
 
-                  // ✅ Determine media URL
+                  // Determine media URL
                   String? mediaUrl;
                   if (type == "image" && (story["image"] ?? "").isNotEmpty) {
                     mediaUrl = userController.addBaseUrl(story["image"]);
@@ -83,6 +96,8 @@ class SeeAllStoryScreen extends StatelessWidget {
                     name,
                     userImage.toString(),
                     type == "video",
+                    storyId,
+                    index,
                   );
                 },
               ),
@@ -93,18 +108,27 @@ class SeeAllStoryScreen extends StatelessWidget {
     );
   }
 
-  /// ✅ Handles both image & video stories
+  /// Updated _buildStoryCard to include index
   Widget _buildStoryCard(
     BuildContext context,
     String mediaUrl,
     String name,
     String userImage,
     bool isVideo,
+    String storyId,
+    int index,
   ) {
     return FutureBuilder<Widget>(
       future: isVideo
-          ? _buildVideoThumbnailCard(context, mediaUrl, name, userImage)
-          : _buildImageCard(mediaUrl, name),
+          ? _buildVideoThumbnailCard(
+              context,
+              mediaUrl,
+              name,
+              userImage,
+              storyId,
+              index,
+            )
+          : _buildImageCard(context, mediaUrl, name, storyId, index),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return Container(
@@ -134,107 +158,177 @@ class SeeAllStoryScreen extends StatelessWidget {
   }
 
   /// 🖼️ Image story card
-  Future<Widget> _buildImageCard(String mediaUrl, String name) async {
-    return ClipRRect(
+  Future<Widget> _buildImageCard(
+  BuildContext context,
+  String mediaUrl,
+  String name,
+  String storyId,
+  int index,
+) async {
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(8),
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.network(
+          mediaUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) =>
+              const Center(child: Icon(Icons.broken_image)),
+        ),
+        _buildBottomNameBar(name),
+        if (widget.isMe == true)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: IconButton(
+              onPressed: () {
+                _confirm(
+                  context,
+                  onYes: () async {
+                    await userController.deleteStory(storyId);
+                    setState(() {
+                      storiesList.removeAt(index); // remove from list
+                    });
+                    Get.back(); // close dialog
+                  },
+                );
+              },
+              icon: Icon(Icons.delete, color: AppColors.primaryColor),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+Future<Widget> _buildVideoThumbnailCard(
+  BuildContext context,
+  String videoUrl,
+  String name,
+  String userImage,
+  String storyId,
+  int index,
+) async {
+  final localVideo = await _downloadVideoToLocal(videoUrl);
+  final thumbPath = await VideoThumbnail.thumbnailFile(
+    video: localVideo.path,
+    imageFormat: ImageFormat.JPEG,
+    maxHeight: 200,
+    quality: 75,
+  );
+
+  return InkWell(
+    onTap: () => Get.to(
+      () => VideoPreviewScreen(
+        videoUrl: localVideo.path,
+        countdownSeconds: 3,
+        userProfile: userImage,
+        userName: name,
+      ),
+    ),
+    child: ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(
-            mediaUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) =>
-                const Center(child: Icon(Icons.broken_image)),
+          if (thumbPath != null)
+            Image.file(File(thumbPath), fit: BoxFit.cover)
+          else
+            Container(
+              color: Colors.black26,
+              child: const Center(child: Icon(Icons.error)),
+            ),
+          Center(
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primaryColor,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 26,
+              ),
+            ),
           ),
           _buildBottomNameBar(name),
-          if (isMe == true)
+          if (widget.isMe == true)
             Positioned(
               right: 0,
               top: 0,
               child: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  _confirm(
+                    context,
+                    onYes: () async {
+                      await userController.deleteStory(storyId);
+                      setState(() {
+                        storiesList.removeAt(index); // remove from list
+                      });
+                      Get.back(); // close dialog
+                    },
+                  );
+                },
                 icon: Icon(Icons.remove_circle, color: AppColors.primaryColor),
               ),
             ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  /// 🎬 Video story card (download + thumbnail + open preview)
-  Future<Widget> _buildVideoThumbnailCard(
-    BuildContext context,
-    String videoUrl,
-    String name,
-    String userImage,
-  ) async {
-    // Download video locally for thumbnail
-    final localVideo = await _downloadVideoToLocal(videoUrl);
-
-    // Generate thumbnail
-    final thumbPath = await VideoThumbnail.thumbnailFile(
-      video: localVideo.path,
-      imageFormat: ImageFormat.JPEG,
-      maxHeight: 200,
-      quality: 75,
-    );
-
-    return InkWell(
-      onTap: () => Get.to(
-        () => VideoPreviewScreen(
-          videoUrl: localVideo.path,
-          countdownSeconds: 3,
-          userProfile: userImage,
-          userName: name,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          fit: StackFit.expand,
+  void _confirm(BuildContext context, {required VoidCallback onYes}) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFFC4C3C3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            if (thumbPath != null)
-              Image.file(File(thumbPath), fit: BoxFit.cover)
-            else
-              Container(
-                color: Colors.black26,
-                child: const Center(child: Icon(Icons.error)),
-              ),
-            Center(
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primaryColor,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
+            const Text(
+              "Are you sure you want delete this story?",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+              textAlign: TextAlign.center,
             ),
-            _buildBottomNameBar(name),
-            if (isMe == true)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.remove_circle,
-                    color: AppColors.primaryColor,
-                  ),
-                ),
-              ),
+            const SizedBox(height: 20),
+            _dialogActions(
+              context,
+              onYes: onYes,
+            ),
           ],
         ),
       ),
     );
   }
 
+  Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: onYes,
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.white),
+            ),
+            child: const Text("Yes", style: TextStyle(color: Colors.white)),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () => Get.back(),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            child: const Text("No", style: TextStyle(color: Color(0xFF676565))),
+          ),
+        ),
+      ],
+    );
+  }
   /// Bottom overlay name bar
   Widget _buildBottomNameBar(String name) {
     return Positioned(

@@ -67,7 +67,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    
     chatController.disconnect();
     messageController.dispose();
     super.dispose();
@@ -184,9 +183,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 );
               }),
             ),
-            Obx(() => chatController.isLoading.value
-        ? const LinearProgressIndicator(color: Color(0xFF56BBFF))
-        : const SizedBox.shrink()),
+            Obx(
+              () => chatController.isLoading.value
+                  ? const LinearProgressIndicator(color: Color(0xFF56BBFF))
+                  : const SizedBox.shrink(),
+            ),
             _buildInputBar(),
           ],
         ),
@@ -295,7 +296,8 @@ class _ChatScreenState extends State<ChatScreen> {
           imageUrl: imageUrl.toString(),
           receiverName: widget.receiverName,
           chatId: widget.chatId,
-          isMe: isMe,
+          // isMe: isMe,
+          isMe: false,
           receiverImage: _receiverImage,
         ),
 
@@ -340,7 +342,8 @@ class _ChatScreenState extends State<ChatScreen> {
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
-              isMe: msg["isMe"] ?? false,
+              // isMe: msg["isMe"] ?? false,
+              isMe: false,
               videoFile: localVideo,
               msg: msg,
               receiverImage: _receiverImage,
@@ -460,5 +463,4 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
-
 }

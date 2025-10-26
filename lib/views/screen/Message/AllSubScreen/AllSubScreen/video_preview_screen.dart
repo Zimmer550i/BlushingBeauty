@@ -72,7 +72,6 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       await _initVideo();
     }
 
-    // ✅ Start countdown only after everything is initialized
     if (mounted) {
       _startCountdown();
     }
@@ -235,6 +234,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     _video?.dispose();
     _stopRecordingIfNeeded();
     _frontCam?.dispose();
+    _disposeControllers();
     super.dispose();
   }
 
@@ -242,6 +242,24 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final ss = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$mm:$ss';
+  }
+
+  void _disposeControllers() {
+    try {
+      _countdownTimer?.cancel();
+      _video?.removeListener(_videoListener);
+      _video?.dispose();
+      _video = null;
+
+      _frontCam?.dispose();
+      _frontCam = null;
+
+      recordedFile = null;
+      isRecording = false;
+      _secondsRemaining = widget.countdownSeconds;
+    } catch (e) {
+      debugPrint("⚠️ Dispose error: $e");
+    }
   }
 
   @override
@@ -253,8 +271,13 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         automaticallyImplyLeading: false,
         title: Row(
           children: [
+            // ← Back Arrow
             InkWell(
-              onTap: () => Get.back(),
+              onTap: () async {
+                await _stopRecordingIfNeeded();
+                _disposeControllers();
+                Get.back();
+              },
               child: const Icon(Icons.arrow_back),
             ),
             const SizedBox(width: 12),
@@ -270,6 +293,17 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             ),
           ],
         ),
+        actions: [
+          // ✖️ X Button (Exit)
+          IconButton(
+            icon: const Icon(Icons.close, size: 26),
+            onPressed: () async {
+              await _stopRecordingIfNeeded();
+              _disposeControllers();
+              Get.back();
+            },
+          ),
+        ],
       ),
       body: videoReady
           ? Stack(
@@ -289,12 +323,14 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                       : Image.network(
                           widget.videoUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
-                              const Icon(Icons.broken_image),
+                          errorBuilder: (_, _, _) => Icon(Icons.broken_image),
                           loadingBuilder: (context, child, progress) {
                             if (progress == null) return child;
-                            return const Center(
-                              child: SpinKitWave(color: Colors.blue, size: 30),
+                            return Center(
+                              child: SpinKitWave(
+                                color: AppColors.primaryColor,
+                                size: 30,
+                              ),
                             );
                           },
                         ),

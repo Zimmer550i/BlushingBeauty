@@ -302,7 +302,6 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
         InkWell(
           onTap: () => Get.to(
             () => FrameSelectionScreen(
-              videoUrl: widget.mainVideo,
               frontVideoUrl: widget.reactionVideo,
               userProfile: widget.userProfile,
               userName: widget.userName,

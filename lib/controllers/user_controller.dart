@@ -16,7 +16,6 @@ class UserController extends GetxController {
   final notificationRefreshTime = Duration(minutes: 10);
   var allUsers = <AllUserModel>[].obs;
 
-
   RxBool isLoading = RxBool(false);
   final RxBool isSubscribed = false.obs;
 
@@ -55,20 +54,12 @@ class UserController extends GetxController {
   }) async {
     isLoading.value = true;
     try {
-      final body = {
-        "name": name,
-        if (hasDate == true) "dob": dob,
-      };
+      final body = {"name": name, if (hasDate == true) "dob": dob};
 
       // Files go here
       final multipartBody = <MultipartBody>[];
       if (image != null) {
-        multipartBody.add(
-          MultipartBody(
-            key: "image",
-            file: image,
-          ),
-        );
+        multipartBody.add(MultipartBody(key: "image", file: image));
       }
 
       final response = await api.patchMultipartData(
@@ -94,7 +85,6 @@ class UserController extends GetxController {
     }
   }
 
-
   String? getImageUrl() {
     if (userInfo.value == null || userInfo.value!.image == null) {
       return null;
@@ -105,8 +95,8 @@ class UserController extends GetxController {
     return baseUrl + userInfo.value!.image!;
   }
 
-  String? addBaseUrl(String image){
-    if(image.isEmpty){
+  String? addBaseUrl(String image) {
+    if (image.isEmpty) {
       return null;
     }
 
@@ -114,11 +104,13 @@ class UserController extends GetxController {
     return baseUrl + image;
   }
 
-
   Future<String> fetchAllUsers({int page = 1, int limit = 10}) async {
     isLoading.value = true;
     try {
-      final response = await api.get("/user/all-user?page=$page&limit=$limit", authReq: true);
+      final response = await api.get(
+        "/user/all-user?page=$page&limit=$limit",
+        authReq: true,
+      );
       final body = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -136,22 +128,26 @@ class UserController extends GetxController {
     }
   }
 
-// Future<http.Response> deleteStory(String storyId) async {
-//   try {
-//     final response = await api.delete('/story/delete/$storyId', authReq: true);
+  Future<bool> deleteStory(String storyId) async {
+    try {
+      isLoading.value = true;
+      final response = await api.delete(
+        '/story/delete/$storyId',
+        authReq: true,
+      );
 
-//     if (response.statusCode == 200) {
-//       debugPrint('🗑️ Story deleted successfully');
-//     } else {
-//       debugPrint('⚠️ Failed to delete story: ${response.body}');
-//     }
-
-//     return response;
-//   } catch (e) {
-//     debugPrint('❗ deleteStory Error: $e');
-//     throw Exception('Failed to delete the story. Please try again.');
-//   }
-// }
-
-
+      if (response.statusCode == 200) {
+        debugPrint('🗑️ Story deleted successfully');
+      } else {
+        debugPrint('⚠️ Failed to delete story: ${response.body}');
+        return false;
+      }
+      return true;
+    } catch (e) {
+      debugPrint('❗ deleteStory Error: $e');
+      throw Exception('Failed to delete the story. Please try again.');
+    }finally {
+      isLoading.value = false;
+    }
+  }
 }

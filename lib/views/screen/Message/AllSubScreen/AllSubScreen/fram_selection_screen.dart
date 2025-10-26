@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -18,7 +19,6 @@ import 'package:video_trimmer/video_trimmer.dart';
 import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 
 class FrameSelectionScreen extends StatefulWidget {
-  final String videoUrl;
   final String frontVideoUrl;
   final String userProfile;
   final String userName;
@@ -28,7 +28,6 @@ class FrameSelectionScreen extends StatefulWidget {
 
   const FrameSelectionScreen({
     super.key,
-    required this.videoUrl,
     required this.userProfile,
     required this.userName,
     required this.frontVideoUrl,
@@ -47,7 +46,6 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   );
   VideoPlayerController? _mainVideoController;
   VideoPlayerController? _frontVideoController;
-  bool _isInitialized = false;
   final sendMessageController = Get.put(SendMessageController());
   final ValueNotifier<bool> _isPlaying = ValueNotifier(false);
   final ScrollController _scrollController = ScrollController();
@@ -59,10 +57,10 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   double _leftHandle = 0.0;
   double _rightHandle = 80.0;
   int _selectedTab = 0;
-  double _frameHandle = 40; // initial position of selector
-  final double _selectorWidth = 60; // width of selection window
+  double frameHandle = 40; // initial position of selector
+  final double selectorWidth = 60; // width of selection window
   int _selectedFrameIndex = 0;
-
+  bool _isInitialized = false;
   final double _thumbnailWidth = 60.0;
   final double thumbnailHeight = 80.0;
 
@@ -144,87 +142,6 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     if (mounted) setState(() {});
   }
 
-  /// ✅ Updated: Properly uses `video_trimmer ^5.0.0` API
-  Future<File?> _trimFrontVideo(File inputFile) async {
-    try {
-      debugPrint("🎞 Loading video for trimming...");
-      await _trimmer.loadVideo(videoFile: inputFile);
-
-      // 🔹 Wait for the internal duration to be available
-      final duration = _trimmer.videoPlayerController?.value.duration;
-      if (duration == null || duration.inMilliseconds == 0) {
-        debugPrint("❌ Video duration invalid or not ready — retrying...");
-        await Future.delayed(const Duration(milliseconds: 500));
-      }
-
-      final totalDuration = _trimmer.videoPlayerController?.value.duration;
-      if (totalDuration == null || totalDuration.inMilliseconds == 0) {
-        debugPrint("❌ Could not fetch video duration");
-        return null;
-      }
-
-      // 🔹 Convert your fractional _trimStart/_trimEnd (0.0–1.0) into actual seconds
-      final startSeconds =
-          (totalDuration.inMilliseconds * _trimStart) /
-          1000.0; // convert to sec
-      final endSeconds =
-          (totalDuration.inMilliseconds * _trimEnd) / 1000.0; // convert to sec
-
-      if (endSeconds <= startSeconds) {
-        debugPrint("⚠️ Invalid trim range, adjusting automatically");
-      }
-
-      final double safeStart = startSeconds.clamp(
-        0.0,
-        totalDuration.inSeconds.toDouble(),
-      );
-      final double safeEnd = endSeconds > safeStart
-          ? endSeconds
-          : (safeStart + 1.0).clamp(0.0, totalDuration.inSeconds.toDouble());
-
-      debugPrint(
-        "🎬 Trimming from ${safeStart.toStringAsFixed(2)}s → ${safeEnd.toStringAsFixed(2)}s "
-        "(of total ${totalDuration.inSeconds}s)",
-      );
-
-      final Completer<String?> completer = Completer<String?>();
-
-      _trimmer.saveTrimmedVideo(
-        startValue: safeStart,
-        endValue: safeEnd,
-        videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
-        onSave: (String? outputPath) {
-          debugPrint("✅ onSave callback: $outputPath");
-          if (!completer.isCompleted) completer.complete(outputPath);
-        },
-      );
-
-      final outputPath = await completer.future.timeout(
-        const Duration(seconds: 60),
-        onTimeout: () {
-          debugPrint("⏰ Trimming timed out!");
-          return null;
-        },
-      );
-
-      if (outputPath == null || outputPath.isEmpty) {
-        debugPrint("❌ No output file returned");
-        return null;
-      }
-
-      final trimmedFile = File(outputPath);
-      final fileSize = await trimmedFile.length();
-      debugPrint(
-        "✅ Trim success: ${trimmedFile.path} (${fileSize ~/ 1024} KB)",
-      );
-
-      return trimmedFile;
-    } catch (e, st) {
-      debugPrint("❌ Trim error: $e\n$st");
-      return null;
-    }
-  }
-
   @override
   void dispose() {
     _mainVideoController?.removeListener(_updatePlayState);
@@ -303,31 +220,30 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
           ),
 
         // Main (popup)
-        if (_mainVideoController != null &&
-            _mainVideoController!.value.isInitialized)
-          Positioned(
-            top: 20,
-            right: 20,
-            child: Container(
-              width: 140,
-              height: 180,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              clipBehavior: Clip.hardEdge,
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _mainVideoController!.value.size.width,
-                  height: _mainVideoController!.value.size.height,
-                  child: VideoPlayer(_mainVideoController!),
-                ),
-              ),
-            ),
-          ),
-
+        // if (_mainVideoController != null &&
+        //     _mainVideoController!.value.isInitialized)
+        //   Positioned(
+        //     top: 20,
+        //     right: 20,
+        //     child: Container(
+        //       width: 140,
+        //       height: 180,
+        //       decoration: BoxDecoration(
+        //         color: Colors.black.withValues(alpha: 0.3),
+        //         borderRadius: BorderRadius.circular(10),
+        //         border: Border.all(color: Colors.white, width: 2),
+        //       ),
+        //       clipBehavior: Clip.hardEdge,
+        //       child: FittedBox(
+        //         fit: BoxFit.cover,
+        //         child: SizedBox(
+        //           width: _mainVideoController!.value.size.width,
+        //           height: _mainVideoController!.value.size.height,
+        //           child: VideoPlayer(_mainVideoController!),
+        //         ),
+        //       ),
+        //     ),
+        //   ),
         Positioned(
           left: 0,
           right: 0,
@@ -351,13 +267,13 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.4)),
+          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.4)),
           child: Row(
             children: [
               Text(
                 "${(current.inSeconds).toString()} sec",
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black38,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -373,9 +289,9 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                     overlayShape: const RoundSliderOverlayShape(
                       overlayRadius: 0,
                     ),
-                    activeTrackColor: Colors.black,
-                    inactiveTrackColor: Colors.black.withValues(alpha: 0.4),
-                    thumbColor: Colors.white,
+                    activeTrackColor: Colors.black38,
+                    inactiveTrackColor: Colors.black38,
+                    thumbColor: Colors.white.withValues(alpha: 0.8),
                   ),
                   child: Slider(
                     value: progress.clamp(0.0, 1.0),
@@ -397,7 +313,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
               Text(
                 "${(totalDuration.inSeconds).toString()} sec",
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black38,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -426,27 +342,16 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   }
 
   void _togglePlayPause() async {
-    if (_frontVideoController == null || _mainVideoController == null) return;
+    if (_frontVideoController == null) return;
 
     final front = _frontVideoController!;
-    final main = _mainVideoController!;
 
-    if (!front.value.isInitialized || !main.value.isInitialized) return;
+    if (!front.value.isInitialized) return;
 
-    // If front video is playing, pause both
     if (front.value.isPlaying) {
       await front.pause();
-      await main.pause();
       _isPlaying.value = false;
     } else {
-      // Align both to same frame
-      final pos = front.value.position;
-      await main.seekTo(pos);
-
-      // Small delay to ensure native sync
-      await Future.delayed(const Duration(milliseconds: 60));
-
-      await main.play();
       await front.play();
       _isPlaying.value = true;
     }
@@ -476,7 +381,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   }
 
   Widget _buildBottomControls() => Container(
-    color: Colors.white.withValues(alpha: 0.4),
+    color: Colors.white,
     padding: const EdgeInsets.all(20),
     child: Column(
       children: [
@@ -573,7 +478,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                       onTap: () {
                         setState(() {
                           _selectedFrameIndex = i;
-                          _frameHandle = i * (_thumbnailWidth + 2);
+                          frameHandle = i * (_thumbnailWidth + 2);
                         });
                       },
                       child: Stack(
@@ -602,7 +507,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                                     sigmaY: 4,
                                   ),
                                   child: Container(
-                                    color: Colors.black.withOpacity(0.015),
+                                    color: Colors.black.withValues(alpha:  0.015),
                                     child: Center(
                                       child: Icon(
                                         Icons.circle,
@@ -685,38 +590,132 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     ),
   );
 
-  Future<void> _handleTrimAndSend() async {
-    if (_frontVideoController == null) return;
+Future<void> _handleTrimAndSend() async {
+  if (widget.videoFile == null) return;
 
-    final original = File(widget.videoFile!.path);
+  try {
+    final trimmer = Trimmer();
+
+    // 1️⃣ Load the video
+    await trimmer.loadVideo(videoFile: File(widget.videoFile!.path));
+
+    // 2️⃣ Show trimming message
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Trimming your front camera video...')),
+      const SnackBar(content: Text('Trimming your video...')),
     );
 
-    final trimmed = await _trimFrontVideo(original);
-    if (trimmed == null) {
-      ScaffoldMessenger.of(
-        // ignore: use_build_context_synchronously
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Trim failed')));
+    // 3️⃣ Trim the video using Completer to get output path
+    final Completer<File?> completer = Completer();
+
+    await trimmer.saveTrimmedVideo(
+      startValue: _trimStart,
+      endValue: _trimEnd,
+      videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}.mp4",
+      onSave: (String? path) {
+        if (path == null || path.isEmpty) {
+          completer.complete(null);
+        } else {
+          debugPrint("✅ Video trimmed to: $path");
+          completer.complete(File(path));
+        }
+      },
+    );
+
+    final trimmedFile = await completer.future;
+
+    if (trimmedFile == null || !await trimmedFile.exists()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Trim failed. Please try again.')),
+      );
       return;
     }
-    if (widget.isInbox == true) {
+
+    debugPrint("🎬 Trimmed file ready: ${trimmedFile.path}");
+
+    // 4️⃣ Send to chat or navigate
+    if (widget.isInbox == true && widget.chatId != null) {
       await sendMessageController.sendMediaToSingleChat(
-        chatId: widget.chatId.toString(),
-        filePath: trimmed.path,
+        chatId: widget.chatId!,
+        filePath: trimmedFile.path,
         isVideo: true,
       );
-    } else {
-      await Get.to(
-        () =>
-            SendMessageWithFriendScreen(filePath: trimmed.path, isVideo: true),
-        transition: Transition.rightToLeft,
-        duration: const Duration(milliseconds: 300),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Video sent successfully!')),
       );
+      if (mounted) Get.back();
       return;
     }
+
+    if (!mounted) return;
+    await Get.to(
+      () => SendMessageWithFriendScreen(
+        filePath: trimmedFile.path,
+        isVideo: true,
+      ),
+      transition: Transition.rightToLeft,
+      duration: const Duration(milliseconds: 300),
+    );
+  } catch (e, st) {
+    debugPrint("❌ Error trimming video: $e\n$st");
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Something went wrong. Please try again.')),
+      );
+    }
   }
+}
+
+
+Future<File?> _trimFrontVideo(File inputFile) async {
+  try {
+    final trimmer = Trimmer();
+    await trimmer.loadVideo(videoFile: inputFile);
+
+    // Wait until video controller is initialized
+    int retries = 0;
+    while ((trimmer.videoPlayerController?.value.isInitialized ?? false) == false &&
+        retries < 10) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      retries++;
+    }
+
+    if (!(trimmer.videoPlayerController?.value.isInitialized ?? false)) {
+      debugPrint("❌ Video controller not initialized");
+      return null;
+    }
+
+    final totalDuration = trimmer.videoPlayerController!.value.duration.inMilliseconds.toDouble();
+    final startSeconds = (_trimStart.clamp(0.0, 1.0)) * (totalDuration / 1000);
+    final endSeconds = (_trimEnd.clamp(0.0, 1.0)) * (totalDuration / 1000);
+
+    if (endSeconds <= startSeconds) {
+      debugPrint("⚠️ Invalid trim range");
+      return null;
+    }
+
+    final completer = Completer<File?>();
+
+    // Use onSave callback to get trimmed file path
+    await trimmer.saveTrimmedVideo(
+      startValue: startSeconds,
+      endValue: endSeconds,
+      videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}.mp4",
+      onSave: (outputPath) {
+        if (outputPath == null || outputPath.isEmpty) {
+          completer.complete(null);
+        } else {
+          completer.complete(File(outputPath));
+        }
+      },
+    );
+
+    return await completer.future;
+  } catch (e, st) {
+    debugPrint("❌ Trim error: $e\n$st");
+    return null;
+  }
+}
+
 
   void _handleFrameAndSend() async {
     final selectedFrame = _thumbnailPaths[_selectedFrameIndex];

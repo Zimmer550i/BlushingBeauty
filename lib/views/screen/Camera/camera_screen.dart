@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/bottom_menu.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_edit_screen.dart';
@@ -18,7 +19,8 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
+class _CameraScreenState extends State<CameraScreen>
+    with WidgetsBindingObserver {
   bool _isRecording = false;
   bool _isVideoMode = false;
   int _recordDuration = 0;
@@ -56,20 +58,26 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   }
 
   Future<void> _initCamera(CameraDescription description) async {
-    if (_isCameraChanging) return;
-    _isCameraChanging = true;
+  if (_isCameraChanging) return;
+  _isCameraChanging = true;
 
-    final controller = await GlobalCameraManager.initialize(description);
-    if (controller != null && mounted) setState(() {});
-    _isCameraChanging = false;
+  // Dispose existing controller safely
+  if (GlobalCameraManager.controller != null) {
+    await GlobalCameraManager.dispose();
   }
+
+  final controller = await GlobalCameraManager.initialize(description);
+  if (controller != null && mounted) setState(() {});
+  _isCameraChanging = false;
+}
+
 
   Future<void> _switchCamera() async {
     if (_controller == null || _isCameraChanging) return;
 
     final currentLens = _controller!.description.lensDirection;
     final newCamera = widget.cameras.firstWhere(
-          (cam) => cam.lensDirection != currentLens,
+      (cam) => cam.lensDirection != currentLens,
       orElse: () => widget.cameras.first,
     );
     await _initCamera(newCamera);
@@ -88,12 +96,18 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     try {
       final file = await _controller!.takePicture();
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VideoEditScreen(filePath: file.path, isVideo: false),
-        ),
-      ).then((_) async {
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (_) => VideoEditScreen(filePath: file.path, isVideo: false),
+      //   ),
+      // ).then((_) async {
+      //   await GlobalCameraManager.dispose();
+      // });
+
+      Get.to(() => VideoEditScreen(filePath: file.path, isVideo: false))?.then((
+        _,
+      ) async {
         await GlobalCameraManager.dispose();
       });
     } catch (e) {
@@ -129,7 +143,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       ).then((_) async {
         await GlobalCameraManager.dispose();
       });
-
     } catch (e) {
       debugPrint('Error stopping video recording: $e');
     }
@@ -168,9 +181,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       }
     }
 
-
-
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -179,10 +189,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           if (_controller != null && _controller!.value.isInitialized)
             Positioned.fill(child: CameraPreview(_controller!))
           else
-            const Positioned.fill(
-              child: ColoredBox(color: Colors.black),
-            ),
-
+            const Positioned.fill(child: ColoredBox(color: Colors.black)),
 
           /// Camera / Video toggle
           Positioned(
@@ -194,9 +201,13 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                   setState(() => _isVideoMode = false);
                 }),
                 const SizedBox(width: 12),
-                _buildModeButton('assets/icons/video_cam.svg', _isVideoMode, () {
-                  setState(() => _isVideoMode = true);
-                }),
+                _buildModeButton(
+                  'assets/icons/video_cam.svg',
+                  _isVideoMode,
+                  () {
+                    setState(() => _isVideoMode = true);
+                  },
+                ),
               ],
             ),
           ),
@@ -209,7 +220,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               right: 0,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(20),

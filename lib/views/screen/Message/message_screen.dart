@@ -38,7 +38,7 @@ class _MessageScreenState extends State<MessageScreen> {
   );
   final ScrollController _chatScrollController = ScrollController();
   final ScrollController _storyScrollController = ScrollController();
-
+  final Map<String, String?> _thumbCache = {};
   bool _isFetchingMoreChats = false;
   bool _isFetchingMoreStories = false;
 
@@ -424,8 +424,12 @@ class _MessageScreenState extends State<MessageScreen> {
                   );
                   return;
                 }
-
-                Get.to(() => SeeAllStoryScreen(stories: myStories, isMe: true));
+                Get.to(
+                  () => SeeAllStoryScreen(stories: myStories, isMe: true),
+                )?.then((value) {
+                  // This code runs when the user comes back
+                  controller.refreshAll();
+                });
               },
               child: Container(
                 color: Colors.transparent, // needed for tap detection
@@ -552,9 +556,6 @@ class _MessageScreenState extends State<MessageScreen> {
       ),
     );
   }
-
-  /// Cache for thumbnails to avoid regenerating repeatedly
-  final Map<String, String?> _thumbCache = {};
 
   /// Handles video story preview with thumbnail + play icon + navigation
   Future<Widget> _buildVideoThumbnailWidget(

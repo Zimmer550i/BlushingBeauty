@@ -19,43 +19,41 @@ class ContactController extends GetxController {
 
   /// Fetch contacts from device & send to API
   Future<void> fetchContacts() async {
-  try {
-    isLoading.value = true;
+    try {
+      isLoading.value = true;
 
-    if (await FlutterContacts.requestPermission()) {
-      final rawContacts = await FlutterContacts.getContacts(withProperties: true);
+      if (await FlutterContacts.requestPermission()) {
+        final rawContacts = await FlutterContacts.getContacts(
+          withProperties: true,
+        );
 
-      List<Map<String, dynamic>> contactList = [];
-      int count = 0;
-      const int maxContacts = 20;
+        List<Map<String, dynamic>> contactList = [];
+        int count = 0;
+        const int maxContacts = 20;
 
-      for (var c in rawContacts) {
-        if (c.phones.isNotEmpty) {
-          for (var phone in c.phones) {
-            if (count >= maxContacts) break; // stop after 20
-            final cleanedNumber = _normalizePhoneNumber(phone.number);
-            contactList.add({
-              "name": c.displayName,
-              "phone": cleanedNumber,
-            });
-            count++;
+        for (var c in rawContacts) {
+          if (c.phones.isNotEmpty) {
+            for (var phone in c.phones) {
+              if (count >= maxContacts) break; // stop after 20
+              final cleanedNumber = _normalizePhoneNumber(phone.number);
+              contactList.add({"name": c.displayName, "phone": cleanedNumber});
+              count++;
+            }
           }
+          if (count >= maxContacts) break;
         }
-        if (count >= maxContacts) break;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("saved_contacts", jsonEncode(contactList));
+
+        await sendContactsToApi(contactList);
       }
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString("saved_contacts", jsonEncode(contactList));
-
-      await sendContactsToApi(contactList);
+    } catch (e) {
+      debugPrint("🚨 Error fetching contacts: $e");
+    } finally {
+      isLoading.value = false;
     }
-  } catch (e) {
-    debugPrint("🚨 Error fetching contacts: $e");
-  } finally {
-    isLoading.value = false;
   }
-}
-
 
   String _normalizePhoneNumber(String number) {
     String cleaned = number.replaceAll(RegExp(r'[^\d+]'), '');
@@ -65,52 +63,55 @@ class ContactController extends GetxController {
     return cleaned;
   }
 
-Future<void> sendInviteSms(BuildContext context, String number, String name) async {
-  // 1️⃣ Create the message
-  final message =
-      "Join $name on re: The app that makes sharing photos and videos more fun by capturing real reactions. Download here - https://yourappdownloadlink.com";
+  Future<void> sendInviteSms(
+    BuildContext context,
+    String number,
+    String name,
+  ) async {
+    // 1️⃣ Create the message
+    final message =
+        "Join me on re: The app that makes sharing photos and videos more fun by capturing real reactions. Download here - link";
 
-  // 2️⃣ Encode the message for URI
-  final encodedMessage = Uri.encodeComponent(message);
+    // 2️⃣ Encode the message for URI
+    final encodedMessage = Uri.encodeComponent(message);
 
-  // 3️⃣ Build the SMS URI
-  final smsUri = Uri.parse('sms:$number?body=$encodedMessage');
+    // 3️⃣ Build the SMS URI
+    final smsUri = Uri.parse('sms:$number?body=$encodedMessage');
 
-  try {
-    // 4️⃣ Launch the SMS app explicitly
-    if (await canLaunchUrl(smsUri)) {
-      await launchUrl(
-        smsUri,
-        mode: LaunchMode.externalApplication, // Forces external SMS app
-      );
-    } else {
-      // 5️⃣ Handle case when no SMS app is available
-      debugPrint("❌ Could not launch SMS app. URI: $smsUri");
-      _showErrorDialog(context, "No SMS app found on this device.");
+    try {
+      // 4️⃣ Launch the SMS app explicitly
+      if (await canLaunchUrl(smsUri)) {
+        await launchUrl(
+          smsUri,
+          mode: LaunchMode.externalApplication, // Forces external SMS app
+        );
+      } else {
+        // 5️⃣ Handle case when no SMS app is available
+        debugPrint("❌ Could not launch SMS app. URI: $smsUri");
+        _showErrorDialog(context, "No SMS app found on this device.");
+      }
+    } catch (e) {
+      debugPrint("❌ Error launching SMS: $e");
+      _showErrorDialog(context, "Failed to open SMS app.");
     }
-  } catch (e) {
-    debugPrint("❌ Error launching SMS: $e");
-    _showErrorDialog(context, "Failed to open SMS app.");
   }
-}
 
-// Helper function to show an error dialog
-void _showErrorDialog(BuildContext context, String message) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Error"),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text("OK"),
-        ),
-      ],
-    ),
-  );
-}
-
+  // Helper function to show an error dialog
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Error"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
 
   /// Send contacts to backend
   Future<void> sendContactsToApi(List<Map<String, dynamic>> contactList) async {
@@ -123,8 +124,12 @@ void _showErrorDialog(BuildContext context, String message) {
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        matchedContacts.assignAll(List<Map<String, dynamic>>.from(decoded["data"]["match"]));
-        unmatchedContacts.assignAll(List<Map<String, dynamic>>.from(decoded["data"]["unmatch"]));
+        matchedContacts.assignAll(
+          List<Map<String, dynamic>>.from(decoded["data"]["match"]),
+        );
+        unmatchedContacts.assignAll(
+          List<Map<String, dynamic>>.from(decoded["data"]["unmatch"]),
+        );
 
         // Initially all contacts are shown
         filteredMatchedContacts.assignAll(matchedContacts);
@@ -148,26 +153,28 @@ void _showErrorDialog(BuildContext context, String message) {
     } else {
       final lower = query.toLowerCase();
       filteredMatchedContacts.assignAll(
-        matchedContacts.where((c) =>
-        (c["name"] ?? "").toLowerCase().contains(lower) ||
-            (c["phone"] ?? "").toLowerCase().contains(lower)),
+        matchedContacts.where(
+          (c) =>
+              (c["name"] ?? "").toLowerCase().contains(lower) ||
+              (c["phone"] ?? "").toLowerCase().contains(lower),
+        ),
       );
       filteredUnmatchedContacts.assignAll(
-        unmatchedContacts.where((c) =>
-        (c["name"] ?? "").toLowerCase().contains(lower) ||
-            (c["phone"] ?? "").toLowerCase().contains(lower)),
+        unmatchedContacts.where(
+          (c) =>
+              (c["name"] ?? "").toLowerCase().contains(lower) ||
+              (c["phone"] ?? "").toLowerCase().contains(lower),
+        ),
       );
     }
   }
 
-Future<void> createPrivateChat(String memberId) async {
+  Future<void> createPrivateChat(String memberId) async {
     isLoading.value = true;
     try {
-      final response = await api.post(
-        "/chat/create-private",
-        {"member": memberId},
-        authReq: true,
-      );
+      final response = await api.post("/chat/create-private", {
+        "member": memberId,
+      }, authReq: true);
 
       final body = jsonDecode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
