@@ -40,7 +40,6 @@ dependencies:
   path: any
   http: any
   http_parser: any
-  video_trimmer: ^5.0.0
   video_thumbnail: ^0.5.6
   
 

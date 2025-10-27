@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -9,8 +10,6 @@ import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/send_message_with_friend_screen.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
-import 'package:video_trimmer/video_trimmer.dart';
-
 
 class VideoTrimAndSendScreen extends StatefulWidget {
   final String videoUrl;
@@ -25,24 +24,15 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
   final CreateStoryController _storyController = Get.put(
     CreateStoryController(),
   );
-
   late VideoPlayerController _videoController;
   final ValueNotifier<bool> _isPlaying = ValueNotifier(false);
   final ScrollController _scrollController = ScrollController();
-    VideoPlayerController? _frontVideoController;
-  int _selectedTab = 0;
-
   final List<String> _thumbnailPaths = [];
-  final Trimmer _trimmer = Trimmer();
+  int _selectedFrameIndex = 0;
 
   bool _isInitialized = false;
-  double _leftHandle = 0.0;
-  double _rightHandle = 100.0;
-  double _trimStart = 0.0;
-  double _trimEnd = 1.0;
-
+  final double _thumbnailHeight = 80.0;
   final double _thumbnailWidth = 60.0;
-  final double thumbnailHeight = 80.0;
 
   @override
   void initState() {
@@ -69,9 +59,7 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
     await _generateThumbnails();
 
     _videoController.addListener(() {
-      if (mounted) {
-        _isPlaying.value = _videoController.value.isPlaying;
-      }
+      if (mounted) _isPlaying.value = _videoController.value.isPlaying;
     });
 
     setState(() => _isInitialized = true);
@@ -107,72 +95,43 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
       );
       if (path != null) _thumbnailPaths.add(path);
     }
+    setState(() {});
   }
 
-  /// ⏱️ Format Duration (mm:ss)
+  /// Format Duration (mm:ss)
   String _formatDuration(Duration d) {
     final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final ss = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$mm:$ss';
   }
 
-  /// ✂️ Trim the video using FFmpeg
-     Future<File?> _trimFrontVideo(File inputFile) async {
-    try {
-      await _trimmer.loadVideo(videoFile: inputFile);
-  
-      final duration = _frontVideoController?.value.duration ?? Duration.zero;
-      final start = duration * _trimStart;
-      final end = duration * _trimEnd;
-  
-      debugPrint("🎬 Trimming from ${start.inSeconds}s → ${end.inSeconds}s");
-      // saveTrimmedVideo returns void in newer video_trimmer versions; use a Completer to capture the path from the onSave callback.
-      final Completer<String?> completer = Completer<String?>();
-  
-      _trimmer.saveTrimmedVideo(
-        startValue: start.inMilliseconds / 1000,
-        endValue: end.inMilliseconds / 1000,
-        videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
-        onSave: (String? path) {
-          debugPrint("🔔 onSave callback: $path");
-          if (!completer.isCompleted) completer.complete(path);
-        },
-      );
-  
-      String? outputPath;
-      try {
-        // await the completer which will be completed by the onSave/onError callbacks
-        outputPath = await completer.future.timeout(const Duration(seconds: 30));
-      } catch (e) {
-        debugPrint("❌ Trimming timed out or failed: $e");
-        outputPath = null;
-      }
-  
-      if (outputPath != null && outputPath.isNotEmpty) {
-        debugPrint("✅ Trimmed video saved at: $outputPath");
-        return File(outputPath);
-      } else {
-        debugPrint("❌ Trimming failed (outputPath is null or empty)");
-        return null;
-      }
-    } catch (e) {
-      debugPrint("❌ Trimming error: $e");
-      return null;
-    }
-  }
-
-  /// 🎞️ Video preview player
+  /// Video preview player
   Widget _buildVideoPreview() {
-    return Container(
-      color: Colors.black,
-      child: AspectRatio(
-        aspectRatio: _videoController.value.aspectRatio,
-        child: VideoPlayer(_videoController),
-      ),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        if (_videoController != null && _videoController.value.isInitialized)
+          Positioned.fill(
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _videoController.value.size.width,
+                height: _videoController.value.size.height,
+                child: VideoPlayer(_videoController),
+              ),
+            ),
+          ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: _buildVideoControls(), // your existing video controls slider
+        ),
+      ],
     );
   }
 
-  /// 🎮 Video controls
+  /// Video controls
   Widget _buildVideoControls() {
     final duration = _videoController.value.duration;
     final position = _videoController.value.position;
@@ -230,68 +189,77 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
     );
   }
 
-  /// ✂️ Trim Slider
-  Widget _buildTrimSlider() {
-    final total = _thumbnailPaths.length * (_thumbnailWidth + 2);
-
+  /// Thumbnails frame selector
+  Widget _buildFrameSelector() {
     return SizedBox(
-      height: 100,
+      height: 120,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 🟦 Outer blue rounded rail
+          // 🟦 Outer rail background
           Container(
-            height: 70,
+            height: 60,
             decoration: BoxDecoration(
               color: AppColors.primaryColor,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AppColors.primaryColor, width: 2),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _thumbnailPaths.length,
-                    itemBuilder: (_, i) => Container(
-                      width: _thumbnailWidth,
-                      margin: const EdgeInsets.symmetric(horizontal: 1),
-                      child: Image.file(
-                        File(_thumbnailPaths[i]),
-                        fit: BoxFit.cover,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _thumbnailPaths.length,
+                  itemBuilder: (_, i) {
+                    final isSelected = i == _selectedFrameIndex;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedFrameIndex = i;
+                        });
+                      },
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: _thumbnailWidth,
+                            margin: const EdgeInsets.symmetric(horizontal: 1),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: Image.file(
+                                File(_thumbnailPaths[i]),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 4,
+                                    sigmaY: 4,
+                                  ),
+                                  child: Container(
+                                    color: Colors.black.withOpacity(0.015),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
             ),
           ),
 
-          // 🌈 Light blue selected area
+          // ◀ Left scroll arrow
           Positioned(
-            left: _leftHandle,
-            width: _rightHandle - _leftHandle,
-            top: 15,
-            bottom: 15,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.primaryColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-
-          // ◀ Left arrow
-          Positioned(
-            left: 0,
+            left: -5,
             child: GestureDetector(
               onTap: () {
                 _scrollController.animateTo(
@@ -300,13 +268,17 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
                   curve: Curves.easeOut,
                 );
               },
-              child: Icon(Icons.chevron_left, color: Colors.white, size: 32),
+              child: const Icon(
+                Icons.chevron_left,
+                color: Colors.white,
+                size: 32,
+              ),
             ),
           ),
 
-          // ▶ Right arrow
+          // ▶ Right scroll arrow
           Positioned(
-            right: 0,
+            right: -5,
             child: GestureDetector(
               onTap: () {
                 _scrollController.animateTo(
@@ -315,41 +287,11 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
                   curve: Curves.easeOut,
                 );
               },
-              child: Icon(Icons.chevron_right, color: Colors.white, size: 32),
-            ),
-          ),
-
-          // 🔹 Left handle
-          Positioned(
-            left: _leftHandle,
-            top: 8,
-            bottom: 8,
-            child: GestureDetector(
-              onHorizontalDragUpdate: (details) {
-                setState(() {
-                  _leftHandle += details.delta.dx;
-                  _leftHandle = _leftHandle.clamp(0.0, _rightHandle - 30);
-                  _trimStart = (_leftHandle / total).clamp(0.0, 1.0);
-                });
-              },
-              child: _buildTrimHandle(),
-            ),
-          ),
-
-          // 🔹 Right handle
-          Positioned(
-            left: _rightHandle - 8,
-            top: 8,
-            bottom: 8,
-            child: GestureDetector(
-              onHorizontalDragUpdate: (details) {
-                setState(() {
-                  _rightHandle += details.delta.dx;
-                  _rightHandle = _rightHandle.clamp(_leftHandle + 30, total);
-                  _trimEnd = (_rightHandle / total).clamp(0.0, 1.0);
-                });
-              },
-              child: _buildTrimHandle(),
+              child: const Icon(
+                Icons.chevron_right,
+                color: Colors.white,
+                size: 32,
+              ),
             ),
           ),
         ],
@@ -357,47 +299,16 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
     );
   }
 
-  // 🔹 Handle UI (Dot + Bar + Dot)
-  Widget _buildTrimHandle() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor,
-            shape: BoxShape.circle,
-          ),
-        ),
-        Container(
-          width: 5,
-          height: 60,
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor,
-            shape: BoxShape.circle,
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 🧭 Action Buttons (Send / Create Story)
+  /// Action Buttons
   Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
+          _buildFrameSelector(),
           InkWell(
-            onTap: _handleTrimAndSend,
+            onTap: _sendSelectedFrame,
             child: Container(
               height: 50,
               decoration: BoxDecoration(
@@ -407,49 +318,51 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
               ),
               child: const Center(
                 child: Text(
-                  "Send Message",
+                  "Send Selected Frame",
                   style: TextStyle(color: Colors.black54, fontSize: 18),
                 ),
               ),
             ),
           ),
           const SizedBox(height: 10),
-          CustomButton(
-            onTap: () => _storyController.addStory(videoPath: widget.videoUrl),
-            text: "Create Story",
+          SafeArea(
+            child: Obx(
+              () => CustomButton(
+                loading: _storyController.isLoading.value,
+                onTap: () {
+                  if (_thumbnailPaths.isEmpty) return;
+                  final selectedFrame = _thumbnailPaths[_selectedFrameIndex];
+                  _storyController.addStory(imagePath: selectedFrame);
+                },
+                text: "Create Story",
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  /// 📤 Trim & Send
-  Future<void> _handleTrimAndSend() async {
-    final originalFile = File(widget.videoUrl);
-    Get.snackbar(
-      "Processing",
-      "Trimming video... please wait.",
-      snackPosition: SnackPosition.BOTTOM,
+  /// Send selected frame as image
+  void _sendSelectedFrame() async {
+    if (_thumbnailPaths.isEmpty) return;
+    final selectedFrame = _thumbnailPaths[_selectedFrameIndex];
+    Get.to(
+      () =>
+          SendMessageWithFriendScreen(filePath: selectedFrame, isVideo: false),
+      transition: Transition.rightToLeft,
+      duration: const Duration(milliseconds: 300),
     );
-
-    final trimmedFile = await _trimFrontVideo(originalFile);
-
-    if (trimmedFile != null) {
-      Get.to(
-        () => SendMessageWithFriendScreen(
-          filePath: trimmedFile.path,
-          isVideo: true,
-        ),
-      );
-    } else {
-      Get.snackbar("Error", "Failed to trim video.");
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primaryColor)));
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryColor),
+        ),
+      );
     }
 
     return Scaffold(
@@ -467,57 +380,8 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
       body: Column(
         children: [
           Expanded(child: _buildVideoPreview()),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Column(
-              children: [
-                _buildTabs(),
-                // SizedBox(height: 10),
-                _buildTrimSlider(),
-              ],
-            ),
-          ),
-
-          _buildVideoControls(),
           _buildActionButtons(),
         ],
-      ),
-    );
-  }
-
-  // 🔹 Tabs ("Use trim" / "Use frame")
-  Widget _buildTabs() {
-    return Row(
-      children: [
-        _buildTabButton("Use trim", 0),
-        const SizedBox(width: 18),
-        _buildTabButton("Use frame", 1),
-      ],
-    );
-  }
-
-  Widget _buildTabButton(String text, int index) {
-    bool isActive = _selectedTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTab = index),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isActive ? Colors.lightBlue : Colors.transparent,
-              width: 2,
-            ),
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isActive ? Colors.lightBlue : Colors.grey[600],
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
       ),
     );
   }
