@@ -121,7 +121,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                                   child: VideoPlayer(_video!),
                                 ),
                               )
-                            : const Center(child: CircularProgressIndicator()))
+                            :  Center(child: CircularProgressIndicator(color: AppColors.primaryColor)))
                       : Image.file(File(widget.filePath), fit: BoxFit.cover),
                 ),
 

@@ -174,9 +174,9 @@ class _CameraScreenState extends State<CameraScreen>
         !_controller!.value.isInitialized ||
         !_controller!.value.isPreviewPaused) {
       if (!GlobalCameraManager.isInitialized) {
-        return const Scaffold(
+        return Scaffold(
           backgroundColor: Colors.black,
-          body: Center(child: CircularProgressIndicator()),
+          body: Center(child: CircularProgressIndicator(color: AppColors.primaryColor)),
         );
       }
     }

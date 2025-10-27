@@ -449,7 +449,7 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primaryColor)));
     }
 
     return Scaffold(

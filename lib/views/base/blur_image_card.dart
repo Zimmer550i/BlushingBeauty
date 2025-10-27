@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
 
 class BlurImageCard extends StatefulWidget {
@@ -84,8 +85,8 @@ class _BlurImageCardState extends State<BlurImageCard> {
                       height: 180,
                       width: 240,
                       color: Colors.black12.withValues(alpha: .1),
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                      child: Center(
+                        child: CircularProgressIndicator(strokeWidth: 2,color: AppColors.primaryColor),
                       ),
                     );
                   }

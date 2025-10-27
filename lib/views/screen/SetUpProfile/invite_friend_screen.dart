@@ -287,7 +287,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
 
                       // Loading
                       if (isLoading)
-                        const Center(child: CircularProgressIndicator())
+                        Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
                       else ...[
                         // Friends on re:
                         if (matched.isNotEmpty) ...[

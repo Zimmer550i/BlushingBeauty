@@ -178,7 +178,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     final message = await authController.signup(
                       fullPhone,
                       password,
-                      true, // mark as phone signup
+                      true,
                     );
 
                     if (message == "success") {

@@ -128,10 +128,10 @@ class _MessageScreenState extends State<MessageScreen> {
                       ),
                       _buildChatList(),
                       if (_isFetchingMoreChats)
-                        const Center(
+                        Center(
                           child: Padding(
                             padding: EdgeInsets.all(12.0),
-                            child: CircularProgressIndicator(),
+                            child: CircularProgressIndicator(color: AppColors.primaryColor),
                           ),
                         ),
                     ],
@@ -277,10 +277,10 @@ class _MessageScreenState extends State<MessageScreen> {
 
                   if (index > filteredStories.length) {
                     return _isFetchingMoreStories
-                        ? const Center(
+                        ? Center(
                             child: Padding(
                               padding: EdgeInsets.all(8.0),
-                              child: CircularProgressIndicator(),
+                              child: CircularProgressIndicator(color: AppColors.primaryColor),
                             ),
                           )
                         : const SizedBox();

@@ -165,7 +165,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
         ),
       ),
       body: _mainVideoController == null || _reactionVideoController == null
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
           : Column(
               children: [
                 Expanded(

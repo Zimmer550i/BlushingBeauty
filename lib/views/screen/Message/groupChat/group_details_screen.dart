@@ -119,7 +119,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       body: SafeArea(
         child: Obx(() {
           if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
           }
 
           return SingleChildScrollView(

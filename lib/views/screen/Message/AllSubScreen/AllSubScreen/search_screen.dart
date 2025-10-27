@@ -104,7 +104,7 @@ class _SearchScreenState extends State<SearchScreen> {
             Expanded(
               child: Obx(() {
                 if (contactController.isLoading.value) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
                 }
 
                 if (filteredContacts.isEmpty) {
