@@ -112,7 +112,7 @@ class AuthController extends GetxController {
 
     try {
       final response = await api.post("/user/create-user", {
-        isPhone ? "phone" : "phone": phone.trim(),
+        "phone": phone.trim(),
         "password": password.trim(),
       });
 
