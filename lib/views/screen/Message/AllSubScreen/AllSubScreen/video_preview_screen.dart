@@ -362,7 +362,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 _buildBottomControls(),
               ],
             )
-          : const Center(child: SpinKitWave(color: Colors.blue, size: 30.0)),
+          : Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
     );
   }
 
