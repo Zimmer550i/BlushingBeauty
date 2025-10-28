@@ -4,21 +4,72 @@ import 'app_colors.dart';
 
 void showSnackBar(String message, bool isError) {
   Get.snackbar(
-    isError ? 'Error' : 'Success',
-    message,
+    '',
+    '',
     snackPosition: SnackPosition.BOTTOM,
-    backgroundColor: isError ? Colors.red.shade600 : AppColors.primaryColor,
-    colorText: Colors.black,
-    borderRadius: 12,
-    margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    animationDuration: Duration(milliseconds: 300),
-    duration: Duration(seconds: 3),
-    icon: Icon(
-      isError ? Icons.error_outline : Icons.check_circle_outline,
-      color: Colors.black,
-    ),
-    forwardAnimationCurve: Curves.easeOut,
+    backgroundColor: Colors.transparent, 
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    padding: EdgeInsets.zero,
+    duration: const Duration(seconds: 3),
+    animationDuration: const Duration(milliseconds: 400),
+    forwardAnimationCurve: Curves.easeOutBack,
     reverseAnimationCurve: Curves.easeIn,
+    messageText: Container(
+      decoration: BoxDecoration(
+        color: isError ? Colors.redAccent : AppColors.primaryColor,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          // Left icon
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(6),
+            child: Icon(
+              isError ? Icons.error_outline : Icons.check_circle_outline,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Text message
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          // Right subtle close icon
+          IconButton(
+            onPressed: () => Get.closeAllSnackbars(),
+            icon: const Icon(
+              Icons.close_rounded,
+              color: Colors.white70,
+              size: 20,
+            ),
+          ),
+        ],
+      ),
+    ),
   );
 }

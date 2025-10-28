@@ -14,7 +14,7 @@ class GlobalCameraManager {
     try {
       final controller = CameraController(
         description,
-        ResolutionPreset.medium,
+        ResolutionPreset.max,
         enableAudio: true,
         imageFormatGroup: ImageFormatGroup.yuv420,
       );

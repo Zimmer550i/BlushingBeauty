@@ -91,7 +91,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ReeLogo(),
               const SizedBox(height: 110),
               const Text(
-                "Check Your \nInbox",
+                "Check your\nmessages",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
                   fontSize: 28,
@@ -119,9 +119,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   InkWell(
                     onTap: _secondsRemaining == 0
                         ? () {
-                      _startTimer();
-                      authController.sendOtp(widget.emailOrPhone);
-                    }
+                            _startTimer();
+                            authController.sendOtp(widget.emailOrPhone);
+                          }
                         : null,
                     child: Text(
                       _secondsRemaining == 0
@@ -146,11 +146,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 ],
               ),
               const SizedBox(height: 92),
-              Obx(()=> CustomButton(
-                loading: authController.isLoading.value,
-                onTap: _verifyCode,
-                text: "Verify and Continue",
-              ),),
+              Obx(
+                () => CustomButton(
+                  loading: authController.isLoading.value,
+                  onTap: _verifyCode,
+                  text: "Verify and Continue",
+                ),
+              ),
             ],
           ),
         ),
@@ -158,9 +160,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     );
   }
 
-  void _verifyCode()async {
+  void _verifyCode() async {
     final code = controllers.map((c) => c.text).join();
-    final message =  await authController.verifyAccount(widget.emailOrPhone, code);
+    final message = await authController.verifyAccount(
+      widget.emailOrPhone,
+      code,
+    );
     if (message == "success") {
       Get.to(() => const ResetPasswordScreen());
     } else {
@@ -184,12 +189,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         ),
         boxShadow: filled
             ? [
-          BoxShadow(
-            color: AppColors.primaryColor.withValues(alpha: .35),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          )
-        ]
+                BoxShadow(
+                  color: AppColors.primaryColor.withValues(alpha: .35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
             : const [],
       ),
       alignment: Alignment.center,

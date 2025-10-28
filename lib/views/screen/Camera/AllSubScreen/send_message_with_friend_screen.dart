@@ -172,6 +172,7 @@ class _SendMessageWithFriendScreenState
                 children: [
                   CircleAvatar(
                     radius: 22,
+                    backgroundColor: AppColors.primaryColor,
                     backgroundImage: imageUrl != null
                         ? NetworkImage(imageUrl)
                         : const AssetImage("assets/images/dummy.jpg")

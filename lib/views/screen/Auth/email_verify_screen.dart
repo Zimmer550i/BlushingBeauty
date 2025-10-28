@@ -7,7 +7,6 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/SetUpProfile/contact_access_screen.dart';
-
 import '../../../utils/show_snackbar.dart';
 
 class EmailVerifyScreen extends StatefulWidget {
@@ -92,7 +91,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
               ReeLogo(),
               const SizedBox(height: 110),
               const Text(
-                "Check Your \nInbox",
+                "Check your\nmessages",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
                   fontSize: 28,

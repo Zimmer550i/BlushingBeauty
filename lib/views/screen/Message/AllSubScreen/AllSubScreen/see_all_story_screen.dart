@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/view_video.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -12,7 +13,11 @@ import 'package:path_provider/path_provider.dart';
 class SeeAllStoryScreen extends StatefulWidget {
   final List<dynamic> stories;
   final bool? isMe;
-  const SeeAllStoryScreen({super.key, required this.stories, this.isMe = false});
+  const SeeAllStoryScreen({
+    super.key,
+    required this.stories,
+    this.isMe = false,
+  });
 
   @override
   State<SeeAllStoryScreen> createState() => _SeeAllStoryScreenState();
@@ -25,7 +30,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
   @override
   void initState() {
     super.initState();
-    storiesList = List.from(widget.stories); // copy of stories for local updates
+    storiesList = List.from(widget.stories);
   }
 
   @override
@@ -45,7 +50,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  "All Stories",
+                  widget.isMe == true ? "My Stories" : "All Stories",
                   style: TextStyle(
                     color: AppColors.textColor,
                     fontSize: 24,
@@ -159,101 +164,22 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
 
   /// 🖼️ Image story card
   Future<Widget> _buildImageCard(
-  BuildContext context,
-  String mediaUrl,
-  String name,
-  String storyId,
-  int index,
-) async {
-  return ClipRRect(
-    borderRadius: BorderRadius.circular(8),
-    child: Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.network(
-          mediaUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) =>
-              const Center(child: Icon(Icons.broken_image)),
-        ),
-        _buildBottomNameBar(name),
-        if (widget.isMe == true)
-          Positioned(
-            right: 0,
-            top: 0,
-            child: IconButton(
-              onPressed: () {
-                _confirm(
-                  context,
-                  onYes: () async {
-                    await userController.deleteStory(storyId);
-                    setState(() {
-                      storiesList.removeAt(index); // remove from list
-                    });
-                    Get.back(); // close dialog
-                  },
-                );
-              },
-              icon: Icon(Icons.delete, color: AppColors.primaryColor),
-            ),
-          ),
-      ],
-    ),
-  );
-}
-
-Future<Widget> _buildVideoThumbnailCard(
-  BuildContext context,
-  String videoUrl,
-  String name,
-  String userImage,
-  String storyId,
-  int index,
-) async {
-  final localVideo = await _downloadVideoToLocal(videoUrl);
-  final thumbPath = await VideoThumbnail.thumbnailFile(
-    video: localVideo.path,
-    imageFormat: ImageFormat.JPEG,
-    maxHeight: 200,
-    quality: 75,
-  );
-
-  return InkWell(
-    onTap: () => Get.to(
-      () => VideoPreviewScreen(
-        videoUrl: localVideo.path,
-        countdownSeconds: 3,
-        userProfile: userImage,
-        userName: name,
-      ),
-    ),
-    child: ClipRRect(
+    BuildContext context,
+    String mediaUrl,
+    String name,
+    String storyId,
+    int index,
+  ) async {
+    return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (thumbPath != null)
-            Image.file(File(thumbPath), fit: BoxFit.cover)
-          else
-            Container(
-              color: Colors.black26,
-              child: const Center(child: Icon(Icons.error)),
-            ),
-          Center(
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primaryColor,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              child: const Icon(
-                Icons.play_arrow,
-                color: Colors.white,
-                size: 26,
-              ),
-            ),
+          Image.network(
+            mediaUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) =>
+                const Center(child: Icon(Icons.broken_image)),
           ),
           _buildBottomNameBar(name),
           if (widget.isMe == true)
@@ -273,14 +199,99 @@ Future<Widget> _buildVideoThumbnailCard(
                     },
                   );
                 },
-                icon: Icon(Icons.remove_circle, color: AppColors.primaryColor),
+                icon: Icon(Icons.delete, color: Colors.red),
               ),
             ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Future<Widget> _buildVideoThumbnailCard(
+    BuildContext context,
+    String videoUrl,
+    String name,
+    String userImage,
+    String storyId,
+    int index,
+  ) async {
+    final localVideo = await _downloadVideoToLocal(videoUrl);
+    final thumbPath = await VideoThumbnail.thumbnailFile(
+      video: localVideo.path,
+      imageFormat: ImageFormat.JPEG,
+      maxHeight: 200,
+      quality: 75,
+    );
+
+    return InkWell(
+      onTap: () {
+        if (widget.isMe == false) {
+          Get.to(
+            () => VideoPreviewScreen(
+              videoUrl: localVideo.path,
+              countdownSeconds: 3,
+              userProfile: userImage,
+              userName: name,
+            ),
+          );
+        } else {
+          Get.to(() => ViewVideo(videoUrl: localVideo.path));
+        }
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (thumbPath != null)
+              Image.file(File(thumbPath), fit: BoxFit.cover)
+            else
+              Container(
+                color: Colors.black26,
+                child: const Center(child: Icon(Icons.error)),
+              ),
+            Center(
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryColor,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(
+                  Icons.play_arrow,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+            ),
+            _buildBottomNameBar(name),
+            if (widget.isMe == true)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: IconButton(
+                  onPressed: () {
+                    _confirm(
+                      context,
+                      onYes: () async {
+                        await userController.deleteStory(storyId);
+                        setState(() {
+                          storiesList.removeAt(index); // remove from list
+                        });
+                        Get.back(); // close dialog
+                      },
+                    );
+                  },
+                  icon: Icon(Icons.delete, color: Colors.red),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _confirm(BuildContext context, {required VoidCallback onYes}) {
     showDialog(
@@ -296,10 +307,7 @@ Future<Widget> _buildVideoThumbnailCard(
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            _dialogActions(
-              context,
-              onYes: onYes,
-            ),
+            _dialogActions(context, onYes: onYes),
           ],
         ),
       ),
@@ -329,6 +337,7 @@ Future<Widget> _buildVideoThumbnailCard(
       ],
     );
   }
+
   /// Bottom overlay name bar
   Widget _buildBottomNameBar(String name) {
     return Positioned(

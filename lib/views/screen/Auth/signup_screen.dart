@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -9,6 +10,7 @@ import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_email_number_field.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Auth/email_verify_screen.dart';
+import 'package:ree_social_media_app/views/screen/Auth/login_screen.dart';
 import '../../../utils/show_snackbar.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -68,7 +70,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   setState(() => selectedCountryCode = code);
                 },
               ),
-
               const SizedBox(height: 12),
               CustomTextField(
                 controller: passwordTextController,
@@ -150,7 +151,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ],
               ),
 
-              const SizedBox(height: 80),
+              const SizedBox(height: 50),
               Obx(
                 () => CustomButton(
                   onTap: () async {
@@ -189,6 +190,38 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                   text: "Agree and Continue",
                   loading: authController.isLoading.value,
+                ),
+              ),
+
+              SizedBox(height: 20),
+
+              Center(
+                child: RichText(
+                  text: TextSpan(
+                    text: "Already have an account?",
+                    style: TextStyle(
+                      color: Color(0xFF676565),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: " Login",
+                        style: TextStyle(
+                          color: AppColors.primaryColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Get.to(
+                              () => LoginScreen(),
+                              transition: Transition.rightToLeft,
+                            );
+                          },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

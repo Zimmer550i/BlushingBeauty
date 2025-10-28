@@ -864,7 +864,6 @@ class _MessageScreenState extends State<MessageScreen> {
                 children: [
                   CircleAvatar(
                     radius: 24,
-
                     backgroundColor: AppColors.primaryColor,
                     backgroundImage: image.isNotEmpty
                         ? NetworkImage(imageWithBaseUrl.toString())

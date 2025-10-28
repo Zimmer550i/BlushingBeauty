@@ -300,7 +300,14 @@ class AuthController extends GetxController {
     if (token != null) {
       debugPrint('🔍 Token found. Fetching user info...');
       final message = await Get.find<UserController>().getInfo();
+      final data = Get.find<UserController>().userInfo.value;
+      final name = data!.name;
+      final image = data.image;
+    
       if (message == "success") {
+        if(name == null || image == null) {
+          return false;
+        }
         debugPrint("🟡 Token:======> $token");
         isLoggedIn.value = true;
         return true;

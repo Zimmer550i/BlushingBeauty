@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 80),
+              SizedBox(height: 50),
               Obx(
                 () => CustomButton(
                   onTap: () async {
@@ -144,7 +144,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            Get.to(() => SignupScreen());
+                            Get.to(
+                              () => SignupScreen(),
+                              transition: Transition.leftToRight,
+                            );
                           },
                       ),
                     ],

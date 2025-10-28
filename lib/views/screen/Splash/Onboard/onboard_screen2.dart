@@ -121,63 +121,64 @@ class _OnboardScreen2State extends State<OnboardScreen2> {
               //   textAlign: TextAlign.center,),
               SizedBox(height: 40),
               Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 50),
-  child: CustomButton(
-    onTap: () async {
-      // 🎯 1. Request camera permission
-      final cameraStatus = await Permission.camera.request();
+                padding: const EdgeInsets.symmetric(horizontal: 50),
+                child: CustomButton(
+                  onTap: () async {
+                    // 🎯 1. Request camera permission
+                    final cameraStatus = await Permission.camera.request();
 
-      // 🎯 2. Handle storage/media permission for all Android versions
-      PermissionStatus mediaStatus;
+                    // 🎯 2. Handle storage/media permission for all Android versions
+                    PermissionStatus mediaStatus;
 
-      if (Platform.isAndroid) {
-        final androidInfo = await DeviceInfoPlugin().androidInfo;
-        final sdkInt = androidInfo.version.sdkInt;
+                    if (Platform.isAndroid) {
+                      final androidInfo = await DeviceInfoPlugin().androidInfo;
+                      final sdkInt = androidInfo.version.sdkInt;
 
-        if (sdkInt >= 33) {
-          // Android 13+ → uses READ_MEDIA_IMAGES or READ_MEDIA_VISUAL_USER_SELECTED
-          mediaStatus = await Permission.photos.request();
-        } else {
-          // Android 12 and below → uses storage permission
-          mediaStatus = await Permission.storage.request();
-        }
-      } else {
-        // iOS → use photos permission
-        mediaStatus = await Permission.photos.request();
-      }
+                      if (sdkInt >= 33) {
+                        // Android 13+ → uses READ_MEDIA_IMAGES or READ_MEDIA_VISUAL_USER_SELECTED
+                        mediaStatus = await Permission.photos.request();
+                      } else {
+                        // Android 12 and below → uses storage permission
+                        mediaStatus = await Permission.storage.request();
+                      }
+                    } else {
+                      // iOS → use photos permission
+                      mediaStatus = await Permission.photos.request();
+                    }
 
-      // 🎯 3. Check if both granted
-      final allGranted = cameraStatus.isGranted && mediaStatus.isGranted;
+                    // 🎯 3. Check if both granted
+                    final allGranted =
+                        cameraStatus.isGranted && mediaStatus.isGranted;
 
-      if (allGranted) {
-        // ✅ Navigate to LoginScreen
-        Get.offAll(
-          () => LoginScreen(),
-          transition: Transition.rightToLeft,
-        );
-      } else {
-        // ❌ Show user-friendly message
-        Get.snackbar(
-          "Permission Required",
-          "Camera and Media access are needed to continue.",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: .8),
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 10,
-          duration: const Duration(seconds: 3),
-        );
+                    if (allGranted) {
+                      // ✅ Navigate to LoginScreen
+                      Get.offAll(
+                        () => LoginScreen(),
+                        transition: Transition.rightToLeft,
+                      );
+                    } else {
+                      // ❌ Show user-friendly message
+                      Get.snackbar(
+                        "Permission Required",
+                        "Camera and Media access are needed to continue.",
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.redAccent.withValues(alpha: .8),
+                        colorText: Colors.white,
+                        margin: const EdgeInsets.all(16),
+                        borderRadius: 10,
+                        duration: const Duration(seconds: 3),
+                      );
 
-        // ⚙️ Open settings if permanently denied
-        if (cameraStatus.isPermanentlyDenied ||
-            mediaStatus.isPermanentlyDenied) {
-          await openAppSettings();
-        }
-      }
-    },
-    text: "Get Started",
-  ),
-),
+                      // ⚙️ Open settings if permanently denied
+                      if (cameraStatus.isPermanentlyDenied ||
+                          mediaStatus.isPermanentlyDenied) {
+                        await openAppSettings();
+                      }
+                    }
+                  },
+                  text: "Get Started",
+                ),
+              ),
             ],
           ),
         ),

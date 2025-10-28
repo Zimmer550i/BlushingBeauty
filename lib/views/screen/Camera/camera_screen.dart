@@ -58,19 +58,18 @@ class _CameraScreenState extends State<CameraScreen>
   }
 
   Future<void> _initCamera(CameraDescription description) async {
-  if (_isCameraChanging) return;
-  _isCameraChanging = true;
+    if (_isCameraChanging) return;
+    _isCameraChanging = true;
 
-  // Dispose existing controller safely
-  if (GlobalCameraManager.controller != null) {
-    await GlobalCameraManager.dispose();
+    // Dispose existing controller safely
+    if (GlobalCameraManager.controller != null) {
+      await GlobalCameraManager.dispose();
+    }
+
+    final controller = await GlobalCameraManager.initialize(description);
+    if (controller != null && mounted) setState(() {});
+    _isCameraChanging = false;
   }
-
-  final controller = await GlobalCameraManager.initialize(description);
-  if (controller != null && mounted) setState(() {});
-  _isCameraChanging = false;
-}
-
 
   Future<void> _switchCamera() async {
     if (_controller == null || _isCameraChanging) return;
@@ -176,7 +175,9 @@ class _CameraScreenState extends State<CameraScreen>
       if (!GlobalCameraManager.isInitialized) {
         return Scaffold(
           backgroundColor: Colors.black,
-          body: Center(child: CircularProgressIndicator(color: AppColors.primaryColor)),
+          body: Center(
+            child: CircularProgressIndicator(color: AppColors.primaryColor),
+          ),
         );
       }
     }

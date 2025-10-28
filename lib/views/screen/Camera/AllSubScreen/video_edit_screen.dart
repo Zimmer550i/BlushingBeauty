@@ -328,7 +328,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                 valueListenable: _isPlaying,
                 builder: (_, playing, _) {
                   return CircleAvatar(
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppColors.primaryColor,
                     child: IconButton(
                       icon: Icon(
                         playing ? Icons.pause : Icons.play_arrow,

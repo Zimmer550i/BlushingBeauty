@@ -99,7 +99,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onPressed: () => Get.back(),
                   icon: Icon(Icons.arrow_back, color: AppColors.textColor),
                 ),
-                SvgPicture.asset("assets/icons/re.svg",height: 35,width: 45),
+                SvgPicture.asset("assets/icons/re.svg", height: 35, width: 45),
               ],
             ),
 
@@ -137,7 +137,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                     image: _profileImage != null
                                         ? FileImage(_profileImage!)
                                         : const AssetImage(
-                                                'assets/images/dummy.jpg',
+                                                'assets/images/demo1.png',
                                               )
                                               as ImageProvider,
                                     fit: BoxFit.cover,
@@ -187,9 +187,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     const SizedBox(height: 80),
 
                     /// Save Button
-                    Obx(() => CustomButton(
+                    Obx(
+                      () => CustomButton(
                         loading: userController.isLoading.value,
-                        onTap: _onSave, text: "Save")),
+                        onTap: _onSave,
+                        text: "Save",
+                      ),
+                    ),
                   ],
                 ),
               ),

@@ -209,6 +209,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           const SizedBox(width: 12),
           CircleAvatar(
+            backgroundColor: AppColors.primaryColor,
             radius: 22,
             backgroundImage: NetworkImage(_receiverImage ?? ""),
           ),

@@ -175,6 +175,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
                         children: [
                           CircleAvatar(
                             radius: 20,
+                            backgroundColor: AppColors.primaryColor,
                             backgroundImage: item['image'] != null &&
                                 item['image'].toString().isNotEmpty
                                 ? NetworkImage(item['image'])

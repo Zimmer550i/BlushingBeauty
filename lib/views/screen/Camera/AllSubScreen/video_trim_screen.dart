@@ -31,7 +31,6 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
   int _selectedFrameIndex = 0;
 
   bool _isInitialized = false;
-  final double _thumbnailHeight = 80.0;
   final double _thumbnailWidth = 60.0;
 
   @override
@@ -110,7 +109,7 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
     return Stack(
       alignment: Alignment.center,
       children: [
-        if (_videoController != null && _videoController.value.isInitialized)
+        if (_videoController.value.isInitialized)
           Positioned.fill(
             child: FittedBox(
               fit: BoxFit.cover,
@@ -243,7 +242,7 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
                                     sigmaY: 4,
                                   ),
                                   child: Container(
-                                    color: Colors.black.withOpacity(0.015),
+                                    color: Colors.black.withValues(alpha: .015),
                                   ),
                                 ),
                               ),

@@ -55,7 +55,7 @@ class _ContactScreenState extends State<ContactScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Contact List",
+                "Contacts",
                 style: TextStyle(
                   color: AppColors.textColor,
                   fontSize: 22,
@@ -150,6 +150,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
     return ListTile(
       leading: CircleAvatar(
+        backgroundColor: AppColors.primaryColor,
         backgroundImage: imageUrl != null
             ? NetworkImage(imageUrl)
             : const AssetImage("assets/images/dummy.jpg") as ImageProvider,

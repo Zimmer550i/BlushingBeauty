@@ -119,7 +119,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     );
     _frontCam = CameraController(
       front,
-      ResolutionPreset.medium,
+      ResolutionPreset.max,
       enableAudio: true,
     );
     await _frontCam!.initialize();
@@ -343,26 +343,31 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                   Positioned(
                     top: 0,
                     right: 0,
-                    child: Container(
-                      width: 130,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        border: Border.all(
-                          color: AppColors.frameColors,
-                          width: 2,
+                    child: SizedBox(
+                      width: 120,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.25),
+                            border: Border.all(
+                              color: AppColors.frameColors,
+                              width: 2,
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAliasWithSaveLayer,
+                          child: CameraPreview(_frontCam!),
                         ),
-                        // borderRadius: BorderRadius.circular(12),
                       ),
-                      clipBehavior: Clip.antiAliasWithSaveLayer,
-                      child: CameraPreview(_frontCam!),
                     ),
                   ),
 
                 _buildBottomControls(),
               ],
             )
-          : Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
+          : Center(
+              child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
+            ),
     );
   }
 
@@ -379,7 +384,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
           children: [
             CircleAvatar(
               radius: 60,
-              backgroundColor: const Color(0xFF383838),
+              backgroundColor: AppColors.primaryColor,
               child: Text(
                 '$_secondsRemaining',
                 style: const TextStyle(
@@ -465,13 +470,27 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 onTap: () {
                   _onNextPressed(true);
                 },
-                child: CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 28,
-                  child: Icon(
-                    Icons.navigate_next,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(32),
                     color: AppColors.primaryColor,
-                    size: 34,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Next",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Icon(Icons.navigate_next, color: Colors.white),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -484,7 +503,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                   _onNextPressed(false);
                 },
                 child: CircleAvatar(
-                  backgroundColor: Colors.white,
+                  backgroundColor: AppColors.primaryColor,
                   radius: 28,
                   child: Icon(
                     Icons.navigate_next,
