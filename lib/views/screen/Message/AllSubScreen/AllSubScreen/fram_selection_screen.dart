@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_loading.dart';
-import '../../../../../helpers/route.dart';
 import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 
 class FrameSelectionScreen extends StatefulWidget {
@@ -184,6 +182,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                   ? CustomLoading()
                   : SvgPicture.asset(
                       'assets/icons/send.svg',
+                      // ignore: deprecated_member_use
                       color: AppColors.primaryColor,
                       height: 28,
                     ),

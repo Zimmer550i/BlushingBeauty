@@ -4,11 +4,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/utils/style.dart';
-import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:video_player/video_player.dart';
 import 'fram_selection_screen.dart';
 
