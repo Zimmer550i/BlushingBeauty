@@ -219,8 +219,9 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
     final thumbPath = await VideoThumbnail.thumbnailFile(
       video: localVideo.path,
       imageFormat: ImageFormat.JPEG,
-      maxHeight: 200,
-      quality: 75,
+      // maxHeight: 1080,
+      // maxWidth: 1920,
+      // quality: 100,
     );
 
     return InkWell(

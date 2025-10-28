@@ -89,7 +89,9 @@ class _VideoTrimAndSendScreenState extends State<VideoTrimAndSendScreen> {
     for (int i = 0; i < count; i++) {
       final path = await VideoThumbnail.thumbnailFile(
         video: widget.videoUrl,
-        quality: 70,
+      //   maxHeight: 1080,
+      // maxWidth: 1920,
+      // quality: 100,
         timeMs: i * interval,
       );
       if (path != null) _thumbnailPaths.add(path);

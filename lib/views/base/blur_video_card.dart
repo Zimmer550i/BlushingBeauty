@@ -44,8 +44,9 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
       final thumb = await VideoThumbnail.thumbnailFile(
         video: widget.videoFile.path,
         imageFormat: ImageFormat.JPEG,
-        maxHeight: 180,
-        quality: 80,
+      //   maxHeight: 1080,
+      // maxWidth: 1920,
+      // quality: 100,
       );
       if (!mounted) return;
       setState(() {

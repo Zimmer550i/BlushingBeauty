@@ -79,9 +79,9 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
         video: widget.frontVideoUrl,
         imageFormat: ImageFormat.PNG,
         timeMs: i * 1000, // frame at each second
-        quality: 80,
-        maxHeight: 200,
-        maxWidth: 200,
+      //   maxHeight: 1080,
+      // maxWidth: 1920,
+      // quality: 100,
         // Ensure unique file name to avoid caching the same file
         thumbnailPath:
             '${Directory.systemTemp.path}/${DateTime.now().millisecondsSinceEpoch}_$i.png',
