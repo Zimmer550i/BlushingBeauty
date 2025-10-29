@@ -119,7 +119,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     );
     _frontCam = CameraController(
       front,
-      ResolutionPreset.max,
+      ResolutionPreset.ultraHigh,
       enableAudio: true,
     );
     await _frontCam!.initialize();
@@ -345,19 +345,21 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                     right: 0,
                     child: SizedBox(
                       width: 100,
-                      height: 160,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: (0.25)),
-                            border: Border.all(
-                              color: AppColors.frameColors,
-                              width: 2,
+                      child: AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.25),
+                              border: Border.all(
+                                color: AppColors.frameColors,
+                                width: 2,
+                              ),
                             ),
+                            clipBehavior: Clip.antiAliasWithSaveLayer,
+                            child: CameraPreview(_frontCam!),
                           ),
-                          clipBehavior: Clip.antiAliasWithSaveLayer,
-                          child: CameraPreview(_frontCam!),
                         ),
                       ),
                     ),
