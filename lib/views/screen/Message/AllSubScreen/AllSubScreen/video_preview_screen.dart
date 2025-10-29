@@ -344,9 +344,10 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                     top: 0,
                     right: 0,
                     child: SizedBox(
-                      width: 120,
+                      width: 100,
+                      height: 160,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(4),
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: (0.25)),
@@ -502,13 +503,27 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 onTap: () {
                   _onNextPressed(false);
                 },
-                child: CircleAvatar(
-                  backgroundColor: AppColors.primaryColor,
-                  radius: 28,
-                  child: Icon(
-                    Icons.navigate_next,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(32),
                     color: AppColors.primaryColor,
-                    size: 34,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Next",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Icon(Icons.navigate_next, color: Colors.white),
+                      ],
+                    ),
                   ),
                 ),
               ),

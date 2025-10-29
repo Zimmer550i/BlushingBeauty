@@ -235,20 +235,20 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                         "Connect With Friends",
                         style: TextStyle(
                           color: Color(0xFF413E3E),
-                          fontSize: 28,
+                          fontSize: 24,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 12),
                       RichText(
-                        textAlign: TextAlign.center,
+                        textAlign: TextAlign.start,
                         text: TextSpan(
                           children: [
                             TextSpan(
                               text: "To start your first messages on",
                               style: TextStyle(
                                 color: Color(0xFF676565),
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -256,7 +256,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                               text: " re:",
                               style: TextStyle(
                                 color: AppColors.primaryColor,
-                                fontSize: 20,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -264,7 +264,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                               text: " invite 5 friends",
                               style: TextStyle(
                                 color: Color(0xFF676565),
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -278,7 +278,7 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
                       CustomTextField(
                         controller: searchTextController,
                         suffixIcon: Padding(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.all(14.0),
                           child: SvgPicture.asset('assets/icons/search.svg'),
                         ),
                         hintText: 'Search Contacts',
@@ -287,7 +287,11 @@ class _InviteFriendScreenState extends State<InviteFriendScreen> {
 
                       // Loading
                       if (isLoading)
-                        Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
+                        Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primaryColor,
+                          ),
+                        )
                       else ...[
                         // Friends on re:
                         if (matched.isNotEmpty) ...[

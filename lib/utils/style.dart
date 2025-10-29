@@ -35,7 +35,7 @@ class AppStyles {
   }) {
     return TextStyle(
       color: color,
-      fontSize: 20,
+      fontSize: 18.sp,
       letterSpacing: letterSpacing,
       fontWeight: fontWeight ?? FontWeight.w400,
     );

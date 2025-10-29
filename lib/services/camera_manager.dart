@@ -3,54 +3,68 @@ import 'package:flutter/foundation.dart';
 
 class GlobalCameraManager {
   static CameraController? _controller;
+  static bool _isDisposing = false;
+  static bool _isInitialized = false;
 
-  /// 🔹 Get the current controller if initialized
+  /// 🔹 Get the current controller
   static CameraController? get controller => _controller;
 
-  /// 🔹 Initialize a camera safely (disposing previous if needed)
+  /// 🔹 Whether the camera is ready
+  static bool get isInitialized =>
+      _isInitialized && _controller?.value.isInitialized == true;
+
+  /// 🔹 Initialize the camera safely
   static Future<CameraController?> initialize(CameraDescription description) async {
-    await dispose(); // ensures only one active camera
+    if (_isDisposing) {
+      debugPrint("⚠️ Waiting for camera to finish disposing...");
+      await Future.delayed(const Duration(milliseconds: 200));
+    }
+
+    await dispose(); // Always ensure clean state
 
     try {
       final controller = CameraController(
         description,
-        ResolutionPreset.max,
+        ResolutionPreset.max, // ✅ use max for best quality
         enableAudio: true,
         imageFormatGroup: ImageFormatGroup.yuv420,
       );
+
       await controller.initialize();
+
       _controller = controller;
-      debugPrint("🎥 Camera initialized: ${description.lensDirection}");
+      _isInitialized = true;
+
+      debugPrint("✅ Camera initialized: ${description.lensDirection}");
       return _controller;
     } catch (e) {
       debugPrint("❌ Error initializing camera: $e");
+      _isInitialized = false;
       return null;
     }
   }
 
-  /// 🔹 Dispose safely — no matter what screen or state you’re in
+  /// 🔹 Dispose safely (with locking)
   static Future<void> dispose() async {
+    if (_controller == null || _isDisposing) return;
+
+    _isDisposing = true;
     try {
-      if (_controller != null) {
-        // Stop image stream safely before disposing
-        if (_controller!.value.isStreamingImages) {
-          await _controller!.stopImageStream();
-        }
-
-        // Give a tiny delay to ensure CameraX detaches observers
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        // await _controller!.dispose();
-        debugPrint("🧹 Camera disposed successfully");
+      if (_controller!.value.isRecordingVideo) {
+        await _controller!.stopVideoRecording();
       }
+      if (_controller!.value.isStreamingImages) {
+        await _controller!.stopImageStream();
+      }
+
+      await _controller!.dispose();
+      debugPrint("🧹 Camera disposed successfully");
     } catch (e) {
       debugPrint("⚠️ Camera dispose error: $e");
     } finally {
       _controller = null;
+      _isInitialized = false;
+      _isDisposing = false;
     }
   }
-
-
-  /// 🔹 Check if camera is initialized
-  static bool get isInitialized => _controller?.value.isInitialized ?? false;
 }

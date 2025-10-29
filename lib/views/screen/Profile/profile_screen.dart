@@ -42,10 +42,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(20),
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Color(0xFF56BBFF), Color(0xFFFFFFFF)],
+                      colors: [AppColors.primaryColor, Colors.white],
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -320,5 +320,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
-
 }

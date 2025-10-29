@@ -112,7 +112,7 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                     ),
                     const TextSpan(
                       text:
-                      " and show you who is already on the app. Your info stays private",
+                          " and show you who is already on the app. Your info stays private",
                       style: TextStyle(
                         color: Color(0xFF413E3E),
                         fontSize: 16,
@@ -135,15 +135,17 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    border:
-                    Border.all(color: const Color(0xFFC4C3C3), width: 0.5),
+                    border: Border.all(
+                      color: const Color(0xFFC4C3C3),
+                      width: 0.5,
+                    ),
                   ),
                   child: const Center(
                     child: Text(
                       "Not Now",
                       style: TextStyle(
                         color: Color(0xFF676565),
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -162,8 +164,10 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
                     await _saveContactsToLocal();
                     Get.to(() => const InviteFriendScreen());
                   } else if (status.isDenied) {
-                    Get.snackbar("Permission Denied",
-                        "You need to allow access to continue");
+                    Get.snackbar(
+                      "Permission Denied",
+                      "You need to allow access to continue",
+                    );
                   } else if (status.isPermanentlyDenied) {
                     openAppSettings();
                   }

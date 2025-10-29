@@ -306,6 +306,7 @@ class ChatController extends GetxController {
 }
 
 
+
   Future<void> pickAndSendVideo() async {
   isLoading.value = true;
   final XFile? file = await _picker.pickVideo(source: ImageSource.gallery);

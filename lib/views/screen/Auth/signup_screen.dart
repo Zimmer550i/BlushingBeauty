@@ -11,6 +11,7 @@ import 'package:ree_social_media_app/views/base/custom_email_number_field.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Auth/email_verify_screen.dart';
 import 'package:ree_social_media_app/views/screen/Auth/login_screen.dart';
+import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/all_data_page.dart';
 import '../../../utils/show_snackbar.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -127,6 +128,15 @@ class _SignupScreenState extends State<SignupScreen> {
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Get.to(
+                                  () => AllDataScreen(
+                                    title: "Terms of Service",
+                                    endPoint: '/terms',
+                                  ),
+                                );
+                              },
                           ),
                           const TextSpan(
                             text: " and acknowledge you have read the ",
@@ -143,6 +153,15 @@ class _SignupScreenState extends State<SignupScreen> {
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Get.to(
+                                  () => AllDataScreen(
+                                    title: "Privacy Policy",
+                                    endPoint: '/privacy',
+                                  ),
+                                );
+                              },
                           ),
                         ],
                       ),
