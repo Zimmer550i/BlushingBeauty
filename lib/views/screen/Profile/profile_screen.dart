@@ -145,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 17),
               _customRow(
                 onTap: () => _confirmDeleteAccount(context),
-                title: 'Delete my account',
+                title: 'Delete My Account',
                 imagePath: 'assets/icons/delete.svg',
               ),
               const SizedBox(height: 17),
@@ -162,7 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     endPoint: '/terms',
                   ),
                 ),
-                title: 'Terms of service',
+                title: 'Terms of Service',
                 imagePath: 'assets/icons/terms.svg',
               ),
               const SizedBox(height: 17),
@@ -198,7 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       "Logout",
                       style: TextStyle(
                         color: Color(0xFFF04B4C),
-                        fontSize: 20,
+                        fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

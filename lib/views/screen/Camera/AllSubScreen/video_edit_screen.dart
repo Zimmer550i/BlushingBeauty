@@ -162,80 +162,120 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                       right: 0,
                       child: _buildBottomControls(),
                     ),
+
+                  if (!widget.isVideo)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.24),
+                        ),
+                        child: _buildBottomActions(),
+                      ),
+                    ),
                 ],
               ),
             ),
 
             /// ====== Buttons Area ======
-            Container(
-              width: double.infinity,
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 20,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    CustomButton(
-                      width: MediaQuery.of(context).size.width / 2.5,
-                      onTap: () async {
-                        try {
-                          if (widget.isVideo) {
-                            final formattedFile = await ensureMp4Format(
-                              widget.filePath,
-                            );
-
-                            Get.to(
-                              () => SendMessageWithFriendScreen(
-                                filePath: formattedFile.path,
-                                isVideo: widget.isVideo,
-                              ),
-                            );
-                          } else {
-                            Get.to(
-                              () => SendMessageWithFriendScreen(
-                                filePath: widget.filePath,
-                                isVideo: widget.isVideo,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          debugPrint('⚠️ Could not format video: $e');
-                        }
-                      },
-                      text: "Send Message",
-                    ),
-                    const SizedBox(height: 20),
-                    Obx(
-                      () => CustomButton(
-                        width: MediaQuery.of(context).size.width / 2.5,
-                        loading: createStoryController.isLoading.value,
-                        onTap: () {
-                          if (widget.isVideo) {
-                            createStoryController.addStory(
-                              videoPath: widget.filePath,
-                            );
-                          } else {
-                            createStoryController.addStory(
-                              imagePath: widget.filePath,
-                            );
-                          }
-                        },
-                        text: "Create Story",
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildBottomActions() => SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          InkWell(
+            onTap: () {
+              if (widget.isVideo) {
+                createStoryController.addStory(videoPath: widget.filePath);
+              } else {
+                createStoryController.addStory(imagePath: widget.filePath);
+              }
+            },
+            child: Container(
+              width: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                color: Colors.grey,
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(
+                    "Create Story",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Obx(
+            () => InkWell(
+              onTap: () async {
+                try {
+                  if (widget.isVideo) {
+                    final formattedFile = await ensureMp4Format(
+                      widget.filePath,
+                    );
+
+                    Get.to(
+                      () => SendMessageWithFriendScreen(
+                        filePath: formattedFile.path,
+                        isVideo: widget.isVideo,
+                      ),
+                    );
+                  } else {
+                    Get.to(
+                      () => SendMessageWithFriendScreen(
+                        filePath: widget.filePath,
+                        isVideo: widget.isVideo,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  debugPrint('⚠️ Could not format video: $e');
+                }
+              },
+              child: Container(
+                width: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(32),
+                  color: AppColors.primaryColor,
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: createStoryController.isLoading.value
+                        ? CircularProgressIndicator(
+                            color: AppColors.primaryColor,
+                          )
+                        : Text(
+                            "Send Now",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   /// ==== Video Controls ====
   Widget _buildBottomControls() {
@@ -246,7 +286,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
     final value = _position.inMilliseconds.toDouble().clamp(0, total);
 
     return Container(
-      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.24)),
+      decoration: BoxDecoration(color: Colors.transparent),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -311,6 +351,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
               ],
             ),
           ),
+          _buildBottomActions(),
         ],
       ),
     );

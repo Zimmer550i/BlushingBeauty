@@ -220,17 +220,17 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
 
                       // Playback controls
                       Positioned(
-                        bottom: 80,
+                        bottom: 0,
                         left: 0,
                         right: 0,
                         child: _buildPlaybackControls(),
                       ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: _buildBottomActions(),
-                      ),
+                      // Positioned(
+                      //   left: 0,
+                      //   right: 0,
+                      //   bottom: 0,
+                      //   child: _buildBottomActions(),
+                      // ),
                     ],
                   ),
                 ),
@@ -250,45 +250,51 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
         return Container(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
           decoration: BoxDecoration(color: Colors.white.withOpacity(0.24)),
-          child: Row(
+          child: Column(
             children: [
-              Text(
-                _formatDuration(_videoPosition),
-                style: const TextStyle(color: Colors.black),
-              ),
-              Expanded(
-                child: Slider(
-                  value: _videoPosition.inMilliseconds
-                      .toDouble()
-                      .clamp(0, totalMs)
-                      .toDouble(),
-                  min: 0,
-                  max: totalMs.toDouble(),
-                  activeColor: AppColors.primaryColor,
-                  inactiveColor: Colors.grey,
-                  onChanged: (v) async {
-                    final pos = Duration(milliseconds: v.toInt());
-                    await _reactionVideoController?.seekTo(pos);
-                    await _mainVideoController?.seekTo(pos);
-                    setState(() => _videoPosition = pos);
-                  },
-                ),
-              ),
-              Text(
-                _formatDuration(_videoDuration),
-                style: const TextStyle(color: Colors.black),
-              ),
-              const SizedBox(width: 12),
-              CircleAvatar(
-                backgroundColor: AppColors.primaryColor,
-                child: IconButton(
-                  icon: Icon(
-                    playing ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
+              Row(
+                children: [
+                  Text(
+                    _formatDuration(_videoPosition),
+                    style: const TextStyle(color: Colors.black),
                   ),
-                  onPressed: _togglePlayPause,
-                ),
+                  Expanded(
+                    child: Slider(
+                      value: _videoPosition.inMilliseconds
+                          .toDouble()
+                          .clamp(0, totalMs)
+                          .toDouble(),
+                      min: 0,
+                      max: totalMs.toDouble(),
+                      activeColor: AppColors.primaryColor,
+                      inactiveColor: Colors.grey,
+                      onChanged: (v) async {
+                        final pos = Duration(milliseconds: v.toInt());
+                        await _reactionVideoController?.seekTo(pos);
+                        await _mainVideoController?.seekTo(pos);
+                        setState(() => _videoPosition = pos);
+                      },
+                    ),
+                  ),
+                  Text(
+                    _formatDuration(_videoDuration),
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                  const SizedBox(width: 12),
+                  CircleAvatar(
+                    backgroundColor: AppColors.primaryColor,
+                    child: IconButton(
+                      icon: Icon(
+                        playing ? Icons.pause : Icons.play_arrow,
+                        color: Colors.white,
+                      ),
+                      onPressed: _togglePlayPause,
+                    ),
+                  ),
+                ],
               ),
+              SizedBox(height: 10),
+              _buildBottomActions(),
             ],
           ),
         );
@@ -296,22 +302,21 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     );
   }
 
-  
   Widget _buildBottomActions() => SafeArea(
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         InkWell(
           onTap: () {
-              Get.to(
-                () => FrameSelectionScreen(
-                  frontVideoUrl: widget.reactionVideo,
-                  userProfile: widget.userProfile,
-                  userName: widget.userName,
-                  chatId: widget.chatId,
-                  isInbox: widget.isInbox,
-                ),
-              );
+            Get.to(
+              () => FrameSelectionScreen(
+                frontVideoUrl: widget.reactionVideo,
+                userProfile: widget.userProfile,
+                userName: widget.userName,
+                chatId: widget.chatId,
+                isInbox: widget.isInbox,
+              ),
+            );
           },
           child: Container(
             decoration: BoxDecoration(
@@ -319,9 +324,9 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
               color: Colors.grey,
             ),
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(10),
               child: Text(
-                "Select image",
+                "Select Image",
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -330,7 +335,6 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
             ),
           ),
         ),
-
         Obx(
           () => InkWell(
             onTap: () async {

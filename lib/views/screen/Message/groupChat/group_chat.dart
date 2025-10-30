@@ -314,6 +314,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   Widget _buildImageMessage(Map<String, dynamic> msg) {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
     bool isMe = msg["isMe"] ?? false;
+    bool view = msg["view"] ?? false;
+  final bool isViewed = isMe ? true : view;
 
     return Column(
       crossAxisAlignment: isMe
@@ -327,7 +329,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           receiverName: widget.groupName,
           receiverImage: image,
           chatId: widget.chatId,
-          isView: isMe ? true : (msg["view"] ?? false),
+          isView: isViewed,
         ),
         const SizedBox(height: 4),
         Text(
@@ -340,6 +342,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
+    bool isMe = msg["isMe"] ?? false;
+    bool view = msg["view"] ?? false;
+  final bool isViewed = isMe ? true : view;
 
     return FutureBuilder<File>(
       future: _downloadVideoToLocal(videoUrl.toString()),
@@ -365,14 +370,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         final localVideo = snap.data!;
 
         return Column(
-          crossAxisAlignment: msg["isMe"]
+          crossAxisAlignment: isMe
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
               chatController: chatController,
               msgId: msg["_id"],
-              isView: msg["isMe"] ? true : (msg["view"] ?? false),
+              isView: isViewed,
               videoFile: localVideo,
               msg: msg,
               receiverImage: image,

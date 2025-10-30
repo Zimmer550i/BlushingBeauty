@@ -69,7 +69,8 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
-                  childAspectRatio: 0.9,
+                  // ✅ Match the 4:3 aspect ratio visually
+                  childAspectRatio: 3 / 4,
                 ),
                 padding: EdgeInsets.zero,
                 itemCount: storiesList.length,
@@ -78,11 +79,12 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                   final type = story["contentType"];
                   final storyId = story["_id"];
                   final name = story["author"]?["name"] ?? "Unknown";
+
                   final userImage = userController.addBaseUrl(
-                    story["author"]["image"],
+                    story["author"]?["image"] ?? "",
                   );
 
-                  // Determine media URL
+                  // ✅ Determine media URL safely
                   String? mediaUrl;
                   if (type == "image" && (story["image"] ?? "").isNotEmpty) {
                     mediaUrl = userController.addBaseUrl(story["image"]);
@@ -92,9 +94,18 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                   }
 
                   if (mediaUrl == null || mediaUrl.isEmpty) {
-                    return const Center(child: Icon(Icons.error));
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.error, color: Colors.red),
+                      ),
+                    );
                   }
 
+                  // ✅ Each story item now keeps 4:3 ratio visually consistent
                   return _buildStoryCard(
                     context,
                     mediaUrl,
@@ -123,42 +134,50 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
     String storyId,
     int index,
   ) {
-    return FutureBuilder<Widget>(
-      future: isVideo
-          ? _buildVideoThumbnailCard(
-              context,
-              mediaUrl,
-              name,
-              userImage,
-              storyId,
-              index,
-            )
-          : _buildImageCard(context, mediaUrl, name,userImage, storyId, index),
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return Container(
-            height: 160,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.black12,
-            ),
-            child: Center(
-              child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
-            ),
-          );
-        }
-        if (snap.hasError || !snap.hasData) {
-          return Container(
-            height: 160,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.black26,
-            ),
-            child: const Center(child: Icon(Icons.error, color: Colors.red)),
-          );
-        }
-        return snap.data!;
-      },
+    return AspectRatio(
+      aspectRatio: 3 / 4,
+      child: FutureBuilder<Widget>(
+        future: isVideo
+            ? _buildVideoThumbnailCard(
+                context,
+                mediaUrl,
+                name,
+                userImage,
+                storyId,
+                index,
+              )
+            : _buildImageCard(
+                context,
+                mediaUrl,
+                name,
+                userImage,
+                storyId,
+                index,
+              ),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.black12,
+              ),
+              child: Center(
+                child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
+              ),
+            );
+          }
+          if (snap.hasError || !snap.hasData) {
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.black26,
+              ),
+              child: const Center(child: Icon(Icons.error, color: Colors.red)),
+            );
+          }
+          return snap.data!;
+        },
+      ),
     );
   }
 
@@ -171,54 +190,57 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
     String storyId,
     int index,
   ) async {
-    return InkWell(
-      onTap: () {
-        if (widget.isMe == false) {
-          Get.to(
-            () => VideoPreviewScreen(
-              videoUrl: mediaUrl,
-              countdownSeconds: 3,
-              userProfile: userImage,
-              userName: name,
-            ),
-          );
-        } else {
-          Get.to(() => ViewMedia(mediaUrl: mediaUrl));
-        }
-      },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.network(
-              mediaUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) =>
-                  const Center(child: Icon(Icons.broken_image)),
-            ),
-            _buildBottomNameBar(name),
-            if (widget.isMe == true)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: IconButton(
-                  onPressed: () {
-                    _confirm(
-                      context,
-                      onYes: () async {
-                        await userController.deleteStory(storyId);
-                        setState(() {
-                          storiesList.removeAt(index);
-                        });
-                        Get.back(); // close dialog
-                      },
-                    );
-                  },
-                  icon: Icon(Icons.delete, color: Colors.red),
-                ),
+    return AspectRatio(
+      aspectRatio: 3 / 4,
+      child: InkWell(
+        onTap: () {
+          if (widget.isMe == false) {
+            Get.to(
+              () => VideoPreviewScreen(
+                videoUrl: mediaUrl,
+                countdownSeconds: 3,
+                userProfile: userImage,
+                userName: name,
               ),
-          ],
+            );
+          } else {
+            Get.to(() => ViewMedia(mediaUrl: mediaUrl));
+          }
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(
+                mediaUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    const Center(child: Icon(Icons.broken_image)),
+              ),
+              _buildBottomNameBar(name),
+              if (widget.isMe == true)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: IconButton(
+                    onPressed: () {
+                      _confirm(
+                        context,
+                        onYes: () async {
+                          await userController.deleteStory(storyId);
+                          setState(() {
+                            storiesList.removeAt(index);
+                          });
+                          Get.back(); // close dialog
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -241,71 +263,79 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
       maxWidth: 0,
     );
 
-    return InkWell(
-      onTap: () {
-        if (widget.isMe == false) {
-          Get.to(
-            () => VideoPreviewScreen(
-              videoUrl: localVideo.path,
-              countdownSeconds: 3,
-              userProfile: userImage,
-              userName: name,
-            ),
-          );
-        } else {
-          Get.to(() => ViewMedia(mediaUrl: localVideo.path));
-        }
-      },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (thumbPath != null)
-              Image.file(File(thumbPath), fit: BoxFit.cover)
-            else
-              Container(
-                color: Colors.black26,
-                child: const Center(child: Icon(Icons.error)),
+    return AspectRatio(
+      aspectRatio: 3 / 4,
+      child: InkWell(
+        onTap: () {
+          if (widget.isMe == false) {
+            Get.to(
+              () => VideoPreviewScreen(
+                videoUrl: localVideo.path,
+                countdownSeconds: 3,
+                userProfile: userImage,
+                userName: name,
               ),
-            Center(
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primaryColor,
-                  border: Border.all(color: Colors.white, width: 2),
+            );
+          } else {
+            Get.to(() => ViewMedia(mediaUrl: localVideo.path));
+          }
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (thumbPath != null)
+                Image.file(File(thumbPath), fit: BoxFit.cover)
+              else
+                Container(
+                  color: Colors.black26,
+                  child: const Center(child: Icon(Icons.error)),
                 ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
-            ),
-            _buildBottomNameBar(name),
-            if (widget.isMe == true)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: IconButton(
-                  onPressed: () {
-                    _confirm(
-                      context,
-                      onYes: () async {
-                        await userController.deleteStory(storyId);
-                        setState(() {
-                          storiesList.removeAt(index); // remove from list
-                        });
-                        Get.back(); // close dialog
-                      },
-                    );
-                  },
-                  icon: Icon(Icons.delete, color: Colors.red),
+
+              // ▶️ Play button overlay
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primaryColor,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow,
+                    color: Colors.white,
+                    size: 26,
+                  ),
                 ),
               ),
-          ],
+
+              _buildBottomNameBar(name),
+
+              // 🗑️ Delete button for your own stories
+              if (widget.isMe == true)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: IconButton(
+                    onPressed: () {
+                      _confirm(
+                        context,
+                        onYes: () async {
+                          await userController.deleteStory(storyId);
+                          setState(() {
+                            storiesList.removeAt(index);
+                          });
+                          Get.back(); // close dialog
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
