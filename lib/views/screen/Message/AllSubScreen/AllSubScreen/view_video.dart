@@ -151,7 +151,7 @@ class _ViewMediaState extends State<ViewMedia> {
       return Image.network(
         widget.mediaUrl,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
+        errorBuilder: (_, _, _) =>
             const Center(child: Icon(Icons.broken_image, size: 60)),
         loadingBuilder: (context, child, progress) {
           if (progress == null) return child;
@@ -183,7 +183,7 @@ class _ViewMediaState extends State<ViewMedia> {
       child: SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: .3),
           child: Row(
             children: [
               Text(
@@ -207,7 +207,7 @@ class _ViewMediaState extends State<ViewMedia> {
               const SizedBox(width: 12),
               ValueListenableBuilder<bool>(
                 valueListenable: _isPlaying,
-                builder: (_, playing, __) => IconButton(
+                builder: (_, playing, _) => IconButton(
                   icon: Icon(
                     playing ? Icons.pause : Icons.play_arrow,
                     color: Colors.white,

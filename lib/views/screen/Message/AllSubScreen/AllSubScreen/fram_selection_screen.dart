@@ -78,8 +78,8 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
         imageFormat: ImageFormat.PNG,
         timeMs: i * 1000, // frame at each second
         maxHeight: 0,
-      maxWidth: 0,
-      quality: 100,
+        maxWidth: 0,
+        quality: 100,
         // Ensure unique file name to avoid caching the same file
         thumbnailPath:
             '${Directory.systemTemp.path}/${DateTime.now().millisecondsSinceEpoch}_$i.png',
@@ -173,7 +173,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
           _buildFrameSelector(),
           IconButton(
             onPressed: () => Get.back(),
-            icon: Icon(Icons.delete, color: Colors.red),
+            icon: Icon(Icons.delete, color: AppColors.primaryColor),
           ),
           Obx(
             () => InkWell(
@@ -184,7 +184,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                       'assets/icons/send.svg',
                       // ignore: deprecated_member_use
                       color: AppColors.primaryColor,
-                      height: 28,
+                      height: 24,
                     ),
             ),
           ),

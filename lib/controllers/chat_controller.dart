@@ -227,7 +227,7 @@ class ChatController extends GetxController {
 }
 
 /// Format time nicely (optional)
-String _formatTime(String? isoString) {
+String formatTime(String? isoString) {
   if (isoString == null) return "";
   final dt = DateTime.tryParse(isoString);
   if (dt == null) return "";

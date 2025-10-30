@@ -319,17 +319,20 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
             );
           },
           child: Container(
+            width: 120,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(32),
               color: Colors.grey,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Text(
-                "Select Image",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  "Select Image",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -345,21 +348,24 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
               );
             },
             child: Container(
+              width: 120,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
                 color: AppColors.primaryColor,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: sendMessageController.isLoading.value
-                    ? CircularProgressIndicator(color: AppColors.primaryColor)
-                    : Text(
-                        "Send Now",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: sendMessageController.isLoading.value
+                      ? CircularProgressIndicator(color: AppColors.primaryColor)
+                      : Text(
+                          "Send Now",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
+                ),
               ),
             ),
           ),

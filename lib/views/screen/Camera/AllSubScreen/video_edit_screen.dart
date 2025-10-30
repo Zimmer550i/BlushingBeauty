@@ -3,7 +3,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/send_message_with_friend_screen.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../controllers/camera_controller.dart';
@@ -170,7 +169,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                       right: 0,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.24),
+                          color: Colors.white.withValues(alpha: .24),
                         ),
                         child: _buildBottomActions(),
                       ),
@@ -192,81 +191,83 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          InkWell(
-            onTap: () {
-              if (widget.isVideo) {
-                createStoryController.addStory(videoPath: widget.filePath);
-              } else {
-                createStoryController.addStory(imagePath: widget.filePath);
-              }
-            },
-            child: Container(
-              width: 120,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                color: Colors.grey,
-              ),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Text(
-                    "Create Story",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
           Obx(
             () => InkWell(
-              onTap: () async {
-                try {
-                  if (widget.isVideo) {
-                    final formattedFile = await ensureMp4Format(
-                      widget.filePath,
-                    );
-
-                    Get.to(
-                      () => SendMessageWithFriendScreen(
-                        filePath: formattedFile.path,
-                        isVideo: widget.isVideo,
-                      ),
-                    );
-                  } else {
-                    Get.to(
-                      () => SendMessageWithFriendScreen(
-                        filePath: widget.filePath,
-                        isVideo: widget.isVideo,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  debugPrint('⚠️ Could not format video: $e');
+              onTap: () {
+                if (widget.isVideo) {
+                  createStoryController.addStory(videoPath: widget.filePath);
+                } else {
+                  createStoryController.addStory(imagePath: widget.filePath);
                 }
               },
               child: Container(
                 width: 120,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(32),
-                  color: AppColors.primaryColor,
+                  color: Colors.grey,
                 ),
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.all(10),
                     child: createStoryController.isLoading.value
-                        ? CircularProgressIndicator(
-                            color: AppColors.primaryColor,
+                        ? Text(
+                            "Uploading...",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           )
                         : Text(
-                            "Send Now",
+                            "Create Story",
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: () async {
+              try {
+                if (widget.isVideo) {
+                  final formattedFile = await ensureMp4Format(widget.filePath);
+
+                  Get.to(
+                    () => SendMessageWithFriendScreen(
+                      filePath: formattedFile.path,
+                      isVideo: widget.isVideo,
+                    ),
+                  );
+                } else {
+                  Get.to(
+                    () => SendMessageWithFriendScreen(
+                      filePath: widget.filePath,
+                      isVideo: widget.isVideo,
+                    ),
+                  );
+                }
+              } catch (e) {
+                debugPrint('⚠️ Could not format video: $e');
+              }
+            },
+            child: Container(
+              width: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                color: AppColors.primaryColor,
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(
+                    "Send Now",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

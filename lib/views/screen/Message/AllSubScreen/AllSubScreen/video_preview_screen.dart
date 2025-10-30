@@ -351,7 +351,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                           borderRadius: BorderRadius.circular(4),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.25),
+                              color: Colors.black.withValues(alpha: .25),
                               border: Border.all(
                                 color: AppColors.frameColors,
                                 width: 2,
