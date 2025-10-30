@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 
 
 android {
-    namespace = "com.ree.socialmedia"
+    namespace = "com.re.socialmedia"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -31,7 +31,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.ree.socialmedia"
+        applicationId = "com.re.socialmedia"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
