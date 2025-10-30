@@ -20,7 +20,7 @@ class GlobalCameraManager {
       await Future.delayed(const Duration(milliseconds: 200));
     }
 
-    await dispose(); // Always ensure clean state
+    await dispose();
 
     try {
       final controller = CameraController(

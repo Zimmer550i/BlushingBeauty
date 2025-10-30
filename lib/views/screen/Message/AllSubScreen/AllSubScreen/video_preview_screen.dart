@@ -117,13 +117,20 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       (c) => c.lensDirection == CameraLensDirection.front,
       orElse: () => cameras.first,
     );
+
     _frontCam = CameraController(
       front,
-      ResolutionPreset.ultraHigh,
+      ResolutionPreset.high,
       enableAudio: true,
+      imageFormatGroup: ImageFormatGroup.yuv420,
     );
+
     await _frontCam!.initialize();
-    if (mounted) setState(() {});
+
+    // Flip preview horizontally (to look natural)
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _initVideo() async {
