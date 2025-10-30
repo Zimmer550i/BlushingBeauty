@@ -344,9 +344,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                     top: 0,
                     right: 0,
                     child: SizedBox(
-                      width: 100,
+                      width: 120,
                       child: AspectRatio(
-                        aspectRatio: 9 / 16,
+                        aspectRatio: 3 / 4,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: Container(
@@ -427,110 +427,112 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
         color: Colors.black.withValues(alpha: 0.3),
-        child: Row(
-          children: [
-            if (isVid)
-              Text(
-                _fmt(_position),
-                style: const TextStyle(color: Colors.white),
-              ),
-            if (isVid)
-              Expanded(
-                child: Slider(
-                  value: double.parse(value.toStringAsFixed(0)),
-                  min: 0,
-                  max: double.parse(total.toStringAsFixed(0)),
-                  activeColor: Colors.white,
-                  onChanged: (v) =>
-                      _video?.seekTo(Duration(milliseconds: v.toInt())),
+        child: SafeArea(
+          child: Row(
+            children: [
+              if (isVid)
+                Text(
+                  _fmt(_position),
+                  style: const TextStyle(color: Colors.white),
                 ),
-              ),
-            if (isVid) ...[
-              Text(
-                _fmt(_videoDuration),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              ValueListenableBuilder<bool>(
-                valueListenable: _isPlaying,
-                builder: (_, playing, _) => IconButton(
-                  icon: Icon(
-                    playing ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
+              if (isVid)
+                Expanded(
+                  child: Slider(
+                    value: double.parse(value.toStringAsFixed(0)),
+                    min: 0,
+                    max: double.parse(total.toStringAsFixed(0)),
+                    activeColor: Colors.white,
+                    onChanged: (v) =>
+                        _video?.seekTo(Duration(milliseconds: v.toInt())),
                   ),
-                  onPressed: () async {
-                    if (playing) {
-                      await _video?.pause();
-                    } else {
-                      await _video?.play();
-                    }
-                    _isPlaying.value = _video?.value.isPlaying ?? false;
+                ),
+              if (isVid) ...[
+                Text(
+                  _fmt(_videoDuration),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                ValueListenableBuilder<bool>(
+                  valueListenable: _isPlaying,
+                  builder: (_, playing, _) => IconButton(
+                    icon: Icon(
+                      playing ? Icons.pause : Icons.play_arrow,
+                      color: Colors.white,
+                    ),
+                    onPressed: () async {
+                      if (playing) {
+                        await _video?.pause();
+                      } else {
+                        await _video?.play();
+                      }
+                      _isPlaying.value = _video?.value.isPlaying ?? false;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 18),
+                InkWell(
+                  onTap: () {
+                    _onNextPressed(true);
                   },
-                ),
-              ),
-              const SizedBox(width: 18),
-              InkWell(
-                onTap: () {
-                  _onNextPressed(true);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    color: AppColors.primaryColor,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Next",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      color: AppColors.primaryColor,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Next",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        Icon(Icons.navigate_next, color: Colors.white),
-                      ],
+                          Icon(Icons.navigate_next, color: Colors.white),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
 
-            if (!isVid) ...[
-              Spacer(),
-              InkWell(
-                onTap: () {
-                  _onNextPressed(false);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    color: AppColors.primaryColor,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Next",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+              if (!isVid) ...[
+                Spacer(),
+                InkWell(
+                  onTap: () {
+                    _onNextPressed(false);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      color: AppColors.primaryColor,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Next",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        Icon(Icons.navigate_next, color: Colors.white),
-                      ],
+                          Icon(Icons.navigate_next, color: Colors.white),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

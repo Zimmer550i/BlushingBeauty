@@ -321,11 +321,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           : CrossAxisAlignment.start,
       children: [
         BlurImageCard(
+          chatController: chatController,
+          msgId: msg["_id"],
           imageUrl: imageUrl.toString(),
           receiverName: widget.groupName,
           receiverImage: image,
           chatId: widget.chatId,
-          isMe: isMe,
+          isView: isMe ? true : (msg["view"] ?? false),
         ),
         const SizedBox(height: 4),
         Text(
@@ -368,7 +370,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
-              isMe: msg["isMe"] ?? false,
+              chatController: chatController,
+              msgId: msg["_id"],
+              isView: msg["isMe"] ? true : (msg["view"] ?? false),
               videoFile: localVideo,
               msg: msg,
               receiverImage: image,

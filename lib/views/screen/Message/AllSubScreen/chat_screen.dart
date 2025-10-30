@@ -169,6 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemCount: msgs.length,
                     itemBuilder: (_, index) {
                       final msg = msgs[index];
+                      debugPrint("Rendering message: $msg");
                       return Align(
                         alignment: msg["isMe"]
                             ? Alignment.centerRight
@@ -287,6 +288,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildImageMessage(Map<String, dynamic> msg) {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
     bool isMe = msg["isMe"] ?? false;
+    bool view = msg["view"] ?? false;
+  final bool isViewed = isMe ? true : view;
+
 
     return Column(
       crossAxisAlignment: isMe
@@ -294,11 +298,12 @@ class _ChatScreenState extends State<ChatScreen> {
           : CrossAxisAlignment.start,
       children: [
         BlurImageCard(
+          chatController: chatController,
+          msgId: msg["_id"],
           imageUrl: imageUrl.toString(),
           receiverName: widget.receiverName,
           chatId: widget.chatId,
-          // isMe: isMe,
-          isMe: false,
+          isView: isViewed,
           receiverImage: _receiverImage,
         ),
 
@@ -313,6 +318,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
+    bool isMe = msg["isMe"] ?? false;
+  final bool isViewed = isMe ? true : (msg["view"] ?? false);
 
     return FutureBuilder<File>(
       future: _downloadVideoToLocal(videoUrl.toString()),
@@ -343,13 +350,14 @@ class _ChatScreenState extends State<ChatScreen> {
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
-              // isMe: msg["isMe"] ?? false,
-              isMe: false,
+              isView: isViewed,
               videoFile: localVideo,
               msg: msg,
               receiverImage: _receiverImage,
               receiverName: widget.receiverName,
               chatId: widget.chatId,
+              msgId: msg["_id"],
+              chatController: chatController,
             ),
             const SizedBox(height: 6),
 

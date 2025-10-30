@@ -1,14 +1,17 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
 
 class BlurImageCard extends StatefulWidget {
+  final ChatController chatController;
   final String imageUrl;
+  final String msgId;
   final String receiverName;
   final String? receiverImage;
   final String chatId;
-  final bool isMe;
+  final bool isView;
 
   const BlurImageCard({
     super.key,
@@ -16,7 +19,9 @@ class BlurImageCard extends StatefulWidget {
     required this.receiverName,
     required this.chatId,
     this.receiverImage,
-    required this.isMe,
+    required this.isView,
+    required this.msgId,
+    required this.chatController,
   });
 
   @override
@@ -30,9 +35,9 @@ class _BlurImageCardState extends State<BlurImageCard> {
   void _onTapImage() {
     if (!_isLoaded || _isTapped) return;
     setState(() => _isTapped = true);
-
     Future.delayed(const Duration(milliseconds: 150), () {
       if (!mounted) return;
+      widget.chatController.updateChatView(widget.msgId);
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -60,9 +65,7 @@ class _BlurImageCardState extends State<BlurImageCard> {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: ImageFiltered(
-              imageFilter: widget.isMe
-                  ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
-                  : _isTapped || !_isLoaded
+              imageFilter: widget.isView
                   ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
                   : ImageFilter.blur(
                       sigmaX: 20,
@@ -86,7 +89,10 @@ class _BlurImageCardState extends State<BlurImageCard> {
                       width: 240,
                       color: Colors.black12.withValues(alpha: .1),
                       child: Center(
-                        child: CircularProgressIndicator(strokeWidth: 2,color: AppColors.primaryColor),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primaryColor,
+                        ),
                       ),
                     );
                   }

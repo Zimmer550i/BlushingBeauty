@@ -2,17 +2,20 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
 class BlurVideoCard extends StatefulWidget {
+  final ChatController chatController;
   final File videoFile;
   final Map<String, dynamic> msg;
   final String? receiverImage;
   final String receiverName;
   final String chatId;
-  final bool isMe;
+  final String msgId;
+  final bool isView;
 
   const BlurVideoCard({
     super.key,
@@ -21,7 +24,8 @@ class BlurVideoCard extends StatefulWidget {
     required this.receiverName,
     this.receiverImage,
     required this.chatId,
-    required this.isMe,
+    required this.isView,
+    required this.msgId, required this.chatController,
   });
 
   @override
@@ -44,9 +48,9 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
       final thumb = await VideoThumbnail.thumbnailFile(
         video: widget.videoFile.path,
         imageFormat: ImageFormat.JPEG,
-      //   maxHeight: 1080,
-      // maxWidth: 1920,
-      // quality: 100,
+        maxHeight: 0,
+        maxWidth: 0,
+        quality: 100,
       );
       if (!mounted) return;
       setState(() {
@@ -78,6 +82,7 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
     setState(() => _isTapped = true);
     Future.delayed(const Duration(milliseconds: 200), () {
       if (!mounted) return;
+      widget.chatController.updateChatView(widget.msgId);
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -118,32 +123,32 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
                     ),
                   )
                 : _thumbnailPath != null
-                    ? AnimatedOpacity(
-                        duration: const Duration(milliseconds: 500),
-                        opacity: _isTapped ? 1.0 : 0.6,
-                        child: ImageFiltered(
-                          imageFilter: widget.isMe
-                              ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
-                              : ImageFilter.blur(
-                                  sigmaX: 20,
-                                  sigmaY: 20,
-                                  tileMode: TileMode.decal,
-                                ),
-                          child: Image.file(
-                            File(_thumbnailPath!),
-                            height: 180,
-                            width: 240,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      )
-                    : Container(
+                ? AnimatedOpacity(
+                    duration: const Duration(milliseconds: 500),
+                    opacity: _isTapped ? 1.0 : 0.6,
+                    child: ImageFiltered(
+                      imageFilter: widget.isView
+                          ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                          : ImageFilter.blur(
+                              sigmaX: 20,
+                              sigmaY: 20,
+                              tileMode: TileMode.decal,
+                            ),
+                      child: Image.file(
+                        File(_thumbnailPath!),
                         height: 180,
                         width: 240,
-                        color: Colors.grey.shade200,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.error, color: Colors.red),
+                        fit: BoxFit.cover,
                       ),
+                    ),
+                  )
+                : Container(
+                    height: 180,
+                    width: 240,
+                    color: Colors.grey.shade200,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.error, color: Colors.red),
+                  ),
           ),
 
           // ▶️ Play Button Overlay

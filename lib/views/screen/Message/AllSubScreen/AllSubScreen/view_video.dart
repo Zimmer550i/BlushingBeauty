@@ -9,33 +9,39 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:video_player/video_player.dart';
 
-class ViewVideo extends StatefulWidget {
-  const ViewVideo({
-    super.key,
-    required this.videoUrl,
-  });
+class ViewMedia extends StatefulWidget {
+  const ViewMedia({super.key, required this.mediaUrl});
 
-  final String videoUrl;
+  final String mediaUrl; // can be video or image
 
   @override
-  State<ViewVideo> createState() => _ViewVideoState();
+  State<ViewMedia> createState() => _ViewMediaState();
 }
 
-class _ViewVideoState extends State<ViewVideo> {
+class _ViewMediaState extends State<ViewMedia> {
   VideoPlayerController? _video;
-
   Duration _videoDuration = Duration.zero;
   Duration _position = Duration.zero;
   late final ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   late final VoidCallback _videoListener;
 
   bool get isVideo {
-    final ext = widget.videoUrl.toLowerCase();
+    final ext = widget.mediaUrl.toLowerCase();
     return ext.endsWith('.mp4') ||
         ext.endsWith('.mov') ||
         ext.endsWith('.avi') ||
         ext.endsWith('.mkv') ||
         ext.contains('video');
+  }
+
+  bool get isImage {
+    final ext = widget.mediaUrl.toLowerCase();
+    return ext.endsWith('.jpg') ||
+        ext.endsWith('.jpeg') ||
+        ext.endsWith('.png') ||
+        ext.endsWith('.gif') ||
+        ext.endsWith('.webp') ||
+        ext.contains('image');
   }
 
   @override
@@ -46,35 +52,18 @@ class _ViewVideoState extends State<ViewVideo> {
 
   Future<void> _initFlow() async {
     await _requestPermissions();
-
-    if (isVideo) {
-      await _initVideo();
-    }
-    if (mounted) {
-      _startCountdown();
-    }
+    if (isVideo) await _initVideo();
+    if (mounted && isVideo) _startPlayback();
   }
 
   Future<void> _requestPermissions() async {
     await [Permission.camera, Permission.microphone].request();
-    final cameraStatus = await Permission.camera.status;
-    final micStatus = await Permission.microphone.status;
-
-    if (!cameraStatus.isGranted || !micStatus.isGranted) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Camera & Microphone permission required'),
-          ),
-        );
-        Navigator.pop(context);
-      }
-    }
   }
+
   Future<void> _initVideo() async {
-    _video = widget.videoUrl.startsWith('http')
-        ? VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-        : VideoPlayerController.file(File(widget.videoUrl));
+    _video = widget.mediaUrl.startsWith('http')
+        ? VideoPlayerController.networkUrl(Uri.parse(widget.mediaUrl))
+        : VideoPlayerController.file(File(widget.mediaUrl));
 
     await _video!.initialize();
     _videoDuration = _video!.value.duration;
@@ -92,16 +81,14 @@ class _ViewVideoState extends State<ViewVideo> {
     if (mounted) setState(() {});
   }
 
-  void _startCountdown() async {
+  Future<void> _startPlayback() async {
     await _video!.play();
   }
-
 
   @override
   void dispose() {
     _video?.removeListener(_videoListener);
     _video?.dispose();
-    _disposeControllers();
     super.dispose();
   }
 
@@ -109,16 +96,6 @@ class _ViewVideoState extends State<ViewVideo> {
     final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final ss = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$mm:$ss';
-  }
-
-  void _disposeControllers() {
-    try {
-      _video?.removeListener(_videoListener);
-      _video?.dispose();
-      _video = null;
-    } catch (e) {
-      debugPrint("⚠️ Dispose error: $e");
-    }
   }
 
   @override
@@ -130,24 +107,16 @@ class _ViewVideoState extends State<ViewVideo> {
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            // ← Back Arrow
             InkWell(
-              onTap: () async {
-                _disposeControllers();
-                Get.back();
-              },
+              onTap: () => Get.back(),
               child: const Icon(Icons.arrow_back),
             ),
-           ],
+          ],
         ),
         actions: [
-          // ✖️ X Button (Exit)
           IconButton(
             icon: const Icon(Icons.close, size: 26),
-            onPressed: () async {
-              _disposeControllers();
-              Get.back();
-            },
+            onPressed: () => Get.back(),
           ),
         ],
       ),
@@ -155,41 +124,52 @@ class _ViewVideoState extends State<ViewVideo> {
           ? Stack(
               alignment: Alignment.center,
               children: [
-                // 🎬 Background (video or image)
-                Positioned.fill(
-                  child: isVideo
-                      ? FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _video!.value.size.width,
-                            height: _video!.value.size.height,
-                            child: VideoPlayer(_video!),
-                          ),
-                        )
-                      : Image.network(
-                          widget.videoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Icon(Icons.broken_image),
-                          loadingBuilder: (context, child, progress) {
-                            if (progress == null) return child;
-                            return Center(
-                              child: SpinKitWave(
-                                color: AppColors.primaryColor,
-                                size: 30,
-                              ),
-                            );
-                          },
-                        ),
-                ),              
-                _buildBottomControls(),
+                Positioned.fill(child: _buildMediaView()),
+                if (isVideo) _buildBottomControls(),
               ],
             )
-          : Center(child: SpinKitWave(color: AppColors.primaryColor, size: 30.0)),
+          : Center(
+              child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
+            ),
     );
   }
 
+  Widget _buildMediaView() {
+    if (isVideo && _video != null) {
+      return FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: _video!.value.size.width,
+          height: _video!.value.size.height,
+          child: VideoPlayer(_video!),
+        ),
+      );
+    }
+
+    // 🖼️ Image view (supports both local and network images)
+    if (widget.mediaUrl.startsWith('http')) {
+      return Image.network(
+        widget.mediaUrl,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) =>
+            const Center(child: Icon(Icons.broken_image, size: 60)),
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return Center(
+            child: SpinKitWave(color: AppColors.primaryColor, size: 30),
+          );
+        },
+      );
+    } else {
+      final file = File(widget.mediaUrl);
+      if (!file.existsSync()) {
+        return const Center(child: Icon(Icons.broken_image, size: 60));
+      }
+      return Image.file(file, fit: BoxFit.contain);
+    }
+  }
+
   Widget _buildBottomControls() {
-    final isVid = isVideo;
     final total = _videoDuration.inMilliseconds.toDouble().clamp(
       1,
       double.infinity,
@@ -200,28 +180,26 @@ class _ViewVideoState extends State<ViewVideo> {
       bottom: 0,
       left: 0,
       right: 0,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-        color: Colors.black.withValues(alpha: 0.3),
-        child: Row(
-          children: [
-            if (isVid)
+      child: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          color: Colors.black.withOpacity(0.3),
+          child: Row(
+            children: [
               Text(
                 _fmt(_position),
                 style: const TextStyle(color: Colors.white),
               ),
-            if (isVid)
               Expanded(
                 child: Slider(
-                  value: double.parse(value.toStringAsFixed(0)),
+                  value: value.toDouble(),
                   min: 0,
-                  max: double.parse(total.toStringAsFixed(0)),
+                  max: total.toDouble(),
                   activeColor: Colors.white,
                   onChanged: (v) =>
                       _video?.seekTo(Duration(milliseconds: v.toInt())),
                 ),
               ),
-            if (isVid) ...[
               Text(
                 _fmt(_videoDuration),
                 style: const TextStyle(color: Colors.white),
@@ -229,7 +207,7 @@ class _ViewVideoState extends State<ViewVideo> {
               const SizedBox(width: 12),
               ValueListenableBuilder<bool>(
                 valueListenable: _isPlaying,
-                builder: (_, playing, _) => IconButton(
+                builder: (_, playing, __) => IconButton(
                   icon: Icon(
                     playing ? Icons.pause : Icons.play_arrow,
                     color: Colors.white,
@@ -244,9 +222,8 @@ class _ViewVideoState extends State<ViewVideo> {
                   },
                 ),
               ),
-              const SizedBox(width: 18),
-              ],
-          ],
+            ],
+          ),
         ),
       ),
     );

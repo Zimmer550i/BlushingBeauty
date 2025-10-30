@@ -21,9 +21,9 @@ class VideoUtils {
       final generatedPath = await VideoThumbnail.thumbnailFile(
         video: videoUrl,
         imageFormat: ImageFormat.JPEG,
-      //   maxHeight: 1080,
-      // maxWidth: 1920,
-      // quality: 100,
+        maxHeight: 0,
+      maxWidth: 0,
+      quality: 100,
         thumbnailPath: thumbPath,
       );
 

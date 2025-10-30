@@ -185,45 +185,54 @@ class ChatController extends GetxController {
   }
 
   Future<void> _fetchPage({bool appendBottom = true}) async {
-    try {
-      if (_currentPage == 1) {
-        isLoading.value = true;
-      } else {
-        isPaginating.value = true;
-      }
-
-      final res = await api.get(
-        "/chat/chat-inbox/$_chatId?limit=$_limit&page=$_currentPage",
-        authReq: true,
-      );
-
-      if (res.statusCode == 200) {
-        final body = jsonDecode(res.body);
-        final List rawMessages = body['data'];
-
-        if (rawMessages.isEmpty) {
-          _hasMore = false;
-        } else {
-          final mapped = rawMessages
-              .map<Map<String, dynamic>>((m) => _mapMessage(m, _currentUserId))
-              .toList();
-
-          if (appendBottom) {
-            messages.insertAll(0, mapped);
-            _scrollToBottom();
-          } else {
-            messages.addAll(mapped);
-          }
-          _currentPage++;
-        }
-      }
-    } catch (e) {
-      debugPrint("❌ Error fetching messages: $e");
-    } finally {
-      isLoading.value = false;
-      isPaginating.value = false;
+  try {
+    if (_currentPage == 1) {
+      isLoading.value = true;
+    } else {
+      isPaginating.value = true;
     }
+
+    final res = await api.get(
+      "/chat/chat-inbox/$_chatId?limit=$_limit&page=$_currentPage",
+      authReq: true,
+    );
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      final List rawMessages = body['data'] ?? [];
+
+      if (rawMessages.isEmpty) {
+        _hasMore = false;
+      } else {
+        final mapped = rawMessages
+            .map<Map<String, dynamic>>((m) => _mapMessage(m, _currentUserId))
+            .toList();
+
+        if (appendBottom) {
+          messages.insertAll(0, mapped);
+          _scrollToBottom();
+        } else {
+          messages.addAll(mapped);
+        }
+
+        _currentPage++;
+      }
+    }
+  } catch (e) {
+    debugPrint("❌ Error fetching messages: $e");
+  } finally {
+    isLoading.value = false;
+    isPaginating.value = false;
   }
+}
+
+/// Format time nicely (optional)
+String _formatTime(String? isoString) {
+  if (isoString == null) return "";
+  final dt = DateTime.tryParse(isoString);
+  if (dt == null) return "";
+  return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+}
 
   void _resetPagination() {
     _currentPage = 1;
@@ -305,8 +314,6 @@ class ChatController extends GetxController {
   isLoading.value = false;
 }
 
-
-
   Future<void> pickAndSendVideo() async {
   isLoading.value = true;
   final XFile? file = await _picker.pickVideo(source: ImageSource.gallery);
@@ -336,7 +343,6 @@ class ChatController extends GetxController {
 
   isLoading.value = false;
 }
-
 
   void sendTyping(bool isTyping) {
     SocketService.sendTyping(
@@ -585,28 +591,51 @@ class ChatController extends GetxController {
   }
 }
 
+
+Future<void> updateChatView(String messageId) async {
+    try {
+      isLoading.value = true;
+      final endpoint = "/message/view-status/$messageId";
+      final response = await api.patch(endpoint, {}, authReq: true);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        debugPrint("✅ Chat view updated successfully: $data");
+      } else {
+        debugPrint("❌ Failed to update chat view: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("⚠️ Exception in updateChatView: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   // ==============================
   // HELPERS
   // ==============================
 
   Map<String, dynamic> _mapMessage(dynamic m, String currentUserId) {
-    final createdAt = DateTime.tryParse(m['createdAt'] ?? '');
-    final formattedTime = createdAt != null
-        ? "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}"
-        : "";
+  final createdAt = DateTime.tryParse(m['createdAt'] ?? '');
+  final formattedTime = createdAt != null
+      ? "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}"
+      : "";
 
-    return {
-      "_id": m["_id"] ?? "",
-      "isMe": m["sender"] is Map
-          ? m["sender"]["_id"] == currentUserId
-          : m["sender"] == currentUserId,
-      "type": m["contentType"] ?? "text",
-      "message": m["message"] ?? "",
-      "media": m["media"] ?? "",
-      "time": formattedTime,
-      "temp": false,
-    };
-  }
+  final isMe = m["sender"] is Map
+      ? m["sender"]["_id"] == currentUserId
+      : m["sender"] == currentUserId;
+
+  return {
+    "_id": m["_id"] ?? "",
+    "isMe": isMe,
+    "type": m["contentType"] ?? "text",
+    "message": m["message"] ?? "",
+    "media": m["media"] ?? "",
+    "time": formattedTime,
+    "temp": false,
+    "view": isMe ? true : (m["view"] ?? false), // ✅ handle view correctly
+  };
+}
+
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {

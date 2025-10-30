@@ -591,9 +591,9 @@ class _MessageScreenState extends State<MessageScreen> {
       final thumbPath = await VideoThumbnail.thumbnailFile(
         video: localVideo.path,
         imageFormat: ImageFormat.JPEG,
-      //   maxHeight: 1080,
-      // maxWidth: 1920,
-      // quality: 100,
+        maxHeight: 0,
+      maxWidth: 0,
+      quality: 100,
       );
 
       // ✅ 4. Cache result for reuse

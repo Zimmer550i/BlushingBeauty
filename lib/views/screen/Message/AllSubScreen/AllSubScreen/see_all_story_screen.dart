@@ -133,7 +133,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
               storyId,
               index,
             )
-          : _buildImageCard(context, mediaUrl, name, storyId, index),
+          : _buildImageCard(context, mediaUrl, name,userImage, storyId, index),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return Container(
@@ -167,42 +167,59 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
     BuildContext context,
     String mediaUrl,
     String name,
+    String userImage,
     String storyId,
     int index,
   ) async {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.network(
-            mediaUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) =>
-                const Center(child: Icon(Icons.broken_image)),
-          ),
-          _buildBottomNameBar(name),
-          if (widget.isMe == true)
-            Positioned(
-              right: 0,
-              top: 0,
-              child: IconButton(
-                onPressed: () {
-                  _confirm(
-                    context,
-                    onYes: () async {
-                      await userController.deleteStory(storyId);
-                      setState(() {
-                        storiesList.removeAt(index); // remove from list
-                      });
-                      Get.back(); // close dialog
-                    },
-                  );
-                },
-                icon: Icon(Icons.delete, color: Colors.red),
-              ),
+    return InkWell(
+      onTap: () {
+        if (widget.isMe == false) {
+          Get.to(
+            () => VideoPreviewScreen(
+              videoUrl: mediaUrl,
+              countdownSeconds: 3,
+              userProfile: userImage,
+              userName: name,
             ),
-        ],
+          );
+        } else {
+          Get.to(() => ViewMedia(mediaUrl: mediaUrl));
+        }
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              mediaUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) =>
+                  const Center(child: Icon(Icons.broken_image)),
+            ),
+            _buildBottomNameBar(name),
+            if (widget.isMe == true)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: IconButton(
+                  onPressed: () {
+                    _confirm(
+                      context,
+                      onYes: () async {
+                        await userController.deleteStory(storyId);
+                        setState(() {
+                          storiesList.removeAt(index);
+                        });
+                        Get.back(); // close dialog
+                      },
+                    );
+                  },
+                  icon: Icon(Icons.delete, color: Colors.red),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -219,9 +236,9 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
     final thumbPath = await VideoThumbnail.thumbnailFile(
       video: localVideo.path,
       imageFormat: ImageFormat.JPEG,
-      // maxHeight: 1080,
-      // maxWidth: 1920,
-      // quality: 100,
+      quality: 100,
+      maxHeight: 0,
+      maxWidth: 0,
     );
 
     return InkWell(
@@ -236,7 +253,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
             ),
           );
         } else {
-          Get.to(() => ViewVideo(videoUrl: localVideo.path));
+          Get.to(() => ViewMedia(mediaUrl: localVideo.path));
         }
       },
       child: ClipRRect(
