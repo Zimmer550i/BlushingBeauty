@@ -65,7 +65,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   }
 
   Future<void> _initFlow() async {
-    if(Platform.isAndroid){
+    if (Platform.isAndroid) {
       await _requestPermissions();
     }
     await _initFrontCamera();
@@ -353,23 +353,18 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                     top: 0,
                     right: 0,
                     child: SizedBox(
-                      width: 120,
-                      child: AspectRatio(
-                        aspectRatio: 3 / 4,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: .25),
-                              border: Border.all(
-                                color: AppColors.frameColors,
-                                width: 2,
-                              ),
-                            ),
-                            clipBehavior: Clip.antiAliasWithSaveLayer,
-                            child: CameraPreview(_frontCam!),
+                      width: 110,
+                      // height: 150,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: .25),
+                          border: Border.all(
+                            color: AppColors.frameColors,
+                            width: 2,
                           ),
                         ),
+                        // clipBehavior: Clip.antiAliasWithSaveLayer,
+                        child: CameraPreview(_frontCam!),
                       ),
                     ),
                   ),
