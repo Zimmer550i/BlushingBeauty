@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
@@ -27,21 +28,15 @@ class ContactController extends GetxController {
           withProperties: true,
         );
 
-        List<Map<String, dynamic>> contactList = [];
-        int count = 0;
-        const int maxContacts = 20;
+        // Convert contacts to List<Map<String, dynamic>> for isolate-safe processing
+        final List<Map<String, dynamic>> contactMaps = rawContacts.map((c) {
+          return {
+            "displayName": c.displayName,
+            "phones": c.phones.map((p) => p.number).toList(),
+          };
+        }).toList();
 
-        for (var c in rawContacts) {
-          if (c.phones.isNotEmpty) {
-            for (var phone in c.phones) {
-              if (count >= maxContacts) break; // stop after 20
-              final cleanedNumber = _normalizePhoneNumber(phone.number);
-              contactList.add({"name": c.displayName, "phone": cleanedNumber});
-              count++;
-            }
-          }
-          if (count >= maxContacts) break;
-        }
+        final contactList = await compute(_processContacts, contactMaps);
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("saved_contacts", jsonEncode(contactList));
@@ -54,6 +49,21 @@ class ContactController extends GetxController {
       isLoading.value = false;
     }
   }
+
+static List<Map<String, dynamic>> _processContacts(List<Map<String, dynamic>> rawContacts) {
+  final expanded = rawContacts.expand((c) {
+    final phones = c["phones"] as List<dynamic>? ?? [];
+    if (phones.isEmpty) return [];
+    return phones.map((phone) {
+      String cleanedNumber = (phone as String).replaceAll(RegExp(r'[^\d+]'), '');
+      if (!cleanedNumber.startsWith("+")) {
+        cleanedNumber = "+1$cleanedNumber"; // default country code
+      }
+      return {"name": c["displayName"], "phone": cleanedNumber};
+    });
+  });
+  return List<Map<String, dynamic>>.from(expanded);
+}
 
   String _normalizePhoneNumber(String number) {
     String cleaned = number.replaceAll(RegExp(r'[^\d+]'), '');

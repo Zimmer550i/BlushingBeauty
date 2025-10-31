@@ -65,7 +65,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   }
 
   Future<void> _initFlow() async {
-    await _requestPermissions();
+    if(Platform.isAndroid){
+      await _requestPermissions();
+    }
     await _initFrontCamera();
 
     if (isVideo) {
