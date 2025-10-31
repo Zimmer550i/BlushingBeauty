@@ -5,7 +5,6 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/screen/SetUpProfile/invite_friend_screen.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'enable_notification_screen.dart';
@@ -158,18 +157,14 @@ class _ContactAccessScreenState extends State<ContactAccessScreen> {
               // Allow Access button
               CustomButton(
                 onTap: () async {
-                  var status = await Permission.contacts.request();
-
-                  if (status.isGranted) {
+                  if (await FlutterContacts.requestPermission()) {
                     await _saveContactsToLocal();
                     Get.to(() => const InviteFriendScreen());
-                  } else if (status.isDenied) {
+                  } else{
                     Get.snackbar(
                       "Permission Denied",
                       "You need to allow access to continue",
                     );
-                  } else if (status.isPermanentlyDenied) {
-                    openAppSettings();
                   }
                 },
                 text: "Allow Access",

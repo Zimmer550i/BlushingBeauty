@@ -124,45 +124,80 @@ class _OnboardScreen2State extends State<OnboardScreen2> {
                 padding: const EdgeInsets.symmetric(horizontal: 50),
                 child: CustomButton(
                   onTap: () async {
-                    // 🎯 1. Request camera permission
+                    // 🎯 Request Camera Permission
                     final cameraStatus = await Permission.camera.request();
+                    print('Camera permission status: $cameraStatus');
 
-                    // 🎯 2. Handle storage/media permission for all Android versions
-                    PermissionStatus mediaStatus;
+                    // 🎯 Request Microphone Permission
+                    final micStatus = await Permission.microphone.request();
+                    print('Microphone permission status: $micStatus');
 
-                    if (Platform.isAndroid) {
+                    // 🎯 Request Photo Library Permission (full access)
+                    PermissionStatus photoStatus;
+                    if (Platform.isIOS) {
+                      photoStatus = await Permission.photos.request();
+                      print(
+                        'iOS Photo Library permission status: $photoStatus',
+                      );
+                      if (photoStatus == PermissionStatus.limited) {
+                        // Request full photo library access if limited
+                        photoStatus = await Permission.photos.request();
+                        print(
+                          'iOS Photo Library full access request status: $photoStatus',
+                        );
+                      }
+                    } else if (Platform.isAndroid) {
                       final androidInfo = await DeviceInfoPlugin().androidInfo;
                       final sdkInt = androidInfo.version.sdkInt;
-
                       if (sdkInt >= 33) {
-                        // Android 13+ → uses READ_MEDIA_IMAGES or READ_MEDIA_VISUAL_USER_SELECTED
-                        mediaStatus = await Permission.photos.request();
+                        photoStatus = await Permission.photos.request();
+                        print(
+                          'Android 13+ Photo permission status: $photoStatus',
+                        );
                       } else {
-                        // Android 12 and below → uses storage permission
-                        mediaStatus = await Permission.storage.request();
+                        photoStatus = await Permission.storage.request();
+                        print(
+                          'Android <=12 Storage permission status: $photoStatus',
+                        );
                       }
                     } else {
-                      // iOS → use photos permission
-                      mediaStatus = await Permission.photos.request();
+                      photoStatus = PermissionStatus.denied;
+                      print('Unsupported platform for photo permission');
                     }
 
-                    // 🎯 3. Check if both granted
-                    final allGranted =
-                        cameraStatus.isGranted && mediaStatus.isGranted;
+                    // 🎯 Request Contacts Permission
+                    PermissionStatus contactStatus;
+                    if (Platform.isIOS || Platform.isAndroid) {
+                      contactStatus = await Permission.contacts.request();
+                      print('Contacts permission status: $contactStatus');
+                    } else {
+                      contactStatus = PermissionStatus.denied;
+                      print('Unsupported platform for contacts permission');
+                    }
 
-                    if (allGranted) {
-                      // ✅ Navigate to LoginScreen
+                    // 🎯 Check if all permissions granted
+                    final allGranted =
+                        cameraStatus.isGranted &&
+                        micStatus.isGranted &&
+                        photoStatus.isGranted &&
+                        contactStatus.isGranted;
+
+                    if (allGranted && Platform.isAndroid) {
+                      Get.offAll(
+                        () => LoginScreen(),
+                        transition: Transition.rightToLeft,
+                      );
+                    } else if (Platform.isIOS) {
                       Get.offAll(
                         () => LoginScreen(),
                         transition: Transition.rightToLeft,
                       );
                     } else {
-                      // ❌ Show user-friendly message
                       Get.snackbar(
                         "Permission Required",
-                        "Camera and Media access are needed to continue.",
+                        "Camera, Microphone, Photo Library, and Contacts access are needed to continue.",
                         snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor: Colors.redAccent.withValues(alpha: .8),
+                        backgroundColor: Colors.redAccent.withOpacity(0.8),
                         colorText: Colors.white,
                         margin: const EdgeInsets.all(16),
                         borderRadius: 10,
@@ -171,7 +206,12 @@ class _OnboardScreen2State extends State<OnboardScreen2> {
 
                       // ⚙️ Open settings if permanently denied
                       if (cameraStatus.isPermanentlyDenied ||
-                          mediaStatus.isPermanentlyDenied) {
+                          micStatus.isPermanentlyDenied ||
+                          photoStatus.isPermanentlyDenied ||
+                          contactStatus.isPermanentlyDenied) {
+                        print(
+                          'One or more permissions permanently denied, opening app settings.',
+                        );
                         await openAppSettings();
                       }
                     }
