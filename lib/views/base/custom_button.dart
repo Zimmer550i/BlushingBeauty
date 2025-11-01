@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/style.dart';
 
@@ -36,13 +35,13 @@ class CustomButton extends StatelessWidget {
           width: width,
           decoration: BoxDecoration(
             color: color ?? AppColors.primaryColor,
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Center(
             child: loading
                 ? SizedBox(
-                    height: 20.h,
-                    width: 20.h,
+                    height: 20,
+                    width: 20,
                     child: CircularProgressIndicator(
                       color: AppColors.primaryColor,
                     ),

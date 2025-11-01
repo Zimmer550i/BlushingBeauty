@@ -13,10 +13,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
   get: ^4.7.2
   shared_preferences:
-  flutter_screenutil: ^5.9.0
   flutter_svg:
   flutter_spinkit:
   flutter_otp_text_field:
@@ -37,9 +35,7 @@ dependencies:
   country_code_picker: ^3.4.1
   device_info_plus: ^12.1.0
   intl: ^0.20.2
-  path: any
   http: any
-  http_parser: any
   video_thumbnail: ^0.5.6
   
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 
 
@@ -19,11 +18,11 @@ ThemeData dark({Color color = const Color(0xFF2683EB)}) => ThemeData(
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
     fillColor: AppColors.fillColor,
-    hintStyle: TextStyle(color:AppColors.hintColor,fontSize:16.sp),
+    hintStyle: TextStyle(color:AppColors.hintColor,fontSize:16),
     isDense: true,
     contentPadding:EdgeInsets.symmetric(
-      horizontal:12.w,
-      vertical: 16.h
+      horizontal:12,
+      vertical: 16
     ),
     enabledBorder: enableBorder(),
     focusedBorder: focusedBorder(),
@@ -40,13 +39,13 @@ ThemeData dark({Color color = const Color(0xFF2683EB)}) => ThemeData(
 
 OutlineInputBorder enableBorder() {
   return OutlineInputBorder(
-    borderRadius: BorderRadius.circular(8.r),
+    borderRadius: BorderRadius.circular(8),
     borderSide: BorderSide.none,
   );
 }
 OutlineInputBorder focusedBorder() {
   return OutlineInputBorder(
-    borderRadius: BorderRadius.circular(8.r),
+    borderRadius: BorderRadius.circular(8),
     borderSide:BorderSide(
       color: AppColors.primaryColor,
     ),
@@ -55,7 +54,7 @@ OutlineInputBorder focusedBorder() {
 
 OutlineInputBorder errorBorder() {
   return OutlineInputBorder(
-    borderRadius: BorderRadius.circular(8.r),
+    borderRadius: BorderRadius.circular(8),
     borderSide:const BorderSide(
       color: Colors.red,
     ),

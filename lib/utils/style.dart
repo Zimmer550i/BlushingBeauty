@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppStyles {
   static TextStyle h1({
@@ -9,7 +8,7 @@ class AppStyles {
   }) {
     return TextStyle(
       color: color,
-      fontSize: 24.sp,
+      fontSize: 24,
       letterSpacing: letterSpacing,
       fontWeight: fontWeight ?? FontWeight.w400,
     );
@@ -22,7 +21,7 @@ class AppStyles {
   }) {
     return TextStyle(
       color: color,
-      fontSize: 20.sp,
+      fontSize: 20,
       letterSpacing: letterSpacing,
       fontWeight: fontWeight ?? FontWeight.w400,
     );
@@ -35,7 +34,7 @@ class AppStyles {
   }) {
     return TextStyle(
       color: color,
-      fontSize: 18.sp,
+      fontSize: 18,
       letterSpacing: letterSpacing,
       fontWeight: fontWeight ?? FontWeight.w400,
     );
@@ -48,7 +47,7 @@ class AppStyles {
     double? height,
   }) {
     return TextStyle(
-      fontSize: 16.sp,
+      fontSize: 16,
       color: color,
       height: height,
       letterSpacing: letterSpacing,
@@ -63,7 +62,7 @@ class AppStyles {
     double? height,
   }) {
     return TextStyle(
-      fontSize: 14.sp,
+      fontSize: 14,
       color: color,
       height: height,
       letterSpacing: letterSpacing,
@@ -78,7 +77,7 @@ class AppStyles {
     double? height,
   }) {
     return TextStyle(
-      fontSize: 12.sp,
+      fontSize: 12,
       color: color,
       height: height,
       letterSpacing: letterSpacing,

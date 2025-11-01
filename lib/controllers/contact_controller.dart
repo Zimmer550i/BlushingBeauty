@@ -65,14 +65,6 @@ static List<Map<String, dynamic>> _processContacts(List<Map<String, dynamic>> ra
   return List<Map<String, dynamic>>.from(expanded);
 }
 
-  String _normalizePhoneNumber(String number) {
-    String cleaned = number.replaceAll(RegExp(r'[^\d+]'), '');
-    if (!cleaned.startsWith("+")) {
-      cleaned = "+1$cleaned"; // default country code
-    }
-    return cleaned;
-  }
-
   Future<void> sendInviteSms(
     BuildContext context,
     String number,

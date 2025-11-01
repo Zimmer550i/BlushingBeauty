@@ -1,6 +1,5 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/localization_controller.dart';
 import 'package:ree_social_media_app/controllers/theme_controller.dart';
@@ -52,12 +51,7 @@ class MyApp extends StatelessWidget {
       builder: (themeController) {
         return GetBuilder<LocalizationController>(
           builder: (localizeController) {
-            return ScreenUtilInit(
-              designSize: const Size(393, 852),
-              minTextAdapt: true,
-              splitScreenMode: true,
-              builder: (_, child) {
-                return GetMaterialApp(
+            return GetMaterialApp(
                   title: AppConstants.appName,
                   debugShowCheckedModeBanner: false,
                   // theme: themeController.darkTheme ? dark(): light(),
@@ -73,8 +67,6 @@ class MyApp extends StatelessWidget {
                   getPages: AppRoutes.page,
                   initialRoute: AppRoutes.splashScreen,
                 );
-              },
-            );
           },
         );
       },

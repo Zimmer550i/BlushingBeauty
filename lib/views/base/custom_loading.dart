@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 
 class CustomLoading extends StatelessWidget {
@@ -8,8 +7,8 @@ class CustomLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return  SizedBox(
-      height: 20.h,
-      width: 20.h,
+      height: 20,
+      width: 20,
       child: CircularProgressIndicator(color: AppColors.primaryColor),
     );
   }
