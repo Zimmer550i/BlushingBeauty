@@ -6,7 +6,10 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:ree_social_media_app/helpers/route.dart';
+import 'package:ree_social_media_app/views/screen/Camera/camera_screen.dart';
 import '../../../../controllers/chat_controller.dart';
 import '../../../../controllers/user_controller.dart';
 import '../../../../services/shared_prefs_service.dart';
@@ -335,10 +338,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           isView: isViewed,
         ),
         const SizedBox(height: 4),
-        Text(
-          msg["time"] ?? "",
-          style: const TextStyle(fontSize: 10, color: Colors.grey),
-        ),
+        _buildImageFooter(msg, imageUrl.toString()),
       ],
     );
   }
@@ -398,13 +398,38 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildVideoFooter(Map<String, dynamic> msg, String path) {
     final isMe = msg['isMe'] ?? false;
+    final rawTime =
+        msg["time"]; // e.g. "2025-11-04T15:45:00" or "2025-11-04 15:45:00"
+    String formattedTime = "";
+
+    if (rawTime != null && rawTime.isNotEmpty) {
+      try {
+        final dateTime = DateTime.parse(rawTime);
+        int hour = dateTime.hour;
+        int minute = dateTime.minute;
+
+        // Determine AM or PM
+        String suffix = hour >= 12 ? 'PM' : 'AM';
+
+        // Convert to 12-hour format
+        hour = hour % 12;
+        if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
+
+        // Format with leading zero for minute
+        formattedTime =
+            "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $suffix";
+      } catch (e) {
+        formattedTime = rawTime; // fallback if parsing fails
+      }
+    }
+
     final timeText = Text(
-      msg["time"] ?? "",
+      formattedTime,
       style: const TextStyle(fontSize: 10, color: Colors.grey),
     );
 
     final saveRow = InkWell(
-      onTap: () async => await saveVideoToGallery(context, path),
+      onTap: () async => await saveVideoToGallery(context, path, false),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -417,7 +442,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             ),
             const SizedBox(width: 8),
             const Text(
-              "Save to gallery",
+              "Save",
               style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
             ),
             Spacer(),
@@ -427,7 +452,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             timeText,
             const Spacer(),
             const Text(
-              "Save to gallery",
+              "Save",
               style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
             ),
             const SizedBox(width: 6),
@@ -442,10 +467,81 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       ),
     );
 
-    return Padding(
-      padding: EdgeInsets.only(left: isMe ? 50 : 0, right: isMe ? 0 : 50),
-      child: saveRow,
+    return saveRow;
+  }
+
+  Widget _buildImageFooter(Map<String, dynamic> msg, String path) {
+    final isMe = msg['isMe'] ?? false;
+    final rawTime =
+        msg["time"]; // e.g. "2025-11-04T15:45:00" or "2025-11-04 15:45:00"
+    String formattedTime = "";
+
+    if (rawTime != null && rawTime.isNotEmpty) {
+      try {
+        final dateTime = DateTime.parse(rawTime);
+        int hour = dateTime.hour;
+        int minute = dateTime.minute;
+
+        // Determine AM or PM
+        String suffix = hour >= 12 ? 'PM' : 'AM';
+
+        // Convert to 12-hour format
+        hour = hour % 12;
+        if (hour == 0) hour = 12;
+
+        // Format with leading zero for minute
+        formattedTime =
+            "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $suffix";
+      } catch (e) {
+        formattedTime = rawTime;
+      }
+    }
+
+    final timeText = Text(
+      formattedTime,
+      style: const TextStyle(fontSize: 10, color: Colors.grey),
     );
+
+    final saveRow = InkWell(
+      onTap: () async => await saveVideoToGallery(context, path, true),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isMe) ...[
+            Spacer(),
+            SvgPicture.asset(
+              'assets/icons/download.svg',
+              color: const Color(0xFF56BBFF),
+              height: 18,
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              "Save",
+              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+            ),
+            Spacer(),
+            timeText,
+          ],
+          if (!isMe) ...[
+            timeText,
+            const Spacer(),
+            const Text(
+              "Save",
+              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+            ),
+            const SizedBox(width: 6),
+            SvgPicture.asset(
+              'assets/icons/download.svg',
+              color: const Color(0xFF56BBFF),
+              height: 18,
+            ),
+            const Spacer(),
+          ],
+        ],
+      ),
+    );
+
+    return saveRow;
   }
 
   Widget _buildInputBar() {
@@ -470,7 +566,15 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             ),
           ),
           InkWell(
-            onTap: () => chatController.pickAndSendImage(),
+            onTap: () {
+              Get.to(
+                () => CameraScreen(
+                  cameras: AppRoutes.cameras ?? [],
+                  isChatBox: true,
+                  chatId: widget.chatId,
+                ),
+              );
+            },
             child: SvgPicture.asset(
               'assets/icons/camera.svg',
               height: 22,

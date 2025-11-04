@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/send_message_with_friend_screen.dart';
 import 'package:video_player/video_player.dart';
@@ -10,6 +12,7 @@ import '../../../../helpers/route.dart';
 import '../../../../utils/file_utils.dart';
 
 class VideoEditScreen extends StatefulWidget {
+  final String? chatId;
   final String filePath;
   final bool isVideo;
   final bool isChatBox;
@@ -17,7 +20,9 @@ class VideoEditScreen extends StatefulWidget {
   const VideoEditScreen({
     super.key,
     required this.filePath,
-    this.isVideo = false, required this.isChatBox,
+    this.isVideo = false,
+    required this.isChatBox,
+    this.chatId,
   });
 
   @override
@@ -27,6 +32,9 @@ class VideoEditScreen extends StatefulWidget {
 class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
   final CreateStoryController createStoryController = Get.put(
     CreateStoryController(),
+  );
+  final SendMessageController sendMessageController = Get.put(
+    SendMessageController(),
   );
   CameraController? _frontCam;
   VideoPlayerController? _video;
@@ -178,71 +186,73 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        Obx(
-          () => InkWell(
-            onTap: () {
-              if (widget.isVideo) {
-                createStoryController.addStory(videoPath: widget.filePath);
-              } else {
-                createStoryController.addStory(imagePath: widget.filePath);
-              }
-            },
-            child: Container(
-              width: 120,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                color: Colors.grey,
-              ),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: createStoryController.isLoading.value
-                      ? Text(
-                          "Uploading...",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        )
-                      : Text(
-                          "Create Story",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+        InkWell(
+          onTap: () {
+            if (widget.isVideo) {
+              createStoryController.addStory(videoPath: widget.filePath);
+            } else {
+              createStoryController.addStory(imagePath: widget.filePath);
+            }
+          },
+          child: Container(
+            width: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(32),
+              color: Colors.grey,
+            ),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Obx(
+                  () => Text(
+                    createStoryController.isLoading.value
+                        ? "Uploading..."
+                        : "Create Story",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-        InkWell( 
-          onTap: widget.isChatBox ? (){
-            
-            
-          } :  () async {
-            try {
-              if (widget.isVideo) {
-                final formattedFile = await ensureMp4Format(widget.filePath);
 
-                Get.to(
-                  () => SendMessageWithFriendScreen(
-                    filePath: formattedFile.path,
-                    isVideo: widget.isVideo,
-                  ),
-                );
-              } else {
-                Get.to(
-                  () => SendMessageWithFriendScreen(
+        // Send button
+        InkWell(
+          onTap: widget.isChatBox
+              ? () {
+                  sendMessageController.sendMediaToSingleChat(
+                    chatId: widget.chatId!,
                     filePath: widget.filePath,
                     isVideo: widget.isVideo,
-                  ),
-                );
-              }
-            } catch (e) {
-              debugPrint('⚠️ Could not format video: $e');
-            }
-          },
+                  );
+                }
+              : () async {
+                  try {
+                    if (widget.isVideo) {
+                      final formattedFile = await ensureMp4Format(
+                        widget.filePath,
+                      );
+                      Get.to(
+                        () => SendMessageWithFriendScreen(
+                          filePath: formattedFile.path,
+                          isVideo: widget.isVideo,
+                        ),
+                      );
+                    } else {
+                      Get.to(
+                        () => SendMessageWithFriendScreen(
+                          filePath: widget.filePath,
+                          isVideo: widget.isVideo,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    debugPrint('⚠️ Could not format video: $e');
+                  }
+                },
           child: Container(
             width: 120,
             decoration: BoxDecoration(
@@ -252,13 +262,20 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(10),
-                child: Text(
-                  "Send Now",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: Obx(() {
+                  final loading1 = createStoryController.isLoading.value;
+                  final loading2 = sendMessageController.isLoading.value;
+                  if (loading1 || loading2) {
+                    return const SpinKitWave(color: Colors.white, size: 16.0);
+                  }
+                  return Text(
+                    "Send Now",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
+                }),
               ),
             ),
           ),

@@ -90,14 +90,7 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: Obx(
-        () => BottomMenu(
-          0,
-          messageCount: int.parse(
-            notificationController.totalNotificationCount.toString(),
-          ),
-        ),
-      ),
+      bottomNavigationBar: BottomMenu(0, messageCount: 0),
       body: RefreshIndicator(
         onRefresh: controller.refreshAll,
         color: AppColors.primaryColor,
@@ -793,13 +786,16 @@ class _MessageScreenState extends State<MessageScreen> {
       // 🟢 When loading is false, show actual chat list
       final allChats = [...controller.privateChats, ...controller.groupChats];
 
-// Sort chats by latest message time (descending)
-allChats.sort((a, b) {
-  final aTime = DateTime.tryParse(a["lastMessage"]?["createdAt"] ?? "") ?? DateTime(1900);
-  final bTime = DateTime.tryParse(b["lastMessage"]?["createdAt"] ?? "") ?? DateTime(1900);
-  return bTime.compareTo(aTime); // newest first
-});
-
+      // Sort chats by latest message time (descending)
+      allChats.sort((a, b) {
+        final aTime =
+            DateTime.tryParse(a["lastMessage"]?["createdAt"] ?? "") ??
+            DateTime(1900);
+        final bTime =
+            DateTime.tryParse(b["lastMessage"]?["createdAt"] ?? "") ??
+            DateTime(1900);
+        return bTime.compareTo(aTime); // newest first
+      });
 
       if (allChats.isEmpty) {
         return const Center(child: Text("No chats found"));

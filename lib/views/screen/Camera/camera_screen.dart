@@ -19,10 +19,11 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
   final bool isChatBox;
+  final String? chatId;
   const CameraScreen({
     super.key,
     required this.cameras,
-    required this.isChatBox,
+    required this.isChatBox, this.chatId,
   });
 
   @override
@@ -146,6 +147,7 @@ class _CameraScreenState extends State<CameraScreen>
             filePath: file.path,
             isVideo: false,
             isChatBox: widget.isChatBox,
+            chatId: widget.chatId,
           ),
         ),
       );
@@ -179,6 +181,7 @@ class _CameraScreenState extends State<CameraScreen>
               filePath: file.path,
               isVideo: false,
               isChatBox: widget.isChatBox,
+              chatId: widget.chatId,
             ),
           ),
         );
@@ -227,6 +230,7 @@ class _CameraScreenState extends State<CameraScreen>
             filePath: file.path,
             isVideo: true,
             isChatBox: widget.isChatBox,
+            chatId: widget.chatId,
           ),
         ),
       );

@@ -518,33 +518,19 @@ class ChatController extends GetxController {
         debugPrint("✅ ${responseData['message']}");
         debugPrint("📦 Response Data: ${responseData['data']}");
 
-        Get.snackbar(
-          "Success",
-          "Message sent successfully!",
-          backgroundColor: AppColors.primaryColor,
-          colorText: Colors.white,
-        );
+        // Get.snackbar(
+        //   "Success",
+        //   "Message sent successfully!",
+        //   backgroundColor: AppColors.primaryColor,
+        //   colorText: Colors.white,
+        // );
       } else {
         debugPrint("❌ Failed: ${response.statusCode}");
         debugPrint("📦 Body: ${response.body}");
-
-        Get.snackbar(
-          "Error",
-          "Failed to send $contentType. Try again.",
-          backgroundColor: Colors.red.shade600,
-          colorText: Colors.white,
-        );
       }
     } catch (e, s) {
       debugPrint("❌ Exception while sending $contentType: $e");
       debugPrintStack(stackTrace: s);
-
-      Get.snackbar(
-        "Error",
-        "Failed to send $contentType: $e",
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-      );
     } finally {
       isLoading.value = false;
     }
