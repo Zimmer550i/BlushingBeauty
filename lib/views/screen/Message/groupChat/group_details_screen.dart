@@ -119,7 +119,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       body: SafeArea(
         child: Obx(() {
           if (controller.isLoading.value) {
-            return Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
+            return Center(
+              child: CircularProgressIndicator(color: AppColors.primaryColor),
+            );
           }
 
           return SingleChildScrollView(
@@ -220,16 +222,36 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                       const SizedBox(height: 6),
                       TextField(
                         controller: _nameController,
-                        decoration: const InputDecoration(
+                        cursorColor: AppColors.primaryColor,
+                        decoration: InputDecoration(
                           hintText: "Write here",
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.transparent),
-                          ),
                           isDense: true,
                           filled: true,
                           fillColor: Colors.white,
+
+                          // Border when NOT focused
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: AppColors.primaryColor,
+                              width: 1.5,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+
+                          // Border when focused
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: AppColors.primaryColor,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+
+                          // Optional hint style or text color
+                          hintStyle: TextStyle(color: Colors.grey.shade500),
                         ),
                       ),
+
                       const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerRight,

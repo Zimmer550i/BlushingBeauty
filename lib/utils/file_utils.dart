@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:path/path.dart' as path;
 
 /// Ensures that a given video file has a .mp4 extension.

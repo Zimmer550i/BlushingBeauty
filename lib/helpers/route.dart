@@ -26,6 +26,7 @@ class AppRoutes{
     GetPage(name:messageScreen, page: ()=> MessageScreen()),
     GetPage(name:cameraScreen, page: ()=> CameraScreen(
       cameras: cameras ?? [],
+      isChatBox: false,
     )),
     GetPage(name:profileScreen, page: ()=>const ProfileScreen()),
     GetPage(name:loginScreen, page: ()=>const LoginScreen()),

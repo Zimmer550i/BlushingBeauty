@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/app_constants.dart';
-import 'package:intl/intl.dart';
 
 class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -74,6 +72,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         controller: widget.controller,
         keyboardType: widget.keyboardType,
         obscuringCharacter: widget.obscure!,
+        textCapitalization: TextCapitalization.sentences,
         maxLines: widget.maxLines,
         validator:
             widget.validator ??
@@ -160,71 +159,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Icon(icon, color: Color(0xFF676565)),
-    );
-  }
-}
-
-class DateOfBirthField extends StatefulWidget {
-  final TextEditingController controller;
-
-  const DateOfBirthField({super.key, required this.controller});
-
-  @override
-  State<DateOfBirthField> createState() => _DateOfBirthFieldState();
-}
-
-class _DateOfBirthFieldState extends State<DateOfBirthField> {
-  // Function to open date picker when user taps on the field
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime? selectedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-
-    // If a date is selected, format it and update the text controller
-    if (selectedDate != null) {
-      final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
-      widget.controller.text = formattedDate;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomTextField(
-      isRealOnly: true,
-      onTap: () => _selectDate(context),
-      controller: widget.controller,
-      hintText: 'Enter your birthday',
-      borderSide: const BorderSide(color: Color(0xFFC4C3C3), width: 1),
-      prefixIcon: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Container(
-          height: 24,
-          width: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.primaryColor,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: SvgPicture.asset('assets/icons/dateOfBirth.svg'),
-          ),
-        ),
-      ),
-      suffixIcon: Padding(
-        padding: const EdgeInsets.all(14),
-        child: SizedBox(
-          height: 16,
-          width: 16,
-          child: SvgPicture.asset(
-            'assets/icons/calender_blue.svg',
-            height: 16,
-            width: 16,
-          ),
-        ),
-      ),
     );
   }
 }

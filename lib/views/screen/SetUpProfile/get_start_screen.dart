@@ -27,30 +27,38 @@ class _GetStartScreenState extends State<GetStartScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ReeLogo(),
-              SizedBox(height: 45,),
-              Text("You’re All Set!",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-              ),),
-              SizedBox(height: 12,),
-              Text("Start sending moments and see real reactions",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),),
-              SizedBox(height: 42,),
-              Center(
-                child: SvgPicture.asset('assets/icons/smail.svg',
-                color: AppColors.primaryColor,),
+              SizedBox(height: 45),
+              Text(
+                "You’re All Set!",
+                style: TextStyle(
+                  color: Color(0xFF413E3E),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              SizedBox(height: 80,),
-              CustomButton(onTap: (){
-                Get.offAll(()=> MessageScreen());
-              },
-                  text: "Get Started")
+              SizedBox(height: 12),
+              Text(
+                "Start sharing moments and see real reactions",
+                style: TextStyle(
+                  color: Color(0xFF413E3E),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              SizedBox(height: 42),
+              Center(
+                child: SvgPicture.asset(
+                  'assets/icons/smail.svg',
+                  color: AppColors.primaryColor,
+                ),
+              ),
+              SizedBox(height: 80),
+              CustomButton(
+                onTap: () {
+                  Get.offAll(() => MessageScreen());
+                },
+                text: "Get Started",
+              ),
             ],
           ),
         ),

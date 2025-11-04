@@ -131,7 +131,9 @@ class _MessageScreenState extends State<MessageScreen> {
                         Center(
                           child: Padding(
                             padding: EdgeInsets.all(12.0),
-                            child: CircularProgressIndicator(color: AppColors.primaryColor),
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryColor,
+                            ),
                           ),
                         ),
                     ],
@@ -147,22 +149,25 @@ class _MessageScreenState extends State<MessageScreen> {
 
   /// Top Bar
   Widget _buildTopBar() {
-    return Row(
-      children: [
-        _logoBox(),
-        const Spacer(),
-        _iconButton(
-          'assets/icons/add.svg',
-          onTap: () => Get.to(() => const ContactScreen()),
-        ),
-        const SizedBox(width: 12),
-        _iconButton(
-          'assets/icons/search.svg',
-          onTap: () => Get.to(() => const SearchScreen()),
-        ),
-        const SizedBox(width: 12),
-        _notificationButton(),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        children: [
+          _logoBox(),
+          const Spacer(),
+          _iconButton(
+            'assets/icons/add.svg',
+            onTap: () => Get.to(() => const ContactScreen()),
+          ),
+          const SizedBox(width: 12),
+          _iconButton(
+            'assets/icons/search.svg',
+            onTap: () => Get.to(() => const SearchScreen()),
+          ),
+          const SizedBox(width: 12),
+          _notificationButton(),
+        ],
+      ),
     );
   }
 
@@ -280,7 +285,9 @@ class _MessageScreenState extends State<MessageScreen> {
                         ? Center(
                             child: Padding(
                               padding: EdgeInsets.all(8.0),
-                              child: CircularProgressIndicator(color: AppColors.primaryColor),
+                              child: CircularProgressIndicator(
+                                color: AppColors.primaryColor,
+                              ),
                             ),
                           )
                         : const SizedBox();
@@ -592,8 +599,8 @@ class _MessageScreenState extends State<MessageScreen> {
         video: localVideo.path,
         imageFormat: ImageFormat.JPEG,
         maxHeight: 0,
-      maxWidth: 0,
-      quality: 100,
+        maxWidth: 0,
+        quality: 100,
       );
 
       // ✅ 4. Cache result for reuse
@@ -785,6 +792,14 @@ class _MessageScreenState extends State<MessageScreen> {
 
       // 🟢 When loading is false, show actual chat list
       final allChats = [...controller.privateChats, ...controller.groupChats];
+
+// Sort chats by latest message time (descending)
+allChats.sort((a, b) {
+  final aTime = DateTime.tryParse(a["lastMessage"]?["createdAt"] ?? "") ?? DateTime(1900);
+  final bTime = DateTime.tryParse(b["lastMessage"]?["createdAt"] ?? "") ?? DateTime(1900);
+  return bTime.compareTo(aTime); // newest first
+});
+
 
       if (allChats.isEmpty) {
         return const Center(child: Text("No chats found"));

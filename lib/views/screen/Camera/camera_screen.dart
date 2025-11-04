@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'dart:async';
 import 'dart:io';
@@ -18,7 +18,12 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
-  const CameraScreen({super.key, required this.cameras});
+  final bool isChatBox;
+  const CameraScreen({
+    super.key,
+    required this.cameras,
+    required this.isChatBox,
+  });
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
@@ -137,7 +142,11 @@ class _CameraScreenState extends State<CameraScreen>
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => VideoEditScreen(filePath: file.path, isVideo: false),
+          builder: (_) => VideoEditScreen(
+            filePath: file.path,
+            isVideo: false,
+            isChatBox: widget.isChatBox,
+          ),
         ),
       );
 
@@ -166,8 +175,11 @@ class _CameraScreenState extends State<CameraScreen>
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                VideoEditScreen(filePath: file.path, isVideo: false),
+            builder: (_) => VideoEditScreen(
+              filePath: file.path,
+              isVideo: false,
+              isChatBox: widget.isChatBox,
+            ),
           ),
         );
       }
@@ -211,7 +223,11 @@ class _CameraScreenState extends State<CameraScreen>
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => VideoEditScreen(filePath: file.path, isVideo: true),
+          builder: (_) => VideoEditScreen(
+            filePath: file.path,
+            isVideo: true,
+            isChatBox: widget.isChatBox,
+          ),
         ),
       );
 
@@ -270,9 +286,26 @@ class _CameraScreenState extends State<CameraScreen>
           else
             const Positioned.fill(child: ColoredBox(color: Colors.black)),
 
+          if (widget.isChatBox)
+            Positioned(
+              top: 70,
+              left: 20,
+              child: InkWell(
+                onTap: () => Get.back(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white38,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.arrow_back, color: AppColors.primaryColor),
+                ),
+              ),
+            ),
+
           /// Camera / Video toggle
           Positioned(
-            top: 40,
+            top: 70,
             right: 20,
             child: Row(
               children: [
@@ -331,7 +364,7 @@ class _CameraScreenState extends State<CameraScreen>
           ),
         ],
       ),
-      bottomNavigationBar: BottomMenu(1),
+      bottomNavigationBar: widget.isChatBox ? SizedBox() : BottomMenu(1),
     );
   }
 
@@ -344,11 +377,14 @@ class _CameraScreenState extends State<CameraScreen>
         width: 36,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: active ? AppColors.primaryColor : Colors.white30,
+          color: active ? AppColors.primaryColor : Colors.white38,
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: SvgPicture.asset(asset),
+          child: SvgPicture.asset(
+            asset,
+            color: active ? Colors.white : AppColors.primaryColor,
+          ),
         ),
       ),
     );

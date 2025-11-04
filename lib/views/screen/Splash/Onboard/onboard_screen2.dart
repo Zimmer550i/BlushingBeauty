@@ -126,23 +126,23 @@ class _OnboardScreen2State extends State<OnboardScreen2> {
                   onTap: () async {
                     // 🎯 Request Camera Permission
                     final cameraStatus = await Permission.camera.request();
-                    print('Camera permission status: $cameraStatus');
+                    debugPrint('Camera permission status: $cameraStatus');
 
                     // 🎯 Request Microphone Permission
                     final micStatus = await Permission.microphone.request();
-                    print('Microphone permission status: $micStatus');
+                    debugPrint('Microphone permission status: $micStatus');
 
                     // 🎯 Request Photo Library Permission (full access)
                     PermissionStatus photoStatus;
                     if (Platform.isIOS) {
                       photoStatus = await Permission.photos.request();
-                      print(
+                      debugPrint(
                         'iOS Photo Library permission status: $photoStatus',
                       );
                       if (photoStatus == PermissionStatus.limited) {
                         // Request full photo library access if limited
                         photoStatus = await Permission.photos.request();
-                        print(
+                        debugPrint(
                           'iOS Photo Library full access request status: $photoStatus',
                         );
                       }
@@ -151,28 +151,28 @@ class _OnboardScreen2State extends State<OnboardScreen2> {
                       final sdkInt = androidInfo.version.sdkInt;
                       if (sdkInt >= 33) {
                         photoStatus = await Permission.photos.request();
-                        print(
+                        debugPrint(
                           'Android 13+ Photo permission status: $photoStatus',
                         );
                       } else {
                         photoStatus = await Permission.storage.request();
-                        print(
+                        debugPrint(
                           'Android <=12 Storage permission status: $photoStatus',
                         );
                       }
                     } else {
                       photoStatus = PermissionStatus.denied;
-                      print('Unsupported platform for photo permission');
+                      debugPrint('Unsupported platform for photo permission');
                     }
 
                     // 🎯 Request Contacts Permission
                     PermissionStatus contactStatus;
                     if (Platform.isIOS || Platform.isAndroid) {
                       contactStatus = await Permission.contacts.request();
-                      print('Contacts permission status: $contactStatus');
+                      debugPrint('Contacts permission status: $contactStatus');
                     } else {
                       contactStatus = PermissionStatus.denied;
-                      print('Unsupported platform for contacts permission');
+                      debugPrint('Unsupported platform for contacts permission');
                     }
 
                     // 🎯 Check if all permissions granted
@@ -197,7 +197,7 @@ class _OnboardScreen2State extends State<OnboardScreen2> {
                         "Permission Required",
                         "Camera, Microphone, Photo Library, and Contacts access are needed to continue.",
                         snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor: Colors.redAccent.withOpacity(0.8),
+                        backgroundColor: Colors.redAccent.withValues(alpha: .8),
                         colorText: Colors.white,
                         margin: const EdgeInsets.all(16),
                         borderRadius: 10,
@@ -209,7 +209,7 @@ class _OnboardScreen2State extends State<OnboardScreen2> {
                           micStatus.isPermanentlyDenied ||
                           photoStatus.isPermanentlyDenied ||
                           contactStatus.isPermanentlyDenied) {
-                        print(
+                        debugPrint(
                           'One or more permissions permanently denied, opening app settings.',
                         );
                         await openAppSettings();

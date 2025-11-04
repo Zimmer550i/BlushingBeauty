@@ -42,7 +42,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   String? token;
   String? currentUserId;
 
-  // Cache for downloaded videos
   final Map<String, File> _videoCache = {};
 
   @override
@@ -176,7 +175,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             ),
             Obx(
               () => chatController.isLoading.value
-                  ? const LinearProgressIndicator(color: Color(0xFF56BBFF))
+                  ? LinearProgressIndicator(
+                      color: AppColors.primaryColor,
+                      backgroundColor: AppColors.primaryColor,
+                    )
                   : const SizedBox.shrink(),
             ),
 
@@ -315,7 +317,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
     bool isMe = msg["isMe"] ?? false;
     bool view = msg["view"] ?? false;
-  final bool isViewed = isMe ? true : view;
+    final bool isViewed = isMe ? true : view;
 
     return Column(
       crossAxisAlignment: isMe
@@ -323,6 +325,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           : CrossAxisAlignment.start,
       children: [
         BlurImageCard(
+          isMe: isMe,
           chatController: chatController,
           msgId: msg["_id"],
           imageUrl: imageUrl.toString(),
@@ -344,7 +347,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
     bool isMe = msg["isMe"] ?? false;
     bool view = msg["view"] ?? false;
-  final bool isViewed = isMe ? true : view;
+    final bool isViewed = isMe ? true : view;
 
     return FutureBuilder<File>(
       future: _downloadVideoToLocal(videoUrl.toString()),
@@ -375,6 +378,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
+              isMe: isMe,
               chatController: chatController,
               msgId: msg["_id"],
               isView: isViewed,
@@ -450,10 +454,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       child: Row(
         children: [
           InkWell(
-            onTap: () => chatController.pickAndSendVideo(),
+            onTap: () => chatController.pickAndSendMedia(),
             child: SvgPicture.asset(
               'assets/icons/add_more.svg',
-              color: const Color(0xFF56BBFF),
+              color: AppColors.primaryColor,
               height: 24,
             ),
           ),
@@ -471,14 +475,15 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               'assets/icons/camera.svg',
               height: 22,
               width: 22,
+              color: AppColors.primaryColor,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 20),
           InkWell(
             onTap: _sendMessage,
             child: SvgPicture.asset(
               'assets/icons/send.svg',
-              color: const Color(0xFF56BBFF),
+              color: AppColors.primaryColor,
               height: 26,
             ),
           ),

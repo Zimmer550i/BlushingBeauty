@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/view_video.dart';
 
 class BlurImageCard extends StatefulWidget {
   final ChatController chatController;
@@ -12,6 +14,7 @@ class BlurImageCard extends StatefulWidget {
   final String? receiverImage;
   final String chatId;
   final bool isView;
+  final bool isMe;
 
   const BlurImageCard({
     super.key,
@@ -22,6 +25,7 @@ class BlurImageCard extends StatefulWidget {
     required this.isView,
     required this.msgId,
     required this.chatController,
+    required this.isMe,
   });
 
   @override
@@ -37,21 +41,27 @@ class _BlurImageCardState extends State<BlurImageCard> {
     setState(() => _isTapped = true);
     Future.delayed(const Duration(milliseconds: 150), () {
       if (!mounted) return;
-      widget.chatController.updateChatView(widget.msgId);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VideoPreviewScreen(
-            videoUrl: widget.imageUrl,
-            countdownSeconds: 3,
-            userProfile: widget.receiverImage ?? "",
-            userName: widget.receiverName,
-            chatId: widget.chatId,
+      if (widget.isMe == true) {
+        Get.to(() => ViewMedia(mediaUrl: widget.imageUrl))?.then((_) {
+          if (mounted) setState(() => _isTapped = false);
+        });
+      } else {
+        widget.chatController.updateChatView(widget.msgId);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VideoPreviewScreen(
+              videoUrl: widget.imageUrl,
+              countdownSeconds: 3,
+              userProfile: widget.receiverImage ?? "",
+              userName: widget.receiverName,
+              chatId: widget.chatId,
+            ),
           ),
-        ),
-      ).then((_) {
-        if (mounted) setState(() => _isTapped = false);
-      });
+        ).then((_) {
+          if (mounted) setState(() => _isTapped = false);
+        });
+      }
     });
   }
 

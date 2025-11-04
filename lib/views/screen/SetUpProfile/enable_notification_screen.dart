@@ -9,7 +9,8 @@ class EnableNotificationScreen extends StatefulWidget {
   const EnableNotificationScreen({super.key});
 
   @override
-  State<EnableNotificationScreen> createState() => _EnableNotificationScreenState();
+  State<EnableNotificationScreen> createState() =>
+      _EnableNotificationScreenState();
 }
 
 class _EnableNotificationScreenState extends State<EnableNotificationScreen> {
@@ -20,6 +21,7 @@ class _EnableNotificationScreenState extends State<EnableNotificationScreen> {
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -37,48 +39,56 @@ class _EnableNotificationScreenState extends State<EnableNotificationScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 110,),
-              
-              Text("Enable Push Notifications",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-              ),),
-              SizedBox(height: 12,),
-              Text("Allow notifications to see friend's messages and respond in real time",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),),
-              SizedBox(height: 80,),
+              SizedBox(height: 110),
+
+              Text(
+                "Enable Push Notifications",
+                style: TextStyle(
+                  color: Color(0xFF413E3E),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                "Allow notifications to see friend's messages and respond in real time",
+                style: TextStyle(
+                  color: Color(0xFF413E3E),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              SizedBox(height: 80),
               InkWell(
-                onTap: (){
-                  Get.to(()=> SetupProfileScreen());
+                onTap: () {
+                  Get.to(() => SetupProfileScreen());
                 },
                 child: Container(
                   height: 52,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Color(0xFFC4C3C3), width: 0.5)
+                    border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
                   ),
                   child: Center(
-                    child: Text("Not Now",
-                    style: TextStyle(
-                      color: Color(0xFF676565),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),),
+                    child: Text(
+                      "Not Now",
+                      style: TextStyle(
+                        color: Color(0xFF676565),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 24,),
-              CustomButton(onTap: (){
-                Get.to(()=> SetupProfileScreen());
-              },
-                  text: "Enable Notifications")
+              SizedBox(height: 24),
+              CustomButton(
+                onTap: () {
+                  Get.to(() => SetupProfileScreen());
+                },
+                text: "Enable Notifications",
+              ),
             ],
           ),
         ),

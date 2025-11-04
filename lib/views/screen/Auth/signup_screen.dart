@@ -104,7 +104,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
               const SizedBox(height: 12),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Checkbox(
                     activeColor: AppColors.primaryColor,
@@ -147,7 +148,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                           ),
                           TextSpan(
-                            text: "Privacy\nPolicy",
+                            text: "Privacy Policy",
                             style: TextStyle(
                               color: AppColors.primaryColor,
                               fontSize: 14,

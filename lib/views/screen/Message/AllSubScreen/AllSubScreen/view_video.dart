@@ -180,10 +180,10 @@ class _ViewMediaState extends State<ViewMedia> {
       bottom: 0,
       left: 0,
       right: 0,
-      child: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-          color: Colors.black.withValues(alpha: .3),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+        color: Colors.black.withValues(alpha: .3),
+        child: SafeArea(
           child: Row(
             children: [
               Text(

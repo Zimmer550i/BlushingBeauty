@@ -2,9 +2,11 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
+import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/view_video.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
 class BlurVideoCard extends StatefulWidget {
@@ -16,6 +18,7 @@ class BlurVideoCard extends StatefulWidget {
   final String chatId;
   final String msgId;
   final bool isView;
+  final bool isMe;
 
   const BlurVideoCard({
     super.key,
@@ -25,7 +28,9 @@ class BlurVideoCard extends StatefulWidget {
     this.receiverImage,
     required this.chatId,
     required this.isView,
-    required this.msgId, required this.chatController,
+    required this.msgId,
+    required this.chatController,
+    required this.isMe,
   });
 
   @override
@@ -82,22 +87,28 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
     setState(() => _isTapped = true);
     Future.delayed(const Duration(milliseconds: 200), () {
       if (!mounted) return;
-      widget.chatController.updateChatView(widget.msgId);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VideoPreviewScreen(
-            videoUrl: widget.videoFile.path,
-            countdownSeconds: 3,
-            userProfile: widget.receiverImage ?? "",
-            userName: widget.receiverName,
-            chatId: widget.chatId,
-            isInbox: true,
+      if (widget.isMe == true) {
+        Get.to(() => ViewMedia(mediaUrl: widget.videoFile.path))?.then((_) {
+          if (mounted) setState(() => _isTapped = false);
+        });
+      } else {
+        widget.chatController.updateChatView(widget.msgId);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VideoPreviewScreen(
+              videoUrl: widget.videoFile.path,
+              countdownSeconds: 3,
+              userProfile: widget.receiverImage ?? "",
+              userName: widget.receiverName,
+              chatId: widget.chatId,
+              isInbox: true,
+            ),
           ),
-        ),
-      ).then((_) {
-        if (mounted) setState(() => _isTapped = false);
-      });
+        ).then((_) {
+          if (mounted) setState(() => _isTapped = false);
+        });
+      }
     });
   }
 

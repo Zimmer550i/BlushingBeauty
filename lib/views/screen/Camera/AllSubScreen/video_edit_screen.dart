@@ -12,11 +12,12 @@ import '../../../../utils/file_utils.dart';
 class VideoEditScreen extends StatefulWidget {
   final String filePath;
   final bool isVideo;
+  final bool isChatBox;
 
   const VideoEditScreen({
     super.key,
     required this.filePath,
-    this.isVideo = false,
+    this.isVideo = false, required this.isChatBox,
   });
 
   @override
@@ -100,85 +101,73 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
+      body: Expanded(
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            /// ====== Preview Area ======
-            Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: widget.isVideo
-                        ? (_video != null && _video!.value.isInitialized
-                              ? FittedBox(
-                                  fit: BoxFit.cover,
-                                  child: SizedBox(
-                                    width: _video!.value.size.width,
-                                    height: _video!.value.size.height,
-                                    child: VideoPlayer(_video!),
-                                  ),
-                                )
-                              : Center(
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.primaryColor,
-                                  ),
-                                ))
-                        : Image.file(File(widget.filePath), fit: BoxFit.cover),
+            Positioned.fill(
+              child: widget.isVideo
+                  ? (_video != null && _video!.value.isInitialized
+                        ? FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _video!.value.size.width,
+                              height: _video!.value.size.height,
+                              child: VideoPlayer(_video!),
+                            ),
+                          )
+                        : Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryColor,
+                            ),
+                          ))
+                  : Image.file(File(widget.filePath), fit: BoxFit.cover),
+            ),
+
+            /// Close button
+            Positioned(
+              top: 70,
+              right: 20,
+              child: InkWell(
+                onTap: () {
+                  Get.offAllNamed(AppRoutes.messageScreen);
+                },
+                child: Container(
+                  height: 32,
+                  width: 32,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.white,
+                    border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
                   ),
-
-                  /// Close button
-                  Positioned(
-                    top: 20,
-                    right: 20,
-                    child: InkWell(
-                      onTap: () {
-                        Get.offAllNamed(AppRoutes.messageScreen);
-                      },
-                      child: Container(
-                        height: 32,
-                        width: 32,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.white,
-                          border: Border.all(
-                            color: Color(0xFFC4C3C3),
-                            width: 0.5,
-                          ),
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.close, color: Color(0xFF676565)),
-                        ),
-                      ),
-                    ),
+                  child: const Center(
+                    child: Icon(Icons.close, color: Color(0xFF676565)),
                   ),
-
-                  /// Bottom controls (only if video)
-                  if (widget.isVideo)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: _buildBottomControls(),
-                    ),
-
-                  if (!widget.isVideo)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: .24),
-                        ),
-                        child: _buildBottomActions(),
-                      ),
-                    ),
-                ],
+                ),
               ),
             ),
 
-            /// ====== Buttons Area ======
+            /// Bottom controls (only if video)
+            if (widget.isVideo)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: _buildBottomControls(),
+              ),
+
+            if (!widget.isVideo)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .24),
+                  ),
+                  child: _buildBottomActions(),
+                ),
+              ),
           ],
         ),
       ),
@@ -186,95 +175,95 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
   }
 
   Widget _buildBottomActions() => SafeArea(
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Obx(
-            () => InkWell(
-              onTap: () {
-                if (widget.isVideo) {
-                  createStoryController.addStory(videoPath: widget.filePath);
-                } else {
-                  createStoryController.addStory(imagePath: widget.filePath);
-                }
-              },
-              child: Container(
-                width: 120,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(32),
-                  color: Colors.grey,
-                ),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: createStoryController.isLoading.value
-                        ? Text(
-                            "Uploading...",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          )
-                        : Text(
-                            "Create Story",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          InkWell(
-            onTap: () async {
-              try {
-                if (widget.isVideo) {
-                  final formattedFile = await ensureMp4Format(widget.filePath);
-
-                  Get.to(
-                    () => SendMessageWithFriendScreen(
-                      filePath: formattedFile.path,
-                      isVideo: widget.isVideo,
-                    ),
-                  );
-                } else {
-                  Get.to(
-                    () => SendMessageWithFriendScreen(
-                      filePath: widget.filePath,
-                      isVideo: widget.isVideo,
-                    ),
-                  );
-                }
-              } catch (e) {
-                debugPrint('⚠️ Could not format video: $e');
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Obx(
+          () => InkWell(
+            onTap: () {
+              if (widget.isVideo) {
+                createStoryController.addStory(videoPath: widget.filePath);
+              } else {
+                createStoryController.addStory(imagePath: widget.filePath);
               }
             },
             child: Container(
               width: 120,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                color: AppColors.primaryColor,
+                color: Colors.grey,
               ),
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(10),
-                  child: Text(
-                    "Send Now",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: createStoryController.isLoading.value
+                      ? Text(
+                          "Uploading...",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                      : Text(
+                          "Create Story",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        InkWell( 
+          onTap: widget.isChatBox ? (){
+            
+            
+          } :  () async {
+            try {
+              if (widget.isVideo) {
+                final formattedFile = await ensureMp4Format(widget.filePath);
+
+                Get.to(
+                  () => SendMessageWithFriendScreen(
+                    filePath: formattedFile.path,
+                    isVideo: widget.isVideo,
+                  ),
+                );
+              } else {
+                Get.to(
+                  () => SendMessageWithFriendScreen(
+                    filePath: widget.filePath,
+                    isVideo: widget.isVideo,
+                  ),
+                );
+              }
+            } catch (e) {
+              debugPrint('⚠️ Could not format video: $e');
+            }
+          },
+          child: Container(
+            width: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(32),
+              color: AppColors.primaryColor,
+            ),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  "Send Now",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     ),
   );
 

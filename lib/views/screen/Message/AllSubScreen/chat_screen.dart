@@ -7,8 +7,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/views/base/blur_image_card.dart';
 import 'package:ree_social_media_app/views/base/blur_video_card.dart';
+import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/screen/Camera/camera_screen.dart';
 import '../../../../controllers/chat_controller.dart';
 import '../../../../controllers/user_controller.dart';
 import '../../../../services/shared_prefs_service.dart';
@@ -186,7 +189,10 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             Obx(
               () => chatController.isLoading.value
-                  ? const LinearProgressIndicator(color: Color(0xFF56BBFF))
+                  ? LinearProgressIndicator(
+                      color: AppColors.primaryColor,
+                      backgroundColor: AppColors.primaryColor,
+                    )
                   : const SizedBox.shrink(),
             ),
             _buildInputBar(),
@@ -289,8 +295,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
     bool isMe = msg["isMe"] ?? false;
     bool view = msg["view"] ?? false;
-  final bool isViewed = isMe ? true : view;
-
+    final bool isViewed = isMe ? true : view;
 
     return Column(
       crossAxisAlignment: isMe
@@ -298,6 +303,7 @@ class _ChatScreenState extends State<ChatScreen> {
           : CrossAxisAlignment.start,
       children: [
         BlurImageCard(
+          isMe: isMe,
           chatController: chatController,
           msgId: msg["_id"],
           imageUrl: imageUrl.toString(),
@@ -319,7 +325,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
     bool isMe = msg["isMe"] ?? false;
-  final bool isViewed = isMe ? true : (msg["view"] ?? false);
+    final bool isViewed = isMe ? true : (msg["view"] ?? false);
 
     return FutureBuilder<File>(
       future: _downloadVideoToLocal(videoUrl.toString()),
@@ -350,6 +356,7 @@ class _ChatScreenState extends State<ChatScreen> {
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
+              isMe: isMe,
               isView: isViewed,
               videoFile: localVideo,
               msg: msg,
@@ -431,40 +438,56 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Row(
         children: [
           InkWell(
-            onTap: () => chatController.pickAndSendVideo(),
+            onTap: () => chatController.pickAndSendMedia(),
             child: SvgPicture.asset(
               'assets/icons/add_more.svg',
-              color: const Color(0xFF56BBFF),
+              color: AppColors.primaryColor,
               height: 24,
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: TextField(
+            child: CustomTextField(
               controller: messageController,
-              decoration: const InputDecoration(
-                hintText: "Type a message...",
-                border: InputBorder.none,
-              ),
-              onChanged: (val) {
-                chatController.sendTyping(val.isNotEmpty);
-              },
+              hintText: 'Type your message...',
+              borderSide: const BorderSide(color: Colors.transparent),
             ),
           ),
+          // Expanded(
+          //   child: TextField(
+          //     controller: messageController,
+          //     decoration: const InputDecoration(
+          //       hintText: "Type a message...",
+          //       border: InputBorder.none,
+          //     ),
+          //     cursorColor: AppColors.primaryColor,
+          //     onChanged: (val) {
+          //       chatController.sendTyping(val.isNotEmpty);
+          //     },
+          //   ),
+          // ),
           InkWell(
-            onTap: () => chatController.pickAndSendImage(),
+            onTap: () {
+              Get.to(
+                () => CameraScreen(
+                  cameras: AppRoutes.cameras ?? [],
+                  isChatBox: true,
+                ),
+              );
+            },
             child: SvgPicture.asset(
               'assets/icons/camera.svg',
               height: 22,
               width: 22,
+              color: AppColors.primaryColor,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 20),
           InkWell(
             onTap: _sendTextMessage,
             child: SvgPicture.asset(
               'assets/icons/send.svg',
-              color: const Color(0xFF56BBFF),
+              color: AppColors.primaryColor,
               height: 26,
             ),
           ),

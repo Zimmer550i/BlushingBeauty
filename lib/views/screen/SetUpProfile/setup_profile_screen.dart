@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/utils/show_snackbar.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/base/date_of_birth_picker.dart';
 import 'package:ree_social_media_app/views/screen/SetUpProfile/get_start_screen.dart';
 
 class SetupProfileScreen extends StatefulWidget {
@@ -75,22 +77,23 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       return;
     }
 
-    // Prevent duplicate API calls while loading
     if (userController.isLoading.value) return;
 
-    // Parse DOB string to DateTime
     final dobText = dobTextController.text.trim();
-    final dob = DateTime.tryParse(dobText);
+    debugPrint("DOB Text: $dobText");
 
-    if (dob == null) {
-      showSnackBar("Invalid date format. Please use YYYY-MM-DD.", true);
+    DateTime? dob;
+    try {
+      dob = DateFormat('MM/dd/yyyy').parseStrict(dobText);
+    } catch (e) {
+      showSnackBar("Invalid date format. Please select a valid date.", true);
       return;
     }
 
-    // Calculate age
     final today = DateTime.now();
     int age = today.year - dob.year;
-    if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
+    if (today.month < dob.month ||
+        (today.month == dob.month && today.day < dob.day)) {
       age--;
     }
 

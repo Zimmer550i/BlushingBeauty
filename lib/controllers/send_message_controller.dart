@@ -5,6 +5,7 @@ import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
+// ignore: depend_on_referenced_packages
 import 'package:path/path.dart' as p;
 
 class SendMessageController extends GetxController {

@@ -95,16 +95,14 @@ class ChatController extends GetxController {
         debugPrint("✍️ Typing: $data");
       });
     });
-  
-  SocketService.onGlobalMessage((data) {
-  final msg = _mapMessage(data, _currentUserId);
-  if (msg["chatId"] == _chatId) {
-    messages.insert(0, msg);
-    _scrollToBottom();
-  }
-});
 
-
+    SocketService.onGlobalMessage((data) {
+      final msg = _mapMessage(data, _currentUserId);
+      if (msg["chatId"] == _chatId) {
+        messages.insert(0, msg);
+        _scrollToBottom();
+      }
+    });
   }
 
   // ==============================
@@ -185,54 +183,54 @@ class ChatController extends GetxController {
   }
 
   Future<void> _fetchPage({bool appendBottom = true}) async {
-  try {
-    if (_currentPage == 1) {
-      isLoading.value = true;
-    } else {
-      isPaginating.value = true;
-    }
-
-    final res = await api.get(
-      "/chat/chat-inbox/$_chatId?limit=$_limit&page=$_currentPage",
-      authReq: true,
-    );
-
-    if (res.statusCode == 200) {
-      final body = jsonDecode(res.body);
-      final List rawMessages = body['data'] ?? [];
-
-      if (rawMessages.isEmpty) {
-        _hasMore = false;
+    try {
+      if (_currentPage == 1) {
+        isLoading.value = true;
       } else {
-        final mapped = rawMessages
-            .map<Map<String, dynamic>>((m) => _mapMessage(m, _currentUserId))
-            .toList();
-
-        if (appendBottom) {
-          messages.insertAll(0, mapped);
-          _scrollToBottom();
-        } else {
-          messages.addAll(mapped);
-        }
-
-        _currentPage++;
+        isPaginating.value = true;
       }
-    }
-  } catch (e) {
-    debugPrint("❌ Error fetching messages: $e");
-  } finally {
-    isLoading.value = false;
-    isPaginating.value = false;
-  }
-}
 
-/// Format time nicely (optional)
-String formatTime(String? isoString) {
-  if (isoString == null) return "";
-  final dt = DateTime.tryParse(isoString);
-  if (dt == null) return "";
-  return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
-}
+      final res = await api.get(
+        "/chat/chat-inbox/$_chatId?limit=$_limit&page=$_currentPage",
+        authReq: true,
+      );
+
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        final List rawMessages = body['data'] ?? [];
+
+        if (rawMessages.isEmpty) {
+          _hasMore = false;
+        } else {
+          final mapped = rawMessages
+              .map<Map<String, dynamic>>((m) => _mapMessage(m, _currentUserId))
+              .toList();
+
+          if (appendBottom) {
+            messages.insertAll(0, mapped);
+            _scrollToBottom();
+          } else {
+            messages.addAll(mapped);
+          }
+
+          _currentPage++;
+        }
+      }
+    } catch (e) {
+      debugPrint("❌ Error fetching messages: $e");
+    } finally {
+      isLoading.value = false;
+      isPaginating.value = false;
+    }
+  }
+
+  /// Format time nicely (optional)
+  String formatTime(String? isoString) {
+    if (isoString == null) return "";
+    final dt = DateTime.tryParse(isoString);
+    if (dt == null) return "";
+    return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+  }
 
   void _resetPagination() {
     _currentPage = 1;
@@ -285,64 +283,106 @@ String formatTime(String? isoString) {
   }
 
   Future<void> pickAndSendImage() async {
-  isLoading.value = true;
-  final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
-  if (file == null) return;
+    isLoading.value = true;
+    final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+    if (file == null) return;
 
-  final mediaUrl = await uploadMedia(File(file.path), type: "image");
-  if (mediaUrl != null) {
-    SocketService.sendImage(
-      chatId: _chatId,
-      senderId: _currentUserId,
-      mediaUrl: mediaUrl,
-    );
+    final mediaUrl = await uploadMedia(File(file.path), type: "image");
+    if (mediaUrl != null) {
+      SocketService.sendImage(
+        chatId: _chatId,
+        senderId: _currentUserId,
+        mediaUrl: mediaUrl,
+      );
 
-    // 👇 Add this manually so UI updates immediately
-    messages.insert(0, {
-      "_id": const Uuid().v4(),
-      "isMe": true,
-      "type": "image",
-      "media": mediaUrl,
-      "message": "",
-      "time":
-          "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}",
-      "temp": true,
-    });
-    _scrollToBottom();
+      // 👇 Add this manually so UI updates immediately
+      messages.insert(0, {
+        "_id": const Uuid().v4(),
+        "isMe": true,
+        "type": "image",
+        "media": mediaUrl,
+        "message": "",
+        "time":
+            "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}",
+        "temp": true,
+      });
+      _scrollToBottom();
+    }
+
+    isLoading.value = false;
   }
-
-  isLoading.value = false;
-}
 
   Future<void> pickAndSendVideo() async {
-  isLoading.value = true;
-  final XFile? file = await _picker.pickVideo(source: ImageSource.gallery);
-  if (file == null) return;
+    isLoading.value = true;
+    final XFile? file = await _picker.pickVideo(source: ImageSource.gallery);
+    if (file == null) return;
 
-  final mediaUrl = await uploadMedia(File(file.path), type: "video");
-  if (mediaUrl != null) {
-    SocketService.sendVideo(
-      chatId: _chatId,
-      senderId: _currentUserId,
-      mediaUrl: mediaUrl,
-    );
+    final mediaUrl = await uploadMedia(File(file.path), type: "video");
+    if (mediaUrl != null) {
+      SocketService.sendVideo(
+        chatId: _chatId,
+        senderId: _currentUserId,
+        mediaUrl: mediaUrl,
+      );
 
-    // 👇 Add this manually so UI updates immediately
-    messages.insert(0, {
-      "_id": const Uuid().v4(),
-      "isMe": true,
-      "type": "video",
-      "media": mediaUrl,
-      "message": "",
-      "time":
-          "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}",
-      "temp": true,
-    });
-    _scrollToBottom();
+      // 👇 Add this manually so UI updates immediately
+      messages.insert(0, {
+        "_id": const Uuid().v4(),
+        "isMe": true,
+        "type": "video",
+        "media": mediaUrl,
+        "message": "",
+        "time":
+            "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}",
+        "temp": true,
+      });
+      _scrollToBottom();
+    }
+
+    isLoading.value = false;
   }
 
-  isLoading.value = false;
-}
+  Future<void> pickAndSendMedia() async {
+    // Bottom sheet: choose Image or Video
+    await showModalBottomSheet(
+      context: Get.context!,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.image, color: AppColors.primaryColor),
+                title: const Text("Select Image"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await pickAndSendImage();
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.videocam, color: AppColors.primaryColor),
+                title: const Text("Select Video"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await pickAndSendVideo();
+                },
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(Icons.close, color: Colors.redAccent),
+                title: const Text("Cancel"),
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   void sendTyping(bool isTyping) {
     SocketService.sendTyping(
@@ -352,123 +392,106 @@ String formatTime(String? isoString) {
     );
   }
 
-  /// 📤 Send Image or Video to Multiple Chats
-  // Future<void> sendMediaToMultipleChats({
-  //   required List<Map<String, dynamic>> friends,
-  //   required Set<String> selectedIds,
-  //   required File mediaFile,
-  //   required String contentType, // 'image' or 'video'
-  // }) async {
-  //   if (selectedIds.isEmpty) {
-  //     debugPrint("⚠️ No friends selected to send media.");
-  //     return;
-  //   }
-
-  //   try {
-  //     isLoading.value = true;
-
-  //     // 1️⃣ Upload media once
-  //     final mediaUrl = await uploadMedia(mediaFile, type: contentType);
-  //     if (mediaUrl == null) {
-  //       debugPrint("❌ Media upload failed.");
-  //       return;
-  //     }
-
-  //     // 2️⃣ Get user session info
-  //     final userCtrl = Get.find<UserController>();
-  //     final token = await SharedPrefsService.get('token');
-  //     final senderId = userCtrl.userInfo.value?.id;
-
-  //     if (token == null || senderId == null) {
-  //       debugPrint("⚠️ Missing token or user ID.");
-  //       return;
-  //     }
-
-  //     // ✅ Maintain one socket connection
-  //     SocketService.connect(token);
-
-  //     // 3️⃣ Loop and send to all friends
-  //     for (final friend in friends) {
-  //       if (!selectedIds.contains(friend['_id'])) continue;
-
-  //       final chatId = friend['chatId'];
-  //       if (chatId == null) {
-  //         debugPrint("⚠️ No chatId found for ${friend['name']}");
-  //         continue;
-  //       }
-
-  //       // Join specific chat
-  //       await initChat(chatId: chatId, currentUserId: senderId, token: token);
-
-  //       // Send via socket
-  //       if (contentType == 'image') {
-  //         SocketService.sendImage(
-  //           chatId: chatId,
-  //           senderId: senderId,
-  //           mediaUrl: mediaUrl,
-  //         );
-  //       } else {
-  //         SocketService.sendVideo(
-  //           chatId: chatId,
-  //           senderId: senderId,
-  //           mediaUrl: mediaUrl,
-  //         );
-  //       }
-
-  //       debugPrint("✅ Sent $contentType to ${friend['name']}");
-  //     }
-
-  //     Get.back();
-
-  //     debugPrint(
-  //       "🎉 Media sent to ${selectedIds.length} friends successfully!",
-  //     );
-  //   } catch (e) {
-  //     debugPrint("❌ Error sending media to multiple chats: $e");
-  //   } finally {
-  //     // 🔌 Disconnect once after all sends are done
-  //     SocketService.clearAllListeners();
-  //     SocketService.disconnect();
-  //     isLoading.value = false;
-  //   }
-  // }
-
   Future<void> sendMediaToMultipleChats({
-  required List<Map<String, dynamic>> friends,
-  required Set<String> selectedIds,
-  required File mediaFile,
-  required String contentType, // 'image' or 'video'
-}) async {
-  if (selectedIds.isEmpty) {
-    debugPrint("⚠️ No friends selected to send media.");
-    return;
-  }
-
-  try {
-    isLoading.value = true;
-
-    final userCtrl = Get.find<UserController>();
-  
-    final senderId = userCtrl.userInfo.value?.id;
-
-    if (senderId == null) {
-      debugPrint("⚠️ Missing user ID.");
+    required List<Map<String, dynamic>> friends,
+    required Set<String> selectedIds,
+    required File mediaFile,
+    required String contentType, // 'image' or 'video'
+  }) async {
+    if (selectedIds.isEmpty) {
+      debugPrint("⚠️ No friends selected to send media.");
       return;
     }
 
-    // 🔄 Loop over all selected friends
-    for (final friend in friends) {
-      if (!selectedIds.contains(friend['_id'])) continue;
+    try {
+      isLoading.value = true;
 
-      final chatId = friend['chatId'];
-      if (chatId == null) {
-        debugPrint("⚠️ No chatId found for ${friend['name']}");
-        continue;
+      final userCtrl = Get.find<UserController>();
+
+      final senderId = userCtrl.userInfo.value?.id;
+
+      if (senderId == null) {
+        debugPrint("⚠️ Missing user ID.");
+        return;
       }
 
-      debugPrint("🚀 Sending $contentType to ${friend['name']}...");
+      // 🔄 Loop over all selected friends
+      for (final friend in friends) {
+        if (!selectedIds.contains(friend['_id'])) continue;
 
-      // 🧩 Prepare body (string fields)
+        final chatId = friend['chatId'];
+        if (chatId == null) {
+          debugPrint("⚠️ No chatId found for ${friend['name']}");
+          continue;
+        }
+
+        debugPrint("🚀 Sending $contentType to ${friend['name']}...");
+
+        // 🧩 Prepare body (string fields)
+        final body = {
+          "data": jsonEncode({
+            "senderId": senderId,
+            "chatIds": [chatId],
+            "contentType": contentType,
+          }),
+        };
+
+        // 📁 Prepare multipart file(s)
+        final multipartFiles = <MultipartBody>[];
+        final fileKey = contentType == "video" ? "video" : "image";
+        multipartFiles.add(MultipartBody(key: fileKey, file: mediaFile));
+
+        // 🔥 Make API call using your ApiService
+        final response = await api.postMultipartData(
+          "/message/send-message",
+          body,
+          multipartBody: multipartFiles,
+          authReq: true,
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final responseData = jsonDecode(response.body);
+          debugPrint("✅ Sent to ${friend['name']}: ${responseData['message']}");
+        } else {
+          debugPrint(
+            "❌ Failed to send to ${friend['name']}: ${response.statusCode}",
+          );
+          debugPrint("📦 Body: ${response.body}");
+        }
+      }
+
+      debugPrint(
+        "🎉 Successfully sent $contentType to ${selectedIds.length} friends!",
+      );
+      Get.back();
+    } catch (e, s) {
+      debugPrint("❌ Error sending media: $e");
+      debugPrintStack(stackTrace: s);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> sendVideoToSingleChat({
+    required String chatId,
+    required File mediaFile,
+    required String contentType,
+  }) async {
+    try {
+      isLoading.value = true;
+
+      final userCtrl = Get.find<UserController>();
+      final apiService = ApiService();
+      final senderId = userCtrl.userInfo.value?.id;
+
+      if (senderId == null) {
+        debugPrint("⚠️ Missing user ID.");
+        return;
+      }
+
+      debugPrint("🚀 Sending $contentType to chatId: $chatId...");
+
+      // 🧩 Prepare body — similar to your Postman “data” field
       final body = {
         "data": jsonEncode({
           "senderId": senderId,
@@ -477,13 +500,13 @@ String formatTime(String? isoString) {
         }),
       };
 
-      // 📁 Prepare multipart file(s)
-      final multipartFiles = <MultipartBody>[];
-      final fileKey = contentType == "video" ? "video" : "image";
-      multipartFiles.add(MultipartBody(key: fileKey, file: mediaFile));
+      // 🎬 Prepare multipart file
+      final multipartFiles = <MultipartBody>[
+        MultipartBody(key: contentType, file: mediaFile),
+      ];
 
-      // 🔥 Make API call using your ApiService
-      final response = await api.postMultipartData(
+      // 🌐 API call
+      final response = await apiService.postMultipartData(
         "/message/send-message",
         body,
         multipartBody: multipartFiles,
@@ -492,107 +515,42 @@ String formatTime(String? isoString) {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        debugPrint("✅ Sent to ${friend['name']}: ${responseData['message']}");
+        debugPrint("✅ ${responseData['message']}");
+        debugPrint("📦 Response Data: ${responseData['data']}");
+
+        Get.snackbar(
+          "Success",
+          "Message sent successfully!",
+          backgroundColor: AppColors.primaryColor,
+          colorText: Colors.white,
+        );
       } else {
-        debugPrint("❌ Failed to send to ${friend['name']}: ${response.statusCode}");
+        debugPrint("❌ Failed: ${response.statusCode}");
         debugPrint("📦 Body: ${response.body}");
+
+        Get.snackbar(
+          "Error",
+          "Failed to send $contentType. Try again.",
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+        );
       }
-    }
-
-    debugPrint("🎉 Successfully sent $contentType to ${selectedIds.length} friends!");
-    Get.back();
-  } catch (e, s) {
-    debugPrint("❌ Error sending media: $e");
-    debugPrintStack(stackTrace: s);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-
-  Future<void> sendVideoToSingleChat({
-  required String chatId,
-  required File mediaFile,
-  required String contentType,
-}) async {
-  try {
-    isLoading.value = true;
-
-    final userCtrl = Get.find<UserController>();
-    final apiService = ApiService();
-    final senderId = userCtrl.userInfo.value?.id;
-
-    if (senderId == null) {
-      debugPrint("⚠️ Missing user ID.");
-      return;
-    }
-
-    debugPrint("🚀 Sending $contentType to chatId: $chatId...");
-
-    // 🧩 Prepare body — similar to your Postman “data” field
-    final body = {
-      "data": jsonEncode({
-        "senderId": senderId,
-        "chatIds": [chatId],
-        "contentType": contentType,
-      }),
-    };
-
-    // 🎬 Prepare multipart file
-    final multipartFiles = <MultipartBody>[
-      MultipartBody(
-        key: contentType,
-        file: mediaFile,
-      ),
-    ];
-
-    // 🌐 API call
-    final response = await apiService.postMultipartData(
-      "/message/send-message",
-      body,
-      multipartBody: multipartFiles,
-      authReq: true,
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final responseData = jsonDecode(response.body);
-      debugPrint("✅ ${responseData['message']}");
-      debugPrint("📦 Response Data: ${responseData['data']}");
-
-      Get.snackbar(
-        "Success",
-        "Message sent successfully!",
-        backgroundColor: AppColors.primaryColor,
-        colorText: Colors.white,
-      );
-    } else {
-      debugPrint("❌ Failed: ${response.statusCode}");
-      debugPrint("📦 Body: ${response.body}");
+    } catch (e, s) {
+      debugPrint("❌ Exception while sending $contentType: $e");
+      debugPrintStack(stackTrace: s);
 
       Get.snackbar(
         "Error",
-        "Failed to send $contentType. Try again.",
+        "Failed to send $contentType: $e",
         backgroundColor: Colors.red.shade600,
         colorText: Colors.white,
       );
+    } finally {
+      isLoading.value = false;
     }
-  } catch (e, s) {
-    debugPrint("❌ Exception while sending $contentType: $e");
-    debugPrintStack(stackTrace: s);
-
-    Get.snackbar(
-      "Error",
-      "Failed to send $contentType: $e",
-      backgroundColor: Colors.red.shade600,
-      colorText: Colors.white,
-    );
-  } finally {
-    isLoading.value = false;
   }
-}
 
-
-Future<void> updateChatView(String messageId) async {
+  Future<void> updateChatView(String messageId) async {
     try {
       isLoading.value = true;
       final endpoint = "/message/view-status/$messageId";
@@ -615,27 +573,26 @@ Future<void> updateChatView(String messageId) async {
   // ==============================
 
   Map<String, dynamic> _mapMessage(dynamic m, String currentUserId) {
-  final createdAt = DateTime.tryParse(m['createdAt'] ?? '');
-  final formattedTime = createdAt != null
-      ? "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}"
-      : "";
+    final createdAt = DateTime.tryParse(m['createdAt'] ?? '');
+    final formattedTime = createdAt != null
+        ? "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}"
+        : "";
 
-  final isMe = m["sender"] is Map
-      ? m["sender"]["_id"] == currentUserId
-      : m["sender"] == currentUserId;
+    final isMe = m["sender"] is Map
+        ? m["sender"]["_id"] == currentUserId
+        : m["sender"] == currentUserId;
 
-  return {
-    "_id": m["_id"] ?? "",
-    "isMe": isMe,
-    "type": m["contentType"] ?? "text",
-    "message": m["message"] ?? "",
-    "media": m["media"] ?? "",
-    "time": formattedTime,
-    "temp": false,
-    "view": isMe ? true : (m["view"] ?? false), // ✅ handle view correctly
-  };
-}
-
+    return {
+      "_id": m["_id"] ?? "",
+      "isMe": isMe,
+      "type": m["contentType"] ?? "text",
+      "message": m["message"] ?? "",
+      "media": m["media"] ?? "",
+      "time": formattedTime,
+      "temp": false,
+      "view": isMe ? true : (m["view"] ?? false), // ✅ handle view correctly
+    };
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
