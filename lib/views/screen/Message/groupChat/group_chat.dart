@@ -246,14 +246,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               ),
             ),
             child: Container(
-              height: 40,
-              width: 40,
+              height: 30,
+              width: 30,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: AppColors.black100),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(7),
+                padding: const EdgeInsets.all(4),
                 child: SvgPicture.asset('assets/icons/more.svg'),
               ),
             ),

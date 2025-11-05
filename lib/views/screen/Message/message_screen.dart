@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/controllers/notification_controller.dart';
@@ -9,6 +11,7 @@ import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/services/api_service.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/utils/show_snackbar.dart';
 import 'package:ree_social_media_app/views/screen/Contact/contact_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/see_all_story_screen.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -830,122 +833,235 @@ class _MessageScreenState extends State<MessageScreen> {
           final lastTime = chat["lastMessage"]?["createdAt"] ?? "";
 
           String formattedTime = "";
+
           if (lastTime.isNotEmpty) {
-            final dt = DateTime.tryParse(lastTime);
-            if (dt != null) {
-              final now = DateTime.now();
-              if (dt.day == now.day &&
-                  dt.month == now.month &&
-                  dt.year == now.year) {
-                formattedTime =
-                    "${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
-              } else if (dt.difference(now).inDays == -1) {
-                formattedTime = "Yesterday";
+            try {
+              final dt = DateTime.tryParse(lastTime);
+              if (dt != null) {
+                final now = DateTime.now();
+                final DateFormat timeFormat = DateFormat(
+                  'h:mm a',
+                ); // AM/PM format
+
+                // If it's today, show time with AM/PM
+                if (dt.day == now.day &&
+                    dt.month == now.month &&
+                    dt.year == now.year) {
+                  formattedTime = timeFormat.format(dt);
+                }
+                // If it's yesterday
+                else if (dt.difference(now).inDays == -1) {
+                  formattedTime = "Yesterday";
+                }
+                // For older dates, show full date with month name
+                else {
+                  formattedTime =
+                      "${dt.day} ${_monthName(dt.month)} ${dt.year}";
+                }
               } else {
-                formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
+                formattedTime = "Invalid time format"; // Fallback message
               }
+            } catch (e) {
+              formattedTime =
+                  "Error parsing time: $e"; // Error handling in case of invalid format
             }
           }
 
           // --- Chat UI ---
           final isPrivate = chat["type"] == "private";
 
-          return InkWell(
-            onTap: () {
-              if (isPrivate) {
-                Get.to(
-                  () => ChatScreen(
-                    chatId: chatId,
-                    receiverName: name,
-                    receiverImage: image,
-                  ),
-                );
-              } else {
-                Get.to(
-                  () => GroupChatScreen(
-                    chatId: chatId,
-                    groupName: name,
-                    groupImage: image,
-                  ),
-                );
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.primaryColor,
-                    backgroundImage: image.isNotEmpty
-                        ? NetworkImage(imageWithBaseUrl.toString())
-                        : null,
-                    child: image.isEmpty
-                        ? Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : "?",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              name,
+          return Slidable(
+            key: const ValueKey(0),
+            endActionPane: ActionPane(
+              motion: const ScrollMotion(),
+              dismissible: DismissiblePane(onDismissed: () {}),
+              children: [
+                SlidableAction(
+                  backgroundColor: const Color(0xFFFE4A49),
+                  foregroundColor: Colors.white,
+                  icon: Icons.delete,
+                  label: 'Delete',
+                  onPressed: (BuildContext context) =>
+                      confirm(context, allChats, index, chatId),
+                ),
+              ],
+            ),
+            child: InkWell(
+              onTap: () {
+                if (isPrivate) {
+                  Get.to(
+                    () => ChatScreen(
+                      chatId: chatId,
+                      receiverName: name,
+                      receiverImage: image,
+                    ),
+                  );
+                } else {
+                  Get.to(
+                    () => GroupChatScreen(
+                      chatId: chatId,
+                      groupName: name,
+                      groupImage: image,
+                    ),
+                  );
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: AppColors.primaryColor,
+                      backgroundImage: image.isNotEmpty
+                          ? NetworkImage(imageWithBaseUrl.toString())
+                          : null,
+                      child: image.isEmpty
+                          ? Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : "?",
                               style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            if (chat["isOnline"] == true)
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.blue,
-                                  shape: BoxShape.circle,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
                                 ),
                               ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          lastMsg,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight:
-                                lastMsg.contains("Video") ||
-                                    lastMsg.contains("Image")
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            color:
-                                lastMsg.contains("Video") ||
-                                    lastMsg.contains("Image")
-                                ? Colors.black
-                                : Colors.grey.shade600,
+                              const SizedBox(width: 4),
+                              if (chat["isOnline"] == true)
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            lastMsg,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight:
+                                  lastMsg.contains("Video") ||
+                                      lastMsg.contains("Image")
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color:
+                                  lastMsg.contains("Video") ||
+                                      lastMsg.contains("Image")
+                                  ? Colors.black
+                                  : Colors.black.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Text(
-                    formattedTime,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
+                    Text(
+                      formattedTime,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         },
       );
     });
+  }
+
+  void confirm(
+    BuildContext context,
+    List<dynamic> allChats,
+    int index,
+    String chatId,
+  ) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFFC4C3C3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Are you sure you want to delete?",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            _dialogActions(
+              context,
+              onYes: () async {
+                allChats.removeAt(index);
+                final message = await controller.deleteChat(chatId);
+                if (message == "success") {
+                  // Get.back();
+                  Get.offAll(() => MessageScreen());
+                } else {
+                  Get.back();
+                  showSnackBar("ERROR $message", true);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: onYes,
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              side: const BorderSide(color: Colors.white),
+            ),
+            child: const Text("Yes", style: TextStyle(color: Colors.white)),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () {
+              // No action taken if 'No' is pressed
+              Get.back();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text("No", style: TextStyle(color: Color(0xFF676565))),
+          ),
+        ),
+      ],
+    );
   }
 
   /// Helper for month names

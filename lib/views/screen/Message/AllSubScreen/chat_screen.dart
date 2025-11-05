@@ -252,6 +252,35 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildTextMessage(Map<String, dynamic> msg) {
+    final rawTime = msg["time"];
+    String formattedTime = "";
+
+    if (rawTime != null && rawTime.isNotEmpty) {
+      try {
+        // Check if the time format is valid (hh.mm)
+        final parts = rawTime.split(':');
+        if (parts.length == 2) {
+          int hour = int.parse(parts[0]);
+          int minute = int.parse(parts[1]);
+
+          // Determine AM or PM
+          String suffix = hour >= 12 ? 'PM' : 'AM';
+
+          // Convert to 12-hour format
+          hour = hour % 12;
+          if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
+
+          // Format with leading zero for minute
+          formattedTime =
+              "${hour}:${minute.toString().padLeft(2, '0')} $suffix";
+        } else {
+          formattedTime = "Invalid time format";
+        }
+      } catch (e) {
+        // Fallback if any error occurs during parsing
+        formattedTime = "Error parsing time: $e";
+      }
+    }
     return Column(
       crossAxisAlignment: msg["isMe"]
           ? CrossAxisAlignment.end
@@ -285,7 +314,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          msg["time"] ?? "",
+          formattedTime,
           style: const TextStyle(fontSize: 10, color: Colors.grey),
         ),
       ],
@@ -379,25 +408,22 @@ class _ChatScreenState extends State<ChatScreen> {
     final rawTime =
         msg["time"]; // e.g. "2025-11-04T15:45:00" or "2025-11-04 15:45:00"
     String formattedTime = "";
+    if (rawTime.isNotEmpty) {
+      final dt = DateTime.tryParse(rawTime);
+      if (dt != null) {
+        final now = DateTime.now();
+        final DateFormat timeFormat = DateFormat('h:mm a'); // AM/PM format
 
-    if (rawTime != null && rawTime.isNotEmpty) {
-      try {
-        final dateTime = DateTime.parse(rawTime);
-        int hour = dateTime.hour;
-        int minute = dateTime.minute;
-
-        // Determine AM or PM
-        String suffix = hour >= 12 ? 'PM' : 'AM';
-
-        // Convert to 12-hour format
-        hour = hour % 12;
-        if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
-
-        // Format with leading zero for minute
-        formattedTime =
-            "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $suffix";
-      } catch (e) {
-        formattedTime = rawTime; // fallback if parsing fails
+        if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
+          // If it's today, show time with AM/PM
+          formattedTime = timeFormat.format(dt);
+        } else if (dt.difference(now).inDays == -1) {
+          // If it's yesterday
+          formattedTime = "Yesterday";
+        } else {
+          // For older dates, show full date with month name
+          formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
+        }
       }
     }
 
@@ -451,31 +477,35 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildImageFooter(Map<String, dynamic> msg, String path) {
     final isMe = msg['isMe'] ?? false;
-    final rawTime =
-        msg["time"]; // e.g. "2025-11-04T15:45:00" or "2025-11-04 15:45:00"
+    final rawTime = msg["time"];
     String formattedTime = "";
 
     if (rawTime != null && rawTime.isNotEmpty) {
       try {
-        final dateTime = DateTime.parse(rawTime);
-        int hour = dateTime.hour;
-        int minute = dateTime.minute;
+        // Check if the time format is valid (hh.mm)
+        final parts = rawTime.split(':');
+        if (parts.length == 2) {
+          int hour = int.parse(parts[0]);
+          int minute = int.parse(parts[1]);
 
-        // Determine AM or PM
-        String suffix = hour >= 12 ? 'PM' : 'AM';
+          // Determine AM or PM
+          String suffix = hour >= 12 ? 'PM' : 'AM';
 
-        // Convert to 12-hour format
-        hour = hour % 12;
-        if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
+          // Convert to 12-hour format
+          hour = hour % 12;
+          if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
 
-        // Format with leading zero for minute
-        formattedTime =
-            "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $suffix";
+          // Format with leading zero for minute
+          formattedTime =
+              "${hour}:${minute.toString().padLeft(2, '0')} $suffix";
+        } else {
+          formattedTime = "Invalid time format";
+        }
       } catch (e) {
-        formattedTime = rawTime; // fallback if parsing fails
+        // Fallback if any error occurs during parsing
+        formattedTime = "Error parsing time: $e";
       }
     }
-
     final timeText = Text(
       formattedTime,
       style: const TextStyle(fontSize: 10, color: Colors.grey),
@@ -521,6 +551,24 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     return saveRow;
+  }
+
+  String _monthName(int month) {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return months[month - 1];
   }
 
   // ==============================================

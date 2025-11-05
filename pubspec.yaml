@@ -37,6 +37,8 @@ dependencies:
   intl: ^0.20.2
   http: any
   video_thumbnail: ^0.5.6
+  sms_autofill: ^2.4.1
+  flutter_slidable: ^4.0.3
   
 
 

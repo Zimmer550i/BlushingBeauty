@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final phoneTextController = TextEditingController();
   final passwordTextController = TextEditingController();
-  CountryCode selectedCountryCode = CountryCode.fromDialCode('+1'); // ✅ Added
+  CountryCode selectedCountryCode = CountryCode.fromDialCode('+1');
 
   @override
   Widget build(BuildContext context) {

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ree_social_media_app/controllers/user_controller.dart';
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
 
@@ -24,6 +25,7 @@ class MessageController extends GetxController {
   /// -----------------------------
   final stories = <dynamic>[].obs;
   final isLoadingStories = false.obs;
+  final isLoading = false.obs;
   final storyPage = 1.obs;
   final hasMoreStories = true.obs;
 
@@ -141,17 +143,36 @@ class MessageController extends GetxController {
 
   /// Helper - Get last message
   String getLastMessage(Map<String, dynamic> chat) {
-    final msg = chat["lastMessage"];
-    if (msg == null) return "";
+  final msg = chat["lastMessage"];
+  final sender = msg?["sender"];
+  final currentUserId = Get.find<UserController>().userInfo.value!.id;
+
+  if (msg == null) return "";
+
+  // Check if the current user sent the message
+  if (sender == currentUserId) {
+    // Current user sent a video or photo
     switch (msg["contentType"]) {
       case "image":
-        return "📸 Image";
+        return "📸 Photo"; // If the user sent a photo
       case "video":
-        return "🎥 Video";
+        return "🎥 Video"; // If the user sent a video
+      default:
+        return msg["message"] ?? "";
+    }
+  } else {
+    // Current user received a video or photo
+    switch (msg["contentType"]) {
+      case "image":
+        return "Sent a photo"; // If the user received a photo
+      case "video":
+        return "Sent a video"; // If the user received a video
       default:
         return msg["message"] ?? "";
     }
   }
+}
+
 
   /// =====================================================
   /// REFRESH (Both Chats & Stories)
@@ -265,4 +286,23 @@ class MessageController extends GetxController {
       return null;
     }
   }
+
+Future<String> deleteChat(String chatId) async {
+    try {
+      isLoading.value = true;
+      final res = await _api.delete("/chat/delete-chat/$chatId", authReq: true);
+      final body = jsonDecode(res.body);
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        return "success";
+      } else {
+        return body["message"] ?? "Failed to delete chat";
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      return "Unexpected error: ${e.toString()}";
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
 }

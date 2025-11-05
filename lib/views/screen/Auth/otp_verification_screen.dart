@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:sms_autofill/sms_autofill.dart'; // Import sms_autofill package
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
@@ -17,7 +18,8 @@ class OtpVerificationScreen extends StatefulWidget {
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
+class _OtpVerificationScreenState extends State<OtpVerificationScreen>
+    with CodeAutoFill {
   final AuthController authController = Get.put(AuthController());
   final controllers = List.generate(6, (_) => TextEditingController());
   final nodes = List.generate(6, (_) => FocusNode());
@@ -29,6 +31,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   void initState() {
     super.initState();
     _startTimer();
+    listenForCode(); // Start listening for OTP code automatically
   }
 
   @override
@@ -78,6 +81,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
     setState(() {});
   }
+
+  // This method is called automatically when OTP is received
+  @override
+  void codeUpdated() async {
+    // Fetch the OTP code from SmsAutoFill and autofill OTP in the text fields
+    String? code = await SmsAutoFill().getAppSignature;
+    for (int i = 0; i < code.length; i++) {
+      controllers[i].text = code[i];
+    }
+    setState(() {});
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +175,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   void _verifyCode() async {
-    final code = controllers.map((c) => c.text).join();
+    final code = controllers
+        .map((c) => c.text)
+        .join(); // OTP from the controllers
     final message = await authController.verifyAccount(
       widget.emailOrPhone,
       code,

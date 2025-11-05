@@ -154,7 +154,7 @@ class GroupChatController extends GetxController {
   Future<void> deleteGroup(String chatId) async {
     try {
       isLoading.value = true;
-      final res = await _apiService.delete("/chat/group-chat/$chatId", authReq: true);
+      final res = await _apiService.delete("/chat/delete-chat/$chatId", authReq: true);
       if (res.statusCode == 200 || res.statusCode == 201) {
         Get.snackbar("Success", "Group deleted successfully");
         Get.offAll(()=>MessageScreen());

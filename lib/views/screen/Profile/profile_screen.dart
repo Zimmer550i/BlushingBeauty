@@ -304,6 +304,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: OutlinedButton(
             onPressed: onYes,
             style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               side: const BorderSide(color: Colors.white),
             ),
             child: const Text("Yes", style: TextStyle(color: Colors.white)),
@@ -313,7 +316,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Expanded(
           child: ElevatedButton(
             onPressed: () => Get.back(),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             child: const Text("No", style: TextStyle(color: Color(0xFF676565))),
           ),
         ),

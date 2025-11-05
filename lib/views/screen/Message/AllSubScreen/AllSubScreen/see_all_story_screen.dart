@@ -236,7 +236,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                         },
                       );
                     },
-                    icon: Icon(Icons.delete, color: AppColors.primaryColor),
+                    icon: Icon(Icons.delete, color: Colors.red),
                   ),
                 ),
             ],
@@ -331,7 +331,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                         },
                       );
                     },
-                    icon: Icon(Icons.delete, color: AppColors.primaryColor),
+                    icon: Icon(Icons.delete, color: Colors.red),
                   ),
                 ),
             ],

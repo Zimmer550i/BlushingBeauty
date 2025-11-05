@@ -576,7 +576,7 @@ class ChatController extends GetxController {
       "media": m["media"] ?? "",
       "time": formattedTime,
       "temp": false,
-      "view": isMe ? true : (m["view"] ?? false), // ✅ handle view correctly
+      "view": isMe ? true : (m["view"] ?? false),
     };
   }
 
