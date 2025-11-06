@@ -272,7 +272,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
           // Format with leading zero for minute
           formattedTime =
-              "${hour}:${minute.toString().padLeft(2, '0')} $suffix";
+              "$hour:${minute.toString().padLeft(2, '0')} $suffix";
         } else {
           formattedTime = "Invalid time format";
         }
@@ -497,7 +497,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
           // Format with leading zero for minute
           formattedTime =
-              "${hour}:${minute.toString().padLeft(2, '0')} $suffix";
+              "$hour:${minute.toString().padLeft(2, '0')} $suffix";
         } else {
           formattedTime = "Invalid time format";
         }
