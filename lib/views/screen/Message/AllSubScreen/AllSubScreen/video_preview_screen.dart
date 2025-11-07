@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
@@ -20,7 +21,7 @@ class VideoPreviewScreen extends StatefulWidget {
     required this.userProfile,
     required this.userName,
     this.chatId,
-    this.isInbox,
+    this.isInbox = false,
   });
 
   final String videoUrl;
@@ -35,6 +36,7 @@ class VideoPreviewScreen extends StatefulWidget {
 }
 
 class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
+  final MessageController messageController = Get.find<MessageController>();
   CameraController? _frontCam;
   VideoPlayerController? _video;
   Timer? _countdownTimer;
@@ -42,6 +44,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   int _secondsRemaining = 3;
   bool isRecording = false;
   XFile? recordedFile;
+  String? storyChatId;
 
   Duration _videoDuration = Duration.zero;
   Duration _position = Duration.zero;
@@ -60,8 +63,18 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.isInbox == false) getStoryId();
     _secondsRemaining = widget.countdownSeconds;
     WidgetsBinding.instance.addPostFrameCallback((_) => _initFlow());
+  }
+
+  void getStoryId() async {
+    storyChatId = await messageController.getOrCreatePrivateChat(
+      widget.chatId!,
+      widget.userName,
+      widget.userProfile,
+    );
+    debugPrint("Chat ID: $storyChatId");
   }
 
   Future<void> _initFlow() async {
@@ -189,7 +202,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
               reactionVideo: recordedFile!.path,
               userProfile: widget.userProfile,
               userName: widget.userName,
-              chatId: widget.chatId.toString(),
+              chatId: widget.isInbox == true
+                  ? widget.chatId.toString()
+                  : storyChatId.toString(),
               isInbox: widget.isInbox ?? false,
               isVideo: true,
               videoFile: recordedFile,
@@ -201,7 +216,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
               reactionVideo: recordedFile!.path,
               userProfile: widget.userProfile,
               userName: widget.userName,
-              chatId: widget.chatId.toString(),
+              chatId: widget.isInbox == true
+                  ? widget.chatId.toString()
+                  : storyChatId.toString(),
               isInbox: widget.isInbox ?? false,
               isVideo: false,
             ),

@@ -392,6 +392,7 @@ class _ChatScreenState extends State<ChatScreen> {
               chatId: widget.chatId,
               msgId: msg["_id"],
               chatController: chatController,
+              
             ),
             const SizedBox(height: 6),
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
@@ -10,6 +11,7 @@ import '../services/api_service.dart';
 class MessageController extends GetxController {
   final ApiService _api = ApiService();
   final ImagePicker _picker = ImagePicker();
+  final chatController = Get.put(ChatController());
 
   /// -----------------------------
   /// 🧩 CHATS (Private & Group)
@@ -35,6 +37,65 @@ class MessageController extends GetxController {
     fetchChats();
     fetchStories();
   }
+
+  Future<String?> getOrCreatePrivateChat(
+    String userId,
+    String name,
+    String image,
+  ) async {
+    try {
+      // Check if a private chat already exists with the given userId
+      final existingChat = privateChats.firstWhere((chat) {
+        // Check if any member in the chat has the userId
+        return chat['members'].any((member) => member['_id'] == userId);
+      }, orElse: () => null);
+
+      if (existingChat != null) {
+        // If a chat exists, return the existing chatId
+        return existingChat['_id'];
+      } else {
+        // If no chat exists, create a new one
+        await createChatAndSendReaction(name, image, userId);
+
+        // After creating the chat, check if the new chat was added to the list
+        final newChat = privateChats.firstWhere((chat) {
+          // Check again after creation
+          return chat['members'].any((member) => member['_id'] == userId);
+        }, orElse: () => null);
+
+        debugPrint("Chat ID: ${newChat?['_id']}");
+
+        return newChat?['_id'];
+      }
+    } catch (e) {
+      debugPrint("❌ Error in getOrCreatePrivateChat: $e");
+      return null;
+    }
+  }
+Future<void> createChatAndSendReaction(
+    String name,
+    String image,
+    String memberId,
+  ) async {
+    isLoading.value = true;
+    try {
+      final response = await _api.post("/chat/create-private", {
+        "member": memberId,
+      }, authReq: true);
+
+      final body = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final chatId = body['data']['_id'];
+      } else {
+        debugPrint("⚠️ Failed: ${body['message']}");
+      }
+    } catch (e) {
+      debugPrint("❌ Error creating private chat: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
 
   /// =====================================================
   /// STORIES SECTION
@@ -143,36 +204,35 @@ class MessageController extends GetxController {
 
   /// Helper - Get last message
   String getLastMessage(Map<String, dynamic> chat) {
-  final msg = chat["lastMessage"];
-  final sender = msg?["sender"];
-  final currentUserId = Get.find<UserController>().userInfo.value!.id;
+    final msg = chat["lastMessage"];
+    final sender = msg?["sender"];
+    final currentUserId = Get.find<UserController>().userInfo.value!.id;
 
-  if (msg == null) return "";
+    if (msg == null) return "";
 
-  // Check if the current user sent the message
-  if (sender == currentUserId) {
-    // Current user sent a video or photo
-    switch (msg["contentType"]) {
-      case "image":
-        return "📸 Photo"; // If the user sent a photo
-      case "video":
-        return "🎥 Video"; // If the user sent a video
-      default:
-        return msg["message"] ?? "";
-    }
-  } else {
-    // Current user received a video or photo
-    switch (msg["contentType"]) {
-      case "image":
-        return "Sent a photo"; // If the user received a photo
-      case "video":
-        return "Sent a video"; // If the user received a video
-      default:
-        return msg["message"] ?? "";
+    // Check if the current user sent the message
+    if (sender == currentUserId) {
+      // Current user sent a video or photo
+      switch (msg["contentType"]) {
+        case "image":
+          return "📸 Photo"; // If the user sent a photo
+        case "video":
+          return "🎥 Video"; // If the user sent a video
+        default:
+          return msg["message"] ?? "";
+      }
+    } else {
+      // Current user received a video or photo
+      switch (msg["contentType"]) {
+        case "image":
+          return "Sent a photo"; // If the user received a photo
+        case "video":
+          return "Sent a video"; // If the user received a video
+        default:
+          return msg["message"] ?? "";
+      }
     }
   }
-}
-
 
   /// =====================================================
   /// REFRESH (Both Chats & Stories)
@@ -287,7 +347,7 @@ class MessageController extends GetxController {
     }
   }
 
-Future<String> deleteChat(String chatId) async {
+  Future<String> deleteChat(String chatId) async {
     try {
       isLoading.value = true;
       final res = await _api.delete("/chat/delete-chat/$chatId", authReq: true);
@@ -304,5 +364,4 @@ Future<String> deleteChat(String chatId) async {
       isLoading.value = false;
     }
   }
-
 }

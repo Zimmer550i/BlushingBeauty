@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -357,7 +358,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(10),
                   child: sendMessageController.isLoading.value
-                      ? CircularProgressIndicator(color: AppColors.primaryColor)
+                      ? SpinKitWave(color: Colors.white, size: 20)
                       : Text(
                           "Send Now",
                           style: TextStyle(

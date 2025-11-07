@@ -309,6 +309,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   } else if (story["author"] is String) {
                     authorName = "User";
                   }
+                  
 
                   return _buildStoryCard(
                     mediaUrl,
@@ -449,15 +450,15 @@ class _MessageScreenState extends State<MessageScreen> {
     String name,
     String image,
     bool isVideo,
-    String chatId,
+    String authorId,
   ) {
     const double cardW = 100;
     const double cardH = 132;
 
     return FutureBuilder<Widget>(
       future: isVideo
-          ? _buildVideoThumbnailWidget(mediaUrl, name, image, chatId)
-          : _buildImageStoryWidget(mediaUrl, name, image, chatId),
+          ? _buildVideoThumbnailWidget(mediaUrl, name, image, authorId)
+          : _buildImageStoryWidget(mediaUrl, name, image, authorId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -495,7 +496,7 @@ class _MessageScreenState extends State<MessageScreen> {
     String mediaUrl,
     String name,
     String image,
-    String chatId,
+    String authorId,
   ) async {
     const double cardW = 100;
     const double cardH = 132;
@@ -509,7 +510,7 @@ class _MessageScreenState extends State<MessageScreen> {
             countdownSeconds: 3,
             userProfile: image,
             userName: name,
-            chatId: chatId,
+            chatId: authorId,
           ),
         );
       },
@@ -565,7 +566,7 @@ class _MessageScreenState extends State<MessageScreen> {
     String videoUrl,
     String name,
     String image,
-    String chatId,
+    String authorId,
   ) async {
     const double cardW = 100;
     const double cardH = 132;
@@ -579,7 +580,7 @@ class _MessageScreenState extends State<MessageScreen> {
           cachedThumb,
           name,
           image,
-          chatId,
+          authorId,
           videoUrl,
           cardW,
           cardH,
@@ -612,7 +613,7 @@ class _MessageScreenState extends State<MessageScreen> {
         thumbPath,
         name,
         image,
-        chatId,
+        authorId,
         videoUrl,
         cardW,
         cardH,
@@ -638,7 +639,7 @@ class _MessageScreenState extends State<MessageScreen> {
     String? thumbPath,
     String name,
     String image,
-    String chatId,
+    String authorId,
     String videoUrl,
     double cardW,
     double cardH,
@@ -652,7 +653,7 @@ class _MessageScreenState extends State<MessageScreen> {
             countdownSeconds: 3,
             userProfile: image,
             userName: name,
-            chatId: chatId,
+            chatId: authorId,
           ),
         );
       },
