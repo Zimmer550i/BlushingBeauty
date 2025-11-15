@@ -233,7 +233,7 @@ class _MessageScreenState extends State<MessageScreen> {
   /// Stories Section
   Widget _buildStoriesSection() {
     return Obx(() {
-      // ✅ Filter out stories from the logged-in user
+      // Filter out stories from the logged-in user
       final currentUserId = userController.userInfo.value!.id;
       final filteredStories = controller.stories
           .where(
@@ -272,7 +272,7 @@ class _MessageScreenState extends State<MessageScreen> {
               child: ListView.builder(
                 controller: _storyScrollController,
                 scrollDirection: Axis.horizontal,
-                itemCount: filteredStories.length + 1, // +1 for "Add Story"
+                itemCount: filteredStories.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) return _buildAddStoryCard();
 
@@ -741,7 +741,7 @@ class _MessageScreenState extends State<MessageScreen> {
 
     return Obx(() {
       if (controller.isLoadingChats.value) {
-        // 🦴 Skeleton loading placeholder while chats are fetching
+        //Skeleton loading placeholder while chats are fetching
         return ListView.builder(
           itemCount: 6,
           shrinkWrap: true,
@@ -875,7 +875,6 @@ class _MessageScreenState extends State<MessageScreen> {
             key: const ValueKey(0),
             endActionPane: ActionPane(
               motion: const ScrollMotion(),
-              dismissible: DismissiblePane(onDismissed: () {}),
               children: [
                 SlidableAction(
                   backgroundColor: const Color(0xFFFE4A49),

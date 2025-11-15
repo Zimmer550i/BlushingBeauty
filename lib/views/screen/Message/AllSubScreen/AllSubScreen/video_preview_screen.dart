@@ -2,17 +2,20 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' show ImageFilter;
+import 'dart:typed_data';
+import 'dart:ui' show ImageFilter; // For RepaintBoundary and image manipulation
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart'; // For loading spinner
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:ree_social_media_app/controllers/message_controller.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart'; // For camera and mic permissions
+import 'package:ree_social_media_app/controllers/message_controller.dart'; // For message handling
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
-
+import 'dart:ui' as ui;
 class VideoPreviewScreen extends StatefulWidget {
   const VideoPreviewScreen({
     super.key,
@@ -37,6 +40,7 @@ class VideoPreviewScreen extends StatefulWidget {
 
 class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   final MessageController messageController = Get.find<MessageController>();
+  final GlobalKey _repaintKey = GlobalKey();
   CameraController? _frontCam;
   VideoPlayerController? _video;
   Timer? _countdownTimer;
@@ -50,6 +54,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   Duration _position = Duration.zero;
   late final ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   late final VoidCallback _videoListener;
+  File? screenshotFile;
 
   bool get isVideo {
     final ext = widget.videoUrl.toLowerCase();
@@ -92,17 +97,45 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     }
   }
 
+  Future<void> _captureAndSaveScreenshot() async {
+  try {
+    RenderRepaintBoundary boundary =
+        _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+
+    ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+
+    ByteData? byteData =
+        await image.toByteData(format: ui.ImageByteFormat.png);
+
+    Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+    // Save file to app's temp directory
+    final dir = await getTemporaryDirectory();
+    final filePath =
+        "${dir.path}/thumbnail_${DateTime.now().millisecondsSinceEpoch}.png";
+
+    screenshotFile = File(filePath);
+    await screenshotFile!.writeAsBytes(pngBytes);
+
+    debugPrint("📸 Screenshot saved at: $filePath");
+  } catch (e) {
+    debugPrint("❌ Screenshot error: $e");
+  }
+}
+
   Future<void> _onCountdownComplete() async {
     setState(() => _secondsRemaining = 0);
 
     try {
-      // ✅ Play video if available
+      // Capture + save screenshot
+  await _captureAndSaveScreenshot();
+      // Play video if available
       if (isVideo && _video != null && _video!.value.isInitialized) {
         await _video!.play();
         debugPrint("🎬 Main video playing...");
       }
 
-      // ✅ Start recording reaction
+      // Start recording reaction
       await _startFrontRecording();
     } catch (e) {
       debugPrint("⚠️ Countdown complete but start failed: $e");
@@ -332,63 +365,66 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         ],
       ),
       body: videoReady
-          ? Stack(
-              alignment: Alignment.center,
-              children: [
-                // 🎬 Background (video or image)
-                Positioned.fill(
-                  child: isVideo
-                      ? FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _video!.value.size.width,
-                            height: _video!.value.size.height,
-                            child: VideoPlayer(_video!),
+          ? RepaintBoundary(
+            key: _repaintKey,
+            child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // 🎬 Background (video or image)
+                  Positioned.fill(
+                    child: isVideo
+                        ? FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _video!.value.size.width,
+                              height: _video!.value.size.height,
+                              child: VideoPlayer(_video!),
+                            ),
+                          )
+                        : Image.network(
+                            widget.videoUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Icon(Icons.broken_image),
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) return child;
+                              return Center(
+                                child: SpinKitWave(
+                                  color: AppColors.primaryColor,
+                                  size: 30,
+                                ),
+                              );
+                            },
                           ),
-                        )
-                      : Image.network(
-                          widget.videoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Icon(Icons.broken_image),
-                          loadingBuilder: (context, child, progress) {
-                            if (progress == null) return child;
-                            return Center(
-                              child: SpinKitWave(
-                                color: AppColors.primaryColor,
-                                size: 30,
-                              ),
-                            );
-                          },
-                        ),
-                ),
-
-                if (_secondsRemaining > 0) _buildCountdownOverlay(),
-
-                // 📸 Front camera PiP
-                if (_frontCam?.value.isInitialized == true)
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: SizedBox(
-                      width: 110,
-                      // height: 150,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: .25),
-                          border: Border.all(
-                            color: AppColors.frameColors,
-                            width: 2,
+                  ),
+            
+                  if (_secondsRemaining > 0) _buildCountdownOverlay(),
+            
+                  // 📸 Front camera PiP
+                  if (_frontCam?.value.isInitialized == true)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: SizedBox(
+                        width: 110,
+                        // height: 150,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: .25),
+                            border: Border.all(
+                              color: AppColors.frameColors,
+                              width: 2,
+                            ),
                           ),
+                          // clipBehavior: Clip.antiAliasWithSaveLayer,
+                          child: CameraPreview(_frontCam!),
                         ),
-                        // clipBehavior: Clip.antiAliasWithSaveLayer,
-                        child: CameraPreview(_frontCam!),
                       ),
                     ),
-                  ),
-
-                _buildBottomControls(),
-              ],
-            )
+            
+                  _buildBottomControls(),
+                ],
+              ),
+          )
           : Center(
               child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
             ),

@@ -204,15 +204,15 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Obx(
-                  () => Text(
-                    createStoryController.isLoading.value
-                        ? "Uploading..."
-                        : "Create Story",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  () => createStoryController.isLoading.value
+                      ? SpinKitWave(color: Colors.white, size: 16.0)
+                      : Text(
+                          "Create Story",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ),

@@ -79,6 +79,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                   final type = story["contentType"];
                   final storyId = story["_id"];
                   final name = story["author"]?["name"] ?? "Unknown";
+                  final authorId = story["author"]?["_id"] ?? "Unknown";
 
                   final userImage = userController.addBaseUrl(
                     story["author"]?["image"] ?? "",
@@ -114,6 +115,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                     type == "video",
                     storyId,
                     index,
+                    authorId,
                   );
                 },
               ),
@@ -133,6 +135,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
     bool isVideo,
     String storyId,
     int index,
+    String authorId,
   ) {
     return AspectRatio(
       aspectRatio: 3 / 4,
@@ -145,6 +148,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                 userImage,
                 storyId,
                 index,
+                authorId,
               )
             : _buildImageCard(
                 context,
@@ -153,6 +157,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                 userImage,
                 storyId,
                 index,
+                authorId,
               ),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -189,6 +194,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
     String userImage,
     String storyId,
     int index,
+    String authorId,
   ) async {
     return AspectRatio(
       aspectRatio: 3 / 4,
@@ -201,6 +207,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                 countdownSeconds: 3,
                 userProfile: userImage,
                 userName: name,
+                chatId: authorId,
               ),
             );
           } else {
@@ -253,6 +260,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
     String userImage,
     String storyId,
     int index,
+    String authorId,
   ) async {
     final localVideo = await _downloadVideoToLocal(videoUrl);
     final thumbPath = await VideoThumbnail.thumbnailFile(
@@ -274,6 +282,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
                 countdownSeconds: 3,
                 userProfile: userImage,
                 userName: name,
+                chatId: authorId,
               ),
             );
           } else {

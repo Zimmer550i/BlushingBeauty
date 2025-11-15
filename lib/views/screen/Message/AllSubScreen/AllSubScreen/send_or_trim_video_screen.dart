@@ -326,7 +326,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
               color: Colors.grey,
             ),
             child: Center(
-              child: Padding(
+              child:  Padding(
                 padding: const EdgeInsets.all(10),
                 child: Text(
                   "Select Image",

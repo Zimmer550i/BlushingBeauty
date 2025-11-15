@@ -166,7 +166,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
   Widget _buildBottomControls() => Container(
     color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
     child: SafeArea(
       child: Row(
         children: [
@@ -175,6 +175,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
             onPressed: () => Get.back(),
             icon: Icon(Icons.delete, color: AppColors.primaryColor),
           ),
+          Spacer(),
           Obx(
             () => InkWell(
               onTap: _handleFrameAndSend,

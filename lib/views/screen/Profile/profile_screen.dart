@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/views/base/custom_switch.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/change_password_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/edit_profile_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/report_problem_screen.dart';
@@ -108,26 +109,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }),
               const SizedBox(height: 40),
 
-              /// Push Notifications
-              // Row(
-              //   children: [
-              //     SvgPicture.asset('assets/icons/notification_fill.svg'),
-              //     const SizedBox(width: 13),
-              //     const Text(
-              //       "Push Notifications",
-              //       style: TextStyle(
-              //         color: Color(0xFF676565),
-              //         fontSize: 16,
-              //         fontWeight: FontWeight.w400,
-              //       ),
-              //     ),
-              //     const Spacer(),
-              //     CustomSwitch(
-              //       value: isSwitch,
-              //       onChanged: (val) => setState(() => isSwitch = val),
-              //     ),
-              //   ],
-              // ),
+              // Push Notifications
+              Row(
+                children: [
+                  SvgPicture.asset('assets/icons/notification_fill.svg'),
+                  const SizedBox(width: 13),
+                  const Text(
+                    "Push Notifications",
+                    style: TextStyle(
+                      color: Color(0xFF676565),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const Spacer(),
+                  CustomSwitch(
+                    value: isSwitch,
+                    onChanged: (val) => setState(() => isSwitch = val),
+                  ),
+                ],
+              ),
               const SizedBox(height: 18),
 
               /// Settings List
