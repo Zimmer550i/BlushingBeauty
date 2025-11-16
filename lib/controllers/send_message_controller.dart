@@ -94,6 +94,7 @@ class SendMessageController extends GetxController {
 
   Future<void> sendMedia({
     required String filePath,
+    required File? thumbnail,
     required bool isVideo,
   }) async {
     isLoading.value = true;
@@ -103,7 +104,7 @@ class SendMessageController extends GetxController {
     }
 
     try {
-      // ✅ Ensure .mp4 extension or rename .temp file properly
+      //Ensure .mp4 extension or rename .temp file properly
       final correctedPath = isVideo ? await ensureMp4File(filePath) : filePath;
 
       final file = File(correctedPath);
@@ -114,13 +115,9 @@ class SendMessageController extends GetxController {
         friends: friends,
         selectedIds: selectedIds,
         mediaFile: file,
+        thumbnail: thumbnail!,
         contentType: isVideo ? 'video' : 'image',
       );
-
-      // Get.snackbar(
-      //   "Success",
-      //   "Media sent to ${selectedIds.length} friend${selectedIds.length > 1 ? 's' : ''}!",
-      // );
       Get.offAllNamed(AppRoutes.messageScreen);
     } catch (e) {
       Get.snackbar("Error", "Failed to send media: $e");
@@ -132,6 +129,7 @@ class SendMessageController extends GetxController {
   Future<void> sendMediaToSingleChat({
     required String chatId,
     required String filePath,
+    required File? thumbnail,
     required bool isVideo,
   }) async {
     try {
@@ -148,6 +146,7 @@ class SendMessageController extends GetxController {
       await chatController.sendVideoToSingleChat(
         chatId: chatId,
         mediaFile: file,
+        thumbnail: thumbnail!,
         contentType: isVideo ? 'video' : 'image',
       );
       Get.offAllNamed(AppRoutes.messageScreen);

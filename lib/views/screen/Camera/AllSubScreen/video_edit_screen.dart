@@ -227,6 +227,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                     chatId: widget.chatId!,
                     filePath: widget.filePath,
                     isVideo: widget.isVideo,
+                    thumbnail: null,
                   );
                 }
               : () async {

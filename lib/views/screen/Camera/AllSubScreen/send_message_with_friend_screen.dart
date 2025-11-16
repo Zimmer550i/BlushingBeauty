@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,12 +13,14 @@ import '../../../../controllers/send_message_controller.dart';
 
 class SendMessageWithFriendScreen extends StatefulWidget {
   final String filePath;
+  final File? thumbnail;
   final bool isVideo;
 
   const SendMessageWithFriendScreen({
     super.key,
     required this.filePath,
     required this.isVideo,
+    this.thumbnail,
   });
 
   @override
@@ -78,6 +82,7 @@ class _SendMessageWithFriendScreenState
                       text: "Send Now",
                       onTap: () => controller.sendMedia(
                         filePath: widget.filePath,
+                        thumbnail: widget.thumbnail,
                         isVideo: widget.isVideo,
                       ),
                     ),),

@@ -352,6 +352,23 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
     bool isMe = msg["isMe"] ?? false;
+    
+    String thumbnail = "";
+
+if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
+  final thumbnailUrl = userController.addBaseUrl(msg["thumbnail"]);
+  debugPrint("🚀 URL: $thumbnailUrl");
+  thumbnail = thumbnailUrl.toString();
+} else {
+  // fallback
+  debugPrint("🚀 MSG: $msg");
+  thumbnail = "";
+}
+
+    debugPrint("🚀 Video URL: $videoUrl");
+
+    debugPrint("🚀 Thumbnail URL: $thumbnail");
+
     final bool isViewed = isMe ? true : (msg["view"] ?? false);
 
     return FutureBuilder<File>(
@@ -384,6 +401,7 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             BlurVideoCard(
               isMe: isMe,
+              thumbnail: thumbnail.toString(),
               isView: isViewed,
               videoFile: localVideo,
               msg: msg,
@@ -406,27 +424,28 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildVideoFooter(Map<String, dynamic> msg, String path) {
     final isMe = msg['isMe'] ?? false;
-    final rawTime =
-        msg["time"]; // e.g. "2025-11-04T15:45:00" or "2025-11-04 15:45:00"
-    String formattedTime = "";
-    if (rawTime.isNotEmpty) {
-      final dt = DateTime.tryParse(rawTime);
-      if (dt != null) {
-        final now = DateTime.now();
-        final DateFormat timeFormat = DateFormat('h:mm a'); // AM/PM format
+    final formattedTime =
+        msg["time"];
+//     String formattedTime = "";
+//     if (rawTime.isNotEmpty) {
+//       final DateFormat formatter = DateFormat("HH:mm");
+// final DateTime dt = formatter.parseLoose(rawTime);
+//       if (dt != null) {
+//         final now = DateTime.now();
+//         final DateFormat timeFormat = DateFormat('h:mm a'); // AM/PM format
 
-        if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
-          // If it's today, show time with AM/PM
-          formattedTime = timeFormat.format(dt);
-        } else if (dt.difference(now).inDays == -1) {
-          // If it's yesterday
-          formattedTime = "Yesterday";
-        } else {
-          // For older dates, show full date with month name
-          formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
-        }
-      }
-    }
+//         if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
+//           // If it's today, show time with AM/PM
+//           formattedTime = timeFormat.format(dt);
+//         } else if (dt.difference(now).inDays == -1) {
+//           // If it's yesterday
+//           formattedTime = "Yesterday";
+//         } else {
+//           // For older dates, show full date with month name
+//           formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
+//         }
+//       }
+//     }
 
     final timeText = Text(
       formattedTime,

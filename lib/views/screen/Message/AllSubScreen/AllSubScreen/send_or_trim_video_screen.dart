@@ -19,6 +19,7 @@ class SendOrTrimVideoScreen extends StatefulWidget {
   final bool? isInbox;
   final bool? isVideo;
   final XFile? videoFile;
+  final File? thumbnail;
 
   const SendOrTrimVideoScreen({
     super.key,
@@ -30,6 +31,7 @@ class SendOrTrimVideoScreen extends StatefulWidget {
     this.isInbox,
     this.isVideo,
     this.videoFile,
+    this.thumbnail,
   });
 
   @override
@@ -316,6 +318,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                 userName: widget.userName,
                 chatId: widget.chatId,
                 isInbox: widget.isInbox,
+                thumbnail: widget.thumbnail,
               ),
             );
           },
@@ -345,6 +348,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
               await sendMessageController.sendMediaToSingleChat(
                 chatId: widget.chatId,
                 filePath: widget.reactionVideo,
+                thumbnail: widget.thumbnail,
                 isVideo: true,
               );
             },

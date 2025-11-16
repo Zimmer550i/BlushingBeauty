@@ -347,6 +347,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     bool isMe = msg["isMe"] ?? false;
     bool view = msg["view"] ?? false;
     final bool isViewed = isMe ? true : view;
+    String thumbnail = msg["thumbnail"] ?? "";
 
     return FutureBuilder<File>(
       future: _downloadVideoToLocal(videoUrl.toString()),
@@ -377,6 +378,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
+              thumbnail: thumbnail,
               isMe: isMe,
               chatController: chatController,
               msgId: msg["_id"],

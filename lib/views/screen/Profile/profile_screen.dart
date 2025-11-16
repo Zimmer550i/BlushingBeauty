@@ -28,185 +28,187 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              /// Profile Card
-              Obx(() {
-                final imageUrl = userController.getImageUrl();
-                final userName =
-                    userController.userInfo.value?.name ?? "Loading...";
-                final userPhone = userController.userInfo.value?.phone ?? "N/A";
-                return Container(
-                  padding: const EdgeInsets.all(20),
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [AppColors.primaryColor, Colors.white],
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                /// Profile Card
+                Obx(() {
+                  final imageUrl = userController.getImageUrl();
+                  final userName =
+                      userController.userInfo.value?.name ?? "Loading...";
+                  final userPhone = userController.userInfo.value?.phone ?? "N/A";
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [AppColors.primaryColor, Colors.white],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    borderRadius: BorderRadius.circular(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: Text(
+                            "re:",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+          
+                        /// Avatar + Logo Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CircleAvatar(
+                              radius: 40,
+                              backgroundColor: AppColors.primaryColor,
+                              backgroundImage:
+                                  (imageUrl != null && imageUrl.isNotEmpty)
+                                  ? NetworkImage(imageUrl)
+                                  : const AssetImage("assets/images/demo1.png")
+                                        as ImageProvider,
+                            ),
+          
+                            // ReeLogo(),
+                          ],
+                        ),
+          
+                        const SizedBox(height: 8),
+          
+                        /// User Info
+                        Text(
+                          userName,
+                          style: const TextStyle(
+                            color: Color(0xFF333333),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          userPhone,
+                          style: const TextStyle(
+                            color: Color(0xFF333333),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 40),
+          
+                // Push Notifications
+                Row(
+                  children: [
+                    SvgPicture.asset('assets/icons/notification_fill.svg'),
+                    const SizedBox(width: 13),
+                    const Text(
+                      "Push Notifications",
+                      style: TextStyle(
+                        color: Color(0xFF676565),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    const Spacer(),
+                    CustomSwitch(
+                      value: isSwitch,
+                      onChanged: (val) => setState(() => isSwitch = val),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+          
+                /// Settings List
+                _customRow(
+                  onTap: () => Get.to(() => const EditProfileScreen()),
+                  imagePath: 'assets/icons/personal.svg',
+                  title: 'Change Personal Information',
+                ),
+                const SizedBox(height: 17),
+                _customRow(
+                  onTap: () => Get.to(() => const ChangePasswordScreen()),
+                  title: 'Change Password',
+                  imagePath: 'assets/icons/change_password.svg',
+                ),
+                const SizedBox(height: 17),
+                _customRow(
+                  onTap: () => _confirmDeleteAccount(context),
+                  title: 'Delete My Account',
+                  imagePath: 'assets/icons/delete.svg',
+                ),
+                const SizedBox(height: 17),
+                _customRow(
+                  onTap: () => Get.to(() => const ReportProblemScreen()),
+                  title: 'Report a Problem',
+                  imagePath: 'assets/icons/report.svg',
+                ),
+                const SizedBox(height: 17),
+                _customRow(
+                  onTap: () => Get.to(
+                    () => AllDataScreen(
+                      title: "Terms of Service",
+                      endPoint: '/terms',
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  title: 'Terms of Service',
+                  imagePath: 'assets/icons/terms.svg',
+                ),
+                const SizedBox(height: 17),
+                _customRow(
+                  onTap: () => Get.to(
+                    () => AllDataScreen(
+                      title: "Privacy Policy",
+                      endPoint: '/privacy',
+                    ),
+                  ),
+                  title: 'Privacy Policy',
+                  imagePath: 'assets/icons/privacy.svg',
+                ),
+                const SizedBox(height: 17),
+                _customRow(
+                  onTap: () => Get.to(
+                    () => AllDataScreen(title: "About Us", endPoint: '/about'),
+                  ),
+          
+                  title: 'About',
+                  imagePath: 'assets/icons/about.svg',
+                ),
+                const SizedBox(height: 17),
+          
+                /// Logout
+                InkWell(
+                  onTap: () => _confirmLogout(context),
+                  child: Row(
                     children: [
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: Text(
-                          "re:",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-
-                      /// Avatar + Logo Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundColor: AppColors.primaryColor,
-                            backgroundImage:
-                                (imageUrl != null && imageUrl.isNotEmpty)
-                                ? NetworkImage(imageUrl)
-                                : const AssetImage("assets/images/demo1.png")
-                                      as ImageProvider,
-                          ),
-
-                          // ReeLogo(),
-                        ],
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      /// User Info
-                      Text(
-                        userName,
-                        style: const TextStyle(
-                          color: Color(0xFF333333),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        userPhone,
-                        style: const TextStyle(
-                          color: Color(0xFF333333),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
+                      SvgPicture.asset('assets/icons/logout.svg'),
+                      const SizedBox(width: 13),
+                      const Text(
+                        "Logout",
+                        style: TextStyle(
+                          color: Color(0xFFF04B4C),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
-                );
-              }),
-              const SizedBox(height: 40),
-
-              // Push Notifications
-              Row(
-                children: [
-                  SvgPicture.asset('assets/icons/notification_fill.svg'),
-                  const SizedBox(width: 13),
-                  const Text(
-                    "Push Notifications",
-                    style: TextStyle(
-                      color: Color(0xFF676565),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const Spacer(),
-                  CustomSwitch(
-                    value: isSwitch,
-                    onChanged: (val) => setState(() => isSwitch = val),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              /// Settings List
-              _customRow(
-                onTap: () => Get.to(() => const EditProfileScreen()),
-                imagePath: 'assets/icons/personal.svg',
-                title: 'Change Personal Information',
-              ),
-              const SizedBox(height: 17),
-              _customRow(
-                onTap: () => Get.to(() => const ChangePasswordScreen()),
-                title: 'Change Password',
-                imagePath: 'assets/icons/change_password.svg',
-              ),
-              const SizedBox(height: 17),
-              _customRow(
-                onTap: () => _confirmDeleteAccount(context),
-                title: 'Delete My Account',
-                imagePath: 'assets/icons/delete.svg',
-              ),
-              const SizedBox(height: 17),
-              _customRow(
-                onTap: () => Get.to(() => const ReportProblemScreen()),
-                title: 'Report a Problem',
-                imagePath: 'assets/icons/report.svg',
-              ),
-              const SizedBox(height: 17),
-              _customRow(
-                onTap: () => Get.to(
-                  () => AllDataScreen(
-                    title: "Terms of Service",
-                    endPoint: '/terms',
-                  ),
                 ),
-                title: 'Terms of Service',
-                imagePath: 'assets/icons/terms.svg',
-              ),
-              const SizedBox(height: 17),
-              _customRow(
-                onTap: () => Get.to(
-                  () => AllDataScreen(
-                    title: "Privacy Policy",
-                    endPoint: '/privacy',
-                  ),
-                ),
-                title: 'Privacy Policy',
-                imagePath: 'assets/icons/privacy.svg',
-              ),
-              const SizedBox(height: 17),
-              _customRow(
-                onTap: () => Get.to(
-                  () => AllDataScreen(title: "About Us", endPoint: '/about'),
-                ),
-
-                title: 'About',
-                imagePath: 'assets/icons/about.svg',
-              ),
-              const SizedBox(height: 17),
-
-              /// Logout
-              InkWell(
-                onTap: () => _confirmLogout(context),
-                child: Row(
-                  children: [
-                    SvgPicture.asset('assets/icons/logout.svg'),
-                    const SizedBox(width: 13),
-                    const Text(
-                      "Logout",
-                      style: TextStyle(
-                        color: Color(0xFFF04B4C),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

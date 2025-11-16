@@ -287,35 +287,37 @@ class ApiService {
   }
 
 
-  Future<http.Response> postMultipartData(
-      String endpoint,
-      Map<String, dynamic> body, {
-        required List<MultipartBody> multipartBody,
-        bool authReq = false,
-      }) async {
-    try {
-      final apiService = ApiService();
-      final headers = await apiService._getHeaders(authReq);
-      final uri = Uri.parse('${apiService.baseUrl}$endpoint');
+Future<http.Response> postMultipartData(
+  String endpoint,
+  Map<String, dynamic> body, {
+  required List<MultipartBody> multipartBody,
+  bool authReq = false,
+}) async {
+  try {
+    final apiService = ApiService();
+    final headers = await apiService._getHeaders(authReq);
+    final uri = Uri.parse('${apiService.baseUrl}$endpoint');
 
-      debugPrint('====> API Call: $uri');
-      debugPrint('====> Headers: $headers');
-      debugPrint('====> Body Fields: $body');
-      debugPrint('====> Uploading ${multipartBody.length} file(s)');
+    debugPrint('====> API Call: $uri');
+    debugPrint('====> Headers: $headers');
+    debugPrint('====> Body Fields: $body');
+    debugPrint('====> Uploading ${multipartBody.length} file(s)');
 
-      // 👇 Use POST here
-      var request = http.MultipartRequest('POST', uri);
-      request.headers.addAll(headers);
+    // Use POST here
+    var request = http.MultipartRequest('POST', uri);
+    request.headers.addAll(headers);
 
-      // Add normal fields
-      body.forEach((key, value) {
-        if (value != null) {
-          request.fields[key] = value.toString();
-        }
-      });
+    // Add normal fields
+    body.forEach((key, value) {
+      if (value != null) {
+        request.fields[key] = value.toString();
+      }
+    });
 
-      // Add file fields
-      for (MultipartBody element in multipartBody) {
+    // Add file fields (media and thumbnail)
+    for (MultipartBody element in multipartBody) {
+      // Upload the media file (video or image)
+      if (element.file != null && await element.file.exists()) {
         final mimeType = lookupMimeType(element.file.path);
         final mediaType = _getMediaType(mimeType);
 
@@ -323,27 +325,51 @@ class ApiService {
 
         request.files.add(
           await http.MultipartFile.fromPath(
-            element.key,
+            element.key, // 'media' or 'image' depending on your content type
             element.file.path,
             contentType: mediaType,
           ),
         );
+      } else {
+        debugPrint("❌ Media file is missing or invalid.");
       }
 
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
+      // If there's a thumbnail, upload it
+      if (element.thumbnail != null && await element.thumbnail!.exists()) {
+        final mimeTypeThumbnail = lookupMimeType(element.thumbnail!.path);
+        
+        // Ensure the thumbnail is a valid image format (e.g., PNG, JPEG)
+        final mediaTypeThumbnail = _getMediaType(mimeTypeThumbnail);
 
-      if (apiService.showAPICalls) {
-        apiService._logResponse(response, 'POST-MULTIPART', uri);
+        debugPrint("📤 Uploading thumbnail: ${element.thumbnail!.path} [${mediaTypeThumbnail.mimeType}]");
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'thumbnail', // Ensure this matches the backend expectation
+            element.thumbnail!.path,
+            contentType: mediaTypeThumbnail,
+          ),
+        );
+      } else {
+        debugPrint("❌ Thumbnail is missing or invalid.");
       }
-
-      apiService._checkTokenExpiry(authReq, response);
-      return response;
-    } catch (e) {
-      debugPrint("❗ Upload exception: $e");
-      throw Exception('Something went wrong while uploading. Please try again.');
     }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (apiService.showAPICalls) {
+      apiService._logResponse(response, 'POST-MULTIPART', uri);
+    }
+
+    apiService._checkTokenExpiry(authReq, response);
+    return response;
+  } catch (e) {
+    debugPrint("❗ Upload exception: $e");
+    throw Exception('Something went wrong while uploading. Please try again.');
   }
+}
+
 
 
   /// Helper method to get MediaType from mime string

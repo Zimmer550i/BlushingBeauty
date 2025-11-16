@@ -13,6 +13,7 @@ import '../views/screen/Message/AllSubScreen/chat_screen.dart';
 import '../views/screen/Message/groupChat/group_chat.dart';
 
 class ChatController extends GetxController {
+  final userCtrl = Get.find<UserController>();
   final api = ApiService();
 
   /// Reactive State
@@ -392,106 +393,40 @@ class ChatController extends GetxController {
     );
   }
 
-  Future<void> sendMediaToMultipleChats({
-    required List<Map<String, dynamic>> friends,
-    required Set<String> selectedIds,
-    required File mediaFile,
-    required String contentType, // 'image' or 'video'
-  }) async {
-    if (selectedIds.isEmpty) {
-      debugPrint("⚠️ No friends selected to send media.");
+Future<void> sendMediaToMultipleChats({
+  required List<Map<String, dynamic>> friends,
+  required Set<String> selectedIds,
+  required File mediaFile,
+  required File? thumbnail, // Thumbnail is optional
+  required String contentType, // 'image' or 'video'
+}) async {
+  if (selectedIds.isEmpty) {
+    debugPrint("⚠️ No friends selected to send media.");
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+
+    final senderId = userCtrl.userInfo.value?.id;
+    if (senderId == null) {
+      debugPrint("⚠️ Missing user ID.");
       return;
     }
 
-    try {
-      isLoading.value = true;
+    // 🔄 Loop over all selected friends
+    for (final friend in friends) {
+      if (!selectedIds.contains(friend['_id'])) continue;
 
-      final userCtrl = Get.find<UserController>();
-
-      final senderId = userCtrl.userInfo.value?.id;
-
-      if (senderId == null) {
-        debugPrint("⚠️ Missing user ID.");
-        return;
+      final chatId = friend['chatId'];
+      if (chatId == null) {
+        debugPrint("⚠️ No chatId found for ${friend['name']}");
+        continue;
       }
 
-      // 🔄 Loop over all selected friends
-      for (final friend in friends) {
-        if (!selectedIds.contains(friend['_id'])) continue;
+      debugPrint("🚀 Sending $contentType to ${friend['name']}...");
 
-        final chatId = friend['chatId'];
-        if (chatId == null) {
-          debugPrint("⚠️ No chatId found for ${friend['name']}");
-          continue;
-        }
-
-        debugPrint("🚀 Sending $contentType to ${friend['name']}...");
-
-        // 🧩 Prepare body (string fields)
-        final body = {
-          "data": jsonEncode({
-            "senderId": senderId,
-            "chatIds": [chatId],
-            "contentType": contentType,
-          }),
-        };
-
-        // 📁 Prepare multipart file(s)
-        final multipartFiles = <MultipartBody>[];
-        final fileKey = contentType == "video" ? "video" : "image";
-        multipartFiles.add(MultipartBody(key: fileKey, file: mediaFile));
-
-        // 🔥 Make API call using your ApiService
-        final response = await api.postMultipartData(
-          "/message/send-message",
-          body,
-          multipartBody: multipartFiles,
-          authReq: true,
-        );
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          final responseData = jsonDecode(response.body);
-          debugPrint("✅ Sent to ${friend['name']}: ${responseData['message']}");
-        } else {
-          debugPrint(
-            "❌ Failed to send to ${friend['name']}: ${response.statusCode}",
-          );
-          debugPrint("📦 Body: ${response.body}");
-        }
-      }
-
-      debugPrint(
-        "🎉 Successfully sent $contentType to ${selectedIds.length} friends!",
-      );
-      Get.back();
-    } catch (e, s) {
-      debugPrint("❌ Error sending media: $e");
-      debugPrintStack(stackTrace: s);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> sendVideoToSingleChat({
-    required String chatId,
-    required File mediaFile,
-    required String contentType,
-  }) async {
-    try {
-      isLoading.value = true;
-
-      final userCtrl = Get.find<UserController>();
-      final apiService = ApiService();
-      final senderId = userCtrl.userInfo.value?.id;
-
-      if (senderId == null) {
-        debugPrint("⚠️ Missing user ID.");
-        return;
-      }
-
-      debugPrint("🚀 Sending $contentType to chatId: $chatId...");
-
-      // 🧩 Prepare body — similar to your Postman “data” field
+      // Prepare the body with JSON data
       final body = {
         "data": jsonEncode({
           "senderId": senderId,
@@ -500,13 +435,25 @@ class ChatController extends GetxController {
         }),
       };
 
-      // 🎬 Prepare multipart file
-      final multipartFiles = <MultipartBody>[
-        MultipartBody(key: contentType, file: mediaFile),
-      ];
+      // Prepare the multipart files (image/video and thumbnail)
+      final multipartFiles = <MultipartBody>[];
 
-      // 🌐 API call
-      final response = await apiService.postMultipartData(
+      if (contentType == 'video') {
+        multipartFiles.add(MultipartBody(key: 'video', file: mediaFile));
+      } else if (contentType == 'image') {
+        multipartFiles.add(MultipartBody(key: 'image', file: mediaFile));
+      }
+
+      // Add the thumbnail file (if provided)
+      if (thumbnail != null && await thumbnail.exists()) {
+        debugPrint("📤 Adding thumbnail for ${friend['name']}");
+        multipartFiles.add(MultipartBody(key: 'thumbnail', file: thumbnail));
+      } else {
+        debugPrint("❌ No valid thumbnail provided for ${friend['name']}");
+      }
+
+      // API call to send data
+      final response = await api.postMultipartData(
         "/message/send-message",
         body,
         multipartBody: multipartFiles,
@@ -515,26 +462,103 @@ class ChatController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        debugPrint("✅ ${responseData['message']}");
-        debugPrint("📦 Response Data: ${responseData['data']}");
-
-        // Get.snackbar(
-        //   "Success",
-        //   "Message sent successfully!",
-        //   backgroundColor: AppColors.primaryColor,
-        //   colorText: Colors.white,
-        // );
+        debugPrint("✅ Sent to ${friend['name']}: ${responseData['message']}");
       } else {
-        debugPrint("❌ Failed: ${response.statusCode}");
+        debugPrint(
+          "❌ Failed to send to ${friend['name']}: ${response.statusCode}",
+        );
         debugPrint("📦 Body: ${response.body}");
       }
-    } catch (e, s) {
-      debugPrint("❌ Exception while sending $contentType: $e");
-      debugPrintStack(stackTrace: s);
-    } finally {
-      isLoading.value = false;
     }
+
+    debugPrint(
+      "🎉 Successfully sent $contentType to ${selectedIds.length} friends!",
+    );
+    Get.back();
+  } catch (e, s) {
+    debugPrint("❌ Error sending media: $e");
+    debugPrintStack(stackTrace: s);
+  } finally {
+    isLoading.value = false;
   }
+}
+
+Future<void> sendVideoToSingleChat({
+  required String chatId,
+  required File mediaFile,
+  required File? thumbnail, // Thumbnail is optional
+  required String contentType, // 'image' or 'video'
+}) async {
+  try {
+    isLoading.value = true;
+
+    // Ensure media file exists
+    if (!await mediaFile.exists()) {
+      debugPrint("❌ Media file is invalid or doesn't exist.");
+      return;
+    }
+
+    // Ensure thumbnail exists (if provided)
+    if (thumbnail != null && !await thumbnail.exists()) {
+      debugPrint("❌ Thumbnail file is invalid or doesn't exist.");
+      return;
+    }
+
+    final senderId = userCtrl.userInfo.value?.id;
+
+    if (senderId == null) {
+      debugPrint("⚠️ Missing user ID.");
+      return;
+    }
+
+    debugPrint("🚀 Sending $contentType to chatId: $chatId...");
+
+    // Prepare the body with JSON data
+    final body = {
+      "data": jsonEncode({
+        "senderId": senderId,
+        "chatIds": [chatId],
+        "contentType": contentType,
+      }),
+    };
+
+    // Prepare the multipart files (image/video and thumbnail)
+    final multipartFiles = <MultipartBody>[
+      contentType == 'video'
+          ? MultipartBody(key: 'video', file: mediaFile)
+          : MultipartBody(key: 'image', file: mediaFile),
+    ];
+
+    // Add the thumbnail file only if it exists
+    if (thumbnail != null && await thumbnail.exists()) {
+      multipartFiles.add(MultipartBody(key: 'thumbnail', file: thumbnail));
+    }
+
+    // API call to send data
+    final response = await api.postMultipartData(
+      "/message/send-message",
+      body,
+      multipartBody: multipartFiles,
+      authReq: true,
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseData = jsonDecode(response.body);
+      debugPrint("✅ ${responseData['message']}");
+      debugPrint("📦 Response Data: ${responseData['data']}");
+    } else {
+      debugPrint("❌ Failed: ${response.statusCode}");
+      debugPrint("📦 Body: ${response.body}");
+    }
+  } catch (e, s) {
+    debugPrint("❌ Exception while sending $contentType: $e");
+    debugPrintStack(stackTrace: s);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+
 
   Future<void> updateChatView(String messageId) async {
     try {

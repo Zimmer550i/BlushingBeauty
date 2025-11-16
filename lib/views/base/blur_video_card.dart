@@ -17,6 +17,7 @@ class BlurVideoCard extends StatefulWidget {
   final String receiverName;
   final String chatId;
   final String msgId;
+  final String thumbnail;
   final bool isView;
   final bool isMe;
 
@@ -31,6 +32,7 @@ class BlurVideoCard extends StatefulWidget {
     required this.msgId,
     required this.chatController,
     required this.isMe,
+    required this.thumbnail,
   });
 
   @override
@@ -45,7 +47,17 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
   @override
   void initState() {
     super.initState();
-    _generateThumbnail();
+    checkThumbnail();
+  }
+
+  void checkThumbnail() {
+    if (widget.thumbnail.isNotEmpty) {
+      setState(() {
+        _thumbnailPath = widget.thumbnail;
+      });
+    } else {
+      _generateThumbnail();
+    }
   }
 
   Future<void> _generateThumbnail() async {
@@ -123,8 +135,8 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
             borderRadius: BorderRadius.circular(12),
             child: _isLoading
                 ? Container(
-                    height: 180,
-                    width: 240,
+                    height: 260,
+                        width: 200,
                     color: Colors.black12.withValues(alpha: .1),
                     child: Center(
                       child: SpinKitWave(
@@ -145,14 +157,35 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
                               sigmaY: 20,
                               tileMode: TileMode.decal,
                             ),
-                      child: Image.file(
-                        File(_thumbnailPath!),
-                        height: 180,
-                        width: 240,
-                        fit: BoxFit.cover,
+                      child: SizedBox(
+                        height: 260,
+                        width: 180,
+                        child: Image.file(
+                          File(_thumbnailPath!),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   )
+                // ? AnimatedOpacity(
+                //     duration: const Duration(milliseconds: 500),
+                //     opacity: _isTapped ? 1.0 : 0.6,
+                //     child: ImageFiltered(
+                //       imageFilter: widget.isView
+                //           ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                //           : ImageFilter.blur(
+                //               sigmaX: 20,
+                //               sigmaY: 20,
+                //               tileMode: TileMode.decal,
+                //             ),
+                //       child: Image.file(
+                //         File(_thumbnailPath!),
+                //         height: 300,
+                //         width: 240,
+                //         fit: BoxFit.fitHeight,
+                //       ),
+                //     ),
+                //   )
                 : Container(
                     height: 180,
                     width: 240,

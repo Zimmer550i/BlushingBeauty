@@ -12,6 +12,7 @@ import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 
 class FrameSelectionScreen extends StatefulWidget {
   final String frontVideoUrl;
+  final File? thumbnail;
   final String userProfile;
   final String userName;
   final String? chatId;
@@ -24,6 +25,7 @@ class FrameSelectionScreen extends StatefulWidget {
     required this.frontVideoUrl,
     this.isInbox = false,
     this.chatId,
+    this.thumbnail,
   });
 
   @override
@@ -33,7 +35,7 @@ class FrameSelectionScreen extends StatefulWidget {
 class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   final sendMessageController = Get.put(SendMessageController());
   final ScrollController _scrollController = ScrollController();
-  final List<String> _thumbnailPaths = [];
+  String _thumbnailPaths = "";
   bool _isInitialized = false;
   int _selectedFrameIndex = 0;
   final double _thumbnailWidth = 60.0;
@@ -49,7 +51,9 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   Future<void> _initFlow() async {
     // await _requestPermissions();
     await _loadVideoDuration();
-    await _generateThumbnails();
+    // await _generateThumbnails();
+    String thumbnail = widget.thumbnail!.path;
+    _thumbnailPaths = thumbnail;
     if (mounted) setState(() => _isInitialized = true);
   }
 
@@ -63,37 +67,37 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     await controller.dispose();
   }
 
-  Future<void> _generateThumbnails() async {
-    if (_videoDuration == null) return;
+  // Future<void> _generateThumbnails() async {
+  //   if (_videoDuration == null) return;
 
-    _thumbnailPaths.clear();
+  //   _thumbnailPaths.clear();
 
-    final totalSeconds = _videoDuration!.inSeconds;
-    debugPrint("🎞 Generating thumbnails for $totalSeconds seconds...");
+  //   final totalSeconds = _videoDuration!.inSeconds;
+  //   debugPrint("🎞 Generating thumbnails for $totalSeconds seconds...");
 
-    for (int i = 0; i <= totalSeconds; i++) {
-      // Use a unique thumbnail file path for each second
-      final thumbnailPath = await VideoThumbnail.thumbnailFile(
-        video: widget.frontVideoUrl,
-        imageFormat: ImageFormat.PNG,
-        timeMs: i * 1000, // frame at each second
-        maxHeight: 0,
-        maxWidth: 0,
-        quality: 100,
-        // Ensure unique file name to avoid caching the same file
-        thumbnailPath:
-            '${Directory.systemTemp.path}/${DateTime.now().millisecondsSinceEpoch}_$i.png',
-      );
+  //   for (int i = 0; i <= totalSeconds; i++) {
+  //     // Use a unique thumbnail file path for each second
+  //     final thumbnailPath = await VideoThumbnail.thumbnailFile(
+  //       video: widget.frontVideoUrl,
+  //       imageFormat: ImageFormat.PNG,
+  //       timeMs: i * 1000, // frame at each second
+  //       maxHeight: 0,
+  //       maxWidth: 0,
+  //       quality: 100,
+  //       // Ensure unique file name to avoid caching the same file
+  //       thumbnailPath:
+  //           '${Directory.systemTemp.path}/${DateTime.now().millisecondsSinceEpoch}_$i.png',
+  //     );
 
-      if (thumbnailPath != null && File(thumbnailPath).existsSync()) {
-        _thumbnailPaths.add(thumbnailPath);
-      }
-    }
+  //     if (thumbnailPath != null && File(thumbnailPath).existsSync()) {
+  //       _thumbnailPaths.add(thumbnailPath);
+  //     }
+  //   }
 
-    debugPrint("Generated ${_thumbnailPaths.length} thumbnails.");
+  //   debugPrint("Generated ${_thumbnailPaths.length} thumbnails.");
 
-    if (mounted) setState(() {});
-  }
+  //   if (mounted) setState(() {});
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -240,6 +244,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     final selectedFrame = _thumbnailPaths[_selectedFrameIndex];
     if (widget.isInbox == true) {
       await sendMessageController.sendMediaToSingleChat(
+        thumbnail: widget.thumbnail!,
         chatId: widget.chatId.toString(),
         filePath: selectedFrame,
         isVideo: false,
@@ -248,6 +253,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       await Get.to(
         () => SendMessageWithFriendScreen(
           filePath: selectedFrame,
+           thumbnail: widget.thumbnail!,
           isVideo: false,
         ),
         transition: Transition.rightToLeft,

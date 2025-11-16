@@ -16,6 +16,7 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:ui' as ui;
+
 class VideoPreviewScreen extends StatefulWidget {
   const VideoPreviewScreen({
     super.key,
@@ -54,7 +55,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   Duration _position = Duration.zero;
   late final ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   late final VoidCallback _videoListener;
-  File? screenshotFile;
+  File? thumbnail;
 
   bool get isVideo {
     final ext = widget.videoUrl.toLowerCase();
@@ -98,42 +99,45 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   }
 
   Future<void> _captureAndSaveScreenshot() async {
-  try {
-    RenderRepaintBoundary boundary =
-        _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    try {
+      RenderRepaintBoundary boundary =
+          _repaintKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
 
-    ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
 
-    ByteData? byteData =
-        await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
 
-    Uint8List pngBytes = byteData!.buffer.asUint8List();
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
 
-    // Save file to app's temp directory
-    final dir = await getTemporaryDirectory();
-    final filePath =
-        "${dir.path}/thumbnail_${DateTime.now().millisecondsSinceEpoch}.png";
+      // Save file to app's temp directory
+      final dir = await getTemporaryDirectory();
+      final filePath =
+          "${dir.path}/thumbnail_${DateTime.now().millisecondsSinceEpoch}.png";
 
-    screenshotFile = File(filePath);
-    await screenshotFile!.writeAsBytes(pngBytes);
+      thumbnail = File(filePath);
+      await thumbnail!.writeAsBytes(pngBytes);
 
-    debugPrint("📸 Screenshot saved at: $filePath");
-  } catch (e) {
-    debugPrint("❌ Screenshot error: $e");
+      debugPrint("📸 thumbnail saved at: $filePath");
+    } catch (e) {
+      debugPrint("❌ thumbnail error: $e");
+    }
   }
-}
 
   Future<void> _onCountdownComplete() async {
     setState(() => _secondsRemaining = 0);
 
     try {
-      // Capture + save screenshot
-  await _captureAndSaveScreenshot();
       // Play video if available
       if (isVideo && _video != null && _video!.value.isInitialized) {
         await _video!.play();
         debugPrint("🎬 Main video playing...");
       }
+
+      // Capture + save screenshot
+      await _captureAndSaveScreenshot();
 
       // Start recording reaction
       await _startFrontRecording();
@@ -241,6 +245,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
               isInbox: widget.isInbox ?? false,
               isVideo: true,
               videoFile: recordedFile,
+              thumbnail: thumbnail,
             ),
           )
         : Get.to(
@@ -254,6 +259,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                   : storyChatId.toString(),
               isInbox: widget.isInbox ?? false,
               isVideo: false,
+              thumbnail: thumbnail,
             ),
           );
   }
@@ -366,8 +372,8 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       ),
       body: videoReady
           ? RepaintBoundary(
-            key: _repaintKey,
-            child: Stack(
+              key: _repaintKey,
+              child: Stack(
                 alignment: Alignment.center,
                 children: [
                   // 🎬 Background (video or image)
@@ -396,9 +402,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                             },
                           ),
                   ),
-            
+
                   if (_secondsRemaining > 0) _buildCountdownOverlay(),
-            
+
                   // 📸 Front camera PiP
                   if (_frontCam?.value.isInitialized == true)
                     Positioned(
@@ -420,11 +426,11 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                         ),
                       ),
                     ),
-            
+
                   _buildBottomControls(),
                 ],
               ),
-          )
+            )
           : Center(
               child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
             ),
