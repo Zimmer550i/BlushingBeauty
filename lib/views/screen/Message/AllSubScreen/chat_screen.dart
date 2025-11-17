@@ -271,8 +271,7 @@ class _ChatScreenState extends State<ChatScreen> {
           if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
 
           // Format with leading zero for minute
-          formattedTime =
-              "$hour:${minute.toString().padLeft(2, '0')} $suffix";
+          formattedTime = "$hour:${minute.toString().padLeft(2, '0')} $suffix";
         } else {
           formattedTime = "Invalid time format";
         }
@@ -326,6 +325,19 @@ class _ChatScreenState extends State<ChatScreen> {
     bool isMe = msg["isMe"] ?? false;
     bool view = msg["view"] ?? false;
     final bool isViewed = isMe ? true : view;
+    bool hasThumbnail = false;
+
+    String thumbnail = "";
+
+    if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
+      final thumbnailUrl = userController.addBaseUrl(msg["thumbnail"]);
+      debugPrint("🚀 URL: $thumbnailUrl");
+      thumbnail = thumbnailUrl.toString();
+      hasThumbnail = true;
+    } else {
+      hasThumbnail = false;
+      thumbnail = "";
+    }
 
     return Column(
       crossAxisAlignment: isMe
@@ -333,6 +345,8 @@ class _ChatScreenState extends State<ChatScreen> {
           : CrossAxisAlignment.start,
       children: [
         BlurImageCard(
+          hasThumbnail: hasThumbnail,
+          thumbnail: thumbnail,
           isMe: isMe,
           chatController: chatController,
           msgId: msg["_id"],
@@ -352,23 +366,19 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
     bool isMe = msg["isMe"] ?? false;
-    
+    bool hasThumbnail = false;
+
     String thumbnail = "";
 
-if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
-  final thumbnailUrl = userController.addBaseUrl(msg["thumbnail"]);
-  debugPrint("🚀 URL: $thumbnailUrl");
-  thumbnail = thumbnailUrl.toString();
-} else {
-  // fallback
-  debugPrint("🚀 MSG: $msg");
-  thumbnail = "";
-}
-
-    debugPrint("🚀 Video URL: $videoUrl");
-
-    debugPrint("🚀 Thumbnail URL: $thumbnail");
-
+    if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
+      final thumbnailUrl = userController.addBaseUrl(msg["thumbnail"]);
+      debugPrint("🚀 URL: $thumbnailUrl");
+      thumbnail = thumbnailUrl.toString();
+      hasThumbnail = true;
+    } else {
+      hasThumbnail = false;
+      thumbnail = "";
+    }
     final bool isViewed = isMe ? true : (msg["view"] ?? false);
 
     return FutureBuilder<File>(
@@ -400,6 +410,7 @@ if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
+              hasThumbnail: hasThumbnail,
               isMe: isMe,
               thumbnail: thumbnail.toString(),
               isView: isViewed,
@@ -410,7 +421,6 @@ if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
               chatId: widget.chatId,
               msgId: msg["_id"],
               chatController: chatController,
-              
             ),
             const SizedBox(height: 6),
 
@@ -424,28 +434,27 @@ if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
 
   Widget _buildVideoFooter(Map<String, dynamic> msg, String path) {
     final isMe = msg['isMe'] ?? false;
-    final formattedTime =
-        msg["time"];
-//     String formattedTime = "";
-//     if (rawTime.isNotEmpty) {
-//       final DateFormat formatter = DateFormat("HH:mm");
-// final DateTime dt = formatter.parseLoose(rawTime);
-//       if (dt != null) {
-//         final now = DateTime.now();
-//         final DateFormat timeFormat = DateFormat('h:mm a'); // AM/PM format
+    final formattedTime = msg["time"];
+    //     String formattedTime = "";
+    //     if (rawTime.isNotEmpty) {
+    //       final DateFormat formatter = DateFormat("HH:mm");
+    // final DateTime dt = formatter.parseLoose(rawTime);
+    //       if (dt != null) {
+    //         final now = DateTime.now();
+    //         final DateFormat timeFormat = DateFormat('h:mm a'); // AM/PM format
 
-//         if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
-//           // If it's today, show time with AM/PM
-//           formattedTime = timeFormat.format(dt);
-//         } else if (dt.difference(now).inDays == -1) {
-//           // If it's yesterday
-//           formattedTime = "Yesterday";
-//         } else {
-//           // For older dates, show full date with month name
-//           formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
-//         }
-//       }
-//     }
+    //         if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
+    //           // If it's today, show time with AM/PM
+    //           formattedTime = timeFormat.format(dt);
+    //         } else if (dt.difference(now).inDays == -1) {
+    //           // If it's yesterday
+    //           formattedTime = "Yesterday";
+    //         } else {
+    //           // For older dates, show full date with month name
+    //           formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
+    //         }
+    //       }
+    //     }
 
     final timeText = Text(
       formattedTime,
@@ -456,38 +465,47 @@ if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
       onTap: () async => await saveVideoToGallery(context, path, false),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        // mainAxisAlignment:  MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
-          if (isMe) ...[
-            Spacer(),
-            SvgPicture.asset(
-              'assets/icons/download.svg',
-              color: const Color(0xFF56BBFF),
-              height: 18,
-            ),
-            SizedBox(width: 8),
-            const Text(
-              "Save",
-              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-            ),
-            Spacer(),
-            timeText,
-          ],
+          SizedBox(
+            width: MediaQuery.of(context).size.width / 2.25,
+            child: Row(
+              children: [
+                if (isMe) ...[
+                  SvgPicture.asset(
+                    'assets/icons/download.svg',
+                    color: const Color(0xFF56BBFF),
+                    height: 18,
+                  ),
+                  SizedBox(width: 8),
+                  const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                  ),
+                  Spacer(),
+                  timeText,
+                ],
 
-          if (!isMe) ...[
-            timeText,
-            const Spacer(),
-            const Text(
-              "Save",
-              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                if (!isMe) ...[
+                  timeText,
+                  const Spacer(),
+                  const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                  ),
+                  const SizedBox(width: 6),
+                  SvgPicture.asset(
+                    'assets/icons/download.svg',
+                    color: const Color(0xFF56BBFF),
+                    height: 18,
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(width: 6),
-            SvgPicture.asset(
-              'assets/icons/download.svg',
-              color: const Color(0xFF56BBFF),
-              height: 18,
-            ),
-            const Spacer(),
-          ],
+          ),
         ],
       ),
     );
@@ -516,8 +534,7 @@ if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
           if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
 
           // Format with leading zero for minute
-          formattedTime =
-              "$hour:${minute.toString().padLeft(2, '0')} $suffix";
+          formattedTime = "$hour:${minute.toString().padLeft(2, '0')} $suffix";
         } else {
           formattedTime = "Invalid time format";
         }
@@ -535,37 +552,48 @@ if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
       onTap: () async => await saveVideoToGallery(context, path, true),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        // mainAxisAlignment:  MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
-          if (isMe) ...[
-            Spacer(),
-            SvgPicture.asset(
-              'assets/icons/download.svg',
-              color: const Color(0xFF56BBFF),
-              height: 18,
+          SizedBox(
+            width: MediaQuery.of(context).size.width / 2.25,
+            child: Row(
+              children: [
+                if (isMe) ...[
+                  
+                  SvgPicture.asset(
+                    'assets/icons/download.svg',
+                    color: const Color(0xFF56BBFF),
+                    height: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                  ),
+                  Spacer(),
+                  timeText,
+                ],
+                if (!isMe) ...[
+                  timeText,
+                  const Spacer(),
+                  const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                  ),
+                  const SizedBox(width: 6),
+                  SvgPicture.asset(
+                    'assets/icons/download.svg',
+                    color: const Color(0xFF56BBFF),
+                    height: 18,
+                  ),
+                  
+                ],
+              ],
             ),
-            const SizedBox(width: 8),
-            const Text(
-              "Save",
-              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-            ),
-            Spacer(),
-            timeText,
-          ],
-          if (!isMe) ...[
-            timeText,
-            const Spacer(),
-            const Text(
-              "Save",
-              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-            ),
-            const SizedBox(width: 6),
-            SvgPicture.asset(
-              'assets/icons/download.svg',
-              color: const Color(0xFF56BBFF),
-              height: 18,
-            ),
-            const Spacer(),
-          ],
+          ),
         ],
       ),
     );

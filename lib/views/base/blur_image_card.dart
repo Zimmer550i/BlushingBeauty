@@ -12,6 +12,8 @@ class BlurImageCard extends StatefulWidget {
   final String msgId;
   final String receiverName;
   final String? receiverImage;
+  final String thumbnail;
+  final bool hasThumbnail;
   final String chatId;
   final bool isView;
   final bool isMe;
@@ -26,6 +28,8 @@ class BlurImageCard extends StatefulWidget {
     required this.msgId,
     required this.chatController,
     required this.isMe,
+    required this.thumbnail,
+    required this.hasThumbnail,
   });
 
   @override
@@ -84,10 +88,10 @@ class _BlurImageCardState extends State<BlurImageCard> {
                       tileMode: TileMode.decal,
                     ),
               child: Image.network(
-                widget.imageUrl,
-                height: 180,
-                width: 240,
-                fit: BoxFit.cover,
+                widget.hasThumbnail ? widget.thumbnail : widget.imageUrl,
+                height: 260,
+                width: 180,
+                fit: BoxFit.fill,
                 loadingBuilder: (context, child, progress) {
                   if (progress == null) {
                     Future.delayed(const Duration(milliseconds: 200), () {
@@ -96,8 +100,8 @@ class _BlurImageCardState extends State<BlurImageCard> {
                     return child;
                   } else {
                     return Container(
-                      height: 180,
-                      width: 240,
+                      height: 260,
+                      width: 180,
                       color: Colors.black12.withValues(alpha: .1),
                       child: Center(
                         child: CircularProgressIndicator(
@@ -109,8 +113,8 @@ class _BlurImageCardState extends State<BlurImageCard> {
                   }
                 },
                 errorBuilder: (_, _, _) => Container(
-                  height: 180,
-                  width: 240,
+                  height: 260,
+                  width: 180,
                   color: Colors.grey.shade200,
                   alignment: Alignment.center,
                   child: const Icon(Icons.error, color: Colors.red),

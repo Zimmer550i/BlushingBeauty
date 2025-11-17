@@ -598,6 +598,7 @@ Future<void> sendVideoToSingleChat({
       "type": m["contentType"] ?? "text",
       "message": m["message"] ?? "",
       "media": m["media"] ?? "",
+      "thumbnail": m["thumbnail"] ?? "",
       "time": formattedTime,
       "temp": false,
       "view": isMe ? true : (m["view"] ?? false),

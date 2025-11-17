@@ -320,6 +320,19 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     bool isMe = msg["isMe"] ?? false;
     bool view = msg["view"] ?? false;
     final bool isViewed = isMe ? true : view;
+    bool hasThumbnail = false;
+
+    String thumbnail = "";
+
+    if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
+      final thumbnailUrl = userController.addBaseUrl(msg["thumbnail"]);
+      debugPrint("🚀 URL: $thumbnailUrl");
+      thumbnail = thumbnailUrl.toString();
+      hasThumbnail = true;
+    } else {
+      hasThumbnail = false;
+      thumbnail = "";
+    }
 
     return Column(
       crossAxisAlignment: isMe
@@ -327,6 +340,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           : CrossAxisAlignment.start,
       children: [
         BlurImageCard(
+          hasThumbnail: hasThumbnail,
+          thumbnail: thumbnail,
           isMe: isMe,
           chatController: chatController,
           msgId: msg["_id"],
@@ -344,10 +359,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
+    final thumbnail = userController.addBaseUrl(msg["thumbnail"] ?? "");
     bool isMe = msg["isMe"] ?? false;
     bool view = msg["view"] ?? false;
     final bool isViewed = isMe ? true : view;
-    String thumbnail = msg["thumbnail"] ?? "";
+    bool hasThumbnail = msg["thumbnail"] != null;
 
     return FutureBuilder<File>(
       future: _downloadVideoToLocal(videoUrl.toString()),
@@ -378,7 +394,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
-              thumbnail: thumbnail,
+              hasThumbnail: hasThumbnail,
+              thumbnail: thumbnail.toString(),
               isMe: isMe,
               chatController: chatController,
               msgId: msg["_id"],

@@ -138,9 +138,9 @@ class CreateStoryController extends GetxController {
 
       debugPrint("📥 Server Response: ${response.statusCode}");
       debugPrint("📦 Body: ${response.body}");
+        final resData = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // final resData = jsonDecode(response.body);
         // Get.snackbar(
         //   "✅ Success",
         //   resData['message'] ?? "Story uploaded successfully!",
@@ -150,7 +150,6 @@ class CreateStoryController extends GetxController {
       } else {
         // Handle backend validation error (Zod or server message)
         try {
-          final resData = jsonDecode(response.body);
           Get.snackbar(
             "Upload Failed",
             resData['message'] ?? "Server rejected upload.",

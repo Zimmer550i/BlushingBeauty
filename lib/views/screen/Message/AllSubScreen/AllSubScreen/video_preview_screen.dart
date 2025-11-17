@@ -135,12 +135,10 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         await _video!.play();
         debugPrint("🎬 Main video playing...");
       }
-
-      // Capture + save screenshot
-      await _captureAndSaveScreenshot();
-
       // Start recording reaction
       await _startFrontRecording();
+      // Capture + save screenshot
+      await _captureAndSaveScreenshot();
     } catch (e) {
       debugPrint("⚠️ Countdown complete but start failed: $e");
     }
