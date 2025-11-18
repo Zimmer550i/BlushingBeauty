@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/localization_controller.dart';
 import 'package:ree_social_media_app/controllers/theme_controller.dart';
+import 'package:ree_social_media_app/helpers/dependency_injection.dart';
 import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
 import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/services/shared_prefs_service.dart';
@@ -28,7 +29,8 @@ void main() async {
 
   // Initialize DI
   Map<String, Map<String, String>> languages = await di.init();
-  Get.put(UserController(), permanent: true);
+  // Initialize GetX bindings
+  InitialBindings().dependencies();
   try {
     final token = await SharedPrefsService.get('token');
     SocketService.connect(token.toString());

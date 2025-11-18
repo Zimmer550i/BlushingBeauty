@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/send_message_with_friend_screen.dart';
+import 'package:ree_social_media_app/views/screen/Camera/camera_screen.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../controllers/camera_controller.dart';
 import '../../../../helpers/route.dart';
@@ -207,7 +208,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                   () => createStoryController.isLoading.value
                       ? SpinKitWave(color: Colors.white, size: 16.0)
                       : Text(
-                          "Create Story",
+                          "Add Story",
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,

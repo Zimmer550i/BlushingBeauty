@@ -15,6 +15,7 @@ import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_edit
 import '../../../services/camera_manager.dart';
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+CameraController? get _controller => GlobalCameraManager.controller;
 
 class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -23,7 +24,8 @@ class CameraScreen extends StatefulWidget {
   const CameraScreen({
     super.key,
     required this.cameras,
-    required this.isChatBox, this.chatId,
+    required this.isChatBox,
+    this.chatId,
   });
 
   @override
@@ -39,8 +41,6 @@ class _CameraScreenState extends State<CameraScreen>
   int _recordDuration = 0;
   Timer? _timer;
   bool _isCameraChanging = false;
-
-  CameraController? get _controller => GlobalCameraManager.controller;
 
   @override
   void initState() {
@@ -281,9 +281,18 @@ class _CameraScreenState extends State<CameraScreen>
               child: FittedBox(
                 fit: BoxFit.cover,
                 child: SizedBox(
-                  width: _controller!.value.previewSize!.height,
-                  height: _controller!.value.previewSize!.width,
-                  child: CameraPreview(_controller!),
+                  width:
+                      _controller?.value.previewSize?.height ??
+                      0, // Safe access
+                  height:
+                      _controller?.value.previewSize?.width ?? 0, // Safe access
+                  child:
+                      _controller?.value.isInitialized ??
+                          false // Check if controller is initialized
+                      ? CameraPreview(_controller!)
+                      : Center(
+                          child: CircularProgressIndicator(),
+                        ), // Show loading until initialized
                 ),
               ),
             )
@@ -403,7 +412,6 @@ class _CameraScreenState extends State<CameraScreen>
         width: 48,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          // border: Border.all(color: AppColors.primaryColor, width: 2),
           color: AppColors.primaryColor,
         ),
         child: Icon(Icons.photo, color: Colors.white, size: 24),

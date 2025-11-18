@@ -460,7 +460,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Starting in $_secondsRemaining...',
+              'Get ready to re:',
               style: const TextStyle(
                 fontSize: 16,
                 color: Color(0xFF383838),

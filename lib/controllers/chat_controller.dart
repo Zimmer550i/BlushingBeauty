@@ -397,8 +397,8 @@ Future<void> sendMediaToMultipleChats({
   required List<Map<String, dynamic>> friends,
   required Set<String> selectedIds,
   required File mediaFile,
-  required File? thumbnail, // Thumbnail is optional
-  required String contentType, // 'image' or 'video'
+  required File? thumbnail,
+  required String contentType,
 }) async {
   if (selectedIds.isEmpty) {
     debugPrint("⚠️ No friends selected to send media.");
@@ -486,8 +486,8 @@ Future<void> sendMediaToMultipleChats({
 Future<void> sendVideoToSingleChat({
   required String chatId,
   required File mediaFile,
-  required File? thumbnail, // Thumbnail is optional
-  required String contentType, // 'image' or 'video'
+  required File? thumbnail,
+  required String contentType,
 }) async {
   try {
     isLoading.value = true;
@@ -498,11 +498,11 @@ Future<void> sendVideoToSingleChat({
       return;
     }
 
-    // Ensure thumbnail exists (if provided)
-    if (thumbnail != null && !await thumbnail.exists()) {
-      debugPrint("❌ Thumbnail file is invalid or doesn't exist.");
-      return;
-    }
+    // // Ensure thumbnail exists if provided (no need to check explicitly in multiple places)
+    // if (thumbnail != null && !await thumbnail.exists()) {
+    //   debugPrint("❌ Thumbnail file is invalid or doesn't exist.");
+    //   return;
+    // }
 
     final senderId = userCtrl.userInfo.value?.id;
 
@@ -522,16 +522,22 @@ Future<void> sendVideoToSingleChat({
       }),
     };
 
-    // Prepare the multipart files (image/video and thumbnail)
+    // Prepare the multipart files (video/image and optional thumbnail)
     final multipartFiles = <MultipartBody>[
-      contentType == 'video'
-          ? MultipartBody(key: 'video', file: mediaFile)
-          : MultipartBody(key: 'image', file: mediaFile),
+      MultipartBody(
+        key: contentType == 'video' ? 'video' : 'image',  // Choose the appropriate key based on contentType
+        file: mediaFile,
+      ),
     ];
 
     // Add the thumbnail file only if it exists
-    if (thumbnail != null && await thumbnail.exists()) {
-      multipartFiles.add(MultipartBody(key: 'thumbnail', file: thumbnail));
+    if (thumbnail != null) {
+      multipartFiles.add(
+        MultipartBody(
+          key: 'thumbnail',  // Always use 'thumbnail' as key
+          file: thumbnail,
+        ),
+      );
     }
 
     // API call to send data

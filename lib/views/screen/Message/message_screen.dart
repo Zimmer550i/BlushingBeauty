@@ -309,7 +309,6 @@ class _MessageScreenState extends State<MessageScreen> {
                   } else if (story["author"] is String) {
                     authorName = "User";
                   }
-                  
 
                   return _buildStoryCard(
                     mediaUrl,
@@ -327,11 +326,20 @@ class _MessageScreenState extends State<MessageScreen> {
     });
   }
 
-  /// ✅ Add Story Card
+  //Add Story Card
   Widget _buildAddStoryCard() {
     final image = userController.userInfo.value!.image;
     final userImage = userController.addBaseUrl(image.toString());
     final currentUserId = userController.userInfo.value!.id;
+    final myStories = controller.stories
+        .where(
+          (story) =>
+              story["author"] != null &&
+              (story["author"] is Map
+                  ? story["author"]["_id"] == currentUserId
+                  : false),
+        )
+        .toList();
 
     return Container(
       margin: const EdgeInsets.only(left: 12, right: 8),
@@ -341,6 +349,13 @@ class _MessageScreenState extends State<MessageScreen> {
         borderRadius: const BorderRadius.only(
           topRight: Radius.circular(8),
           topLeft: Radius.circular(8),
+        ),
+        
+         border: Border.all(
+          color: myStories.isNotEmpty
+              ? AppColors.primaryColor
+              : Colors.transparent,
+          width: myStories.isNotEmpty ? 5 : 0,
         ),
         image: DecorationImage(
           image: NetworkImage(userImage.toString()),
@@ -355,10 +370,10 @@ class _MessageScreenState extends State<MessageScreen> {
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(8),
-                topLeft: Radius.circular(8),
+                topLeft: Radius.circular(4),
               ),
               child: Container(
-                width: 56, // left overlay
+                width: 56,
                 color: AppColors.primaryColor.withValues(alpha: 0.56),
                 child: Stack(
                   children: [
@@ -409,17 +424,6 @@ class _MessageScreenState extends State<MessageScreen> {
             left: 56, // only make the RIGHT side tappable
             child: InkWell(
               onTap: () {
-                // get only logged-in user's stories
-                final myStories = controller.stories
-                    .where(
-                      (story) =>
-                          story["author"] != null &&
-                          (story["author"] is Map
-                              ? story["author"]["_id"] == currentUserId
-                              : false),
-                    )
-                    .toList();
-
                 if (myStories.isEmpty) {
                   Get.snackbar(
                     "No Stories",

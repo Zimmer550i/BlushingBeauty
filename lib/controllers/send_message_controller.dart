@@ -92,76 +92,96 @@ class SendMessageController extends GetxController {
     return uniqueFriends;
   }
 
-  Future<void> sendMedia({
-    required String filePath,
-    required File? thumbnail,
-    required bool isVideo,
-  }) async {
+Future<void> sendMedia({
+  required String filePath,
+  required File? thumbnail,
+  required bool isVideo,
+}) async {
+  isLoading.value = true;
+
+  // Ensure at least one friend is selected
+  if (selectedIds.isEmpty) {
+    Get.snackbar("Error", "Please select at least one friend.");
+    isLoading.value = false; // Make sure loading state is reset
+    return;
+  }
+
+  try {
+    // Ensure .mp4 extension or rename .temp file properly
+    final correctedPath = isVideo ? await ensureMp4File(filePath) : filePath;
+
+    final file = File(correctedPath);
+
+    // Check if the file exists at the corrected path
+    if (!await file.exists()) {
+      throw Exception("File not found at path: $correctedPath");
+    }
+
+    // Handle the case where thumbnail is null
+    File? validThumbnail;
+    if (thumbnail != null) {
+      if (!await thumbnail.exists()) {
+        throw Exception("Thumbnail not found at path: ${thumbnail.path}");
+      }
+      validThumbnail = thumbnail; // Only pass thumbnail if it's valid
+    }
+
+    // Send the media to multiple chats
+    await chatController.sendMediaToMultipleChats(
+      friends: friends,
+      selectedIds: selectedIds,
+      mediaFile: file,
+      thumbnail: validThumbnail,
+      contentType: isVideo ? 'video' : 'image',
+    );
+
+    // Navigate to message screen after sending
+    Get.offAllNamed(AppRoutes.messageScreen);
+  } catch (e) {
+    debugPrint("Failed to send media: $e");
+    // Handle error by showing a snackbar
+    Get.snackbar("Error", "Failed to send media: $e", backgroundColor: Colors.red, colorText: Colors.white);
+  } finally {
+    isLoading.value = false; // Reset loading state
+  }
+}
+
+
+Future<void> sendMediaToSingleChat({
+  required String chatId,
+  required String filePath,
+  required File? thumbnail,
+  required bool isVideo,
+}) async {
+  try {
     isLoading.value = true;
-    if (selectedIds.isEmpty) {
-      Get.snackbar("Error", "Please select at least one friend.");
-      return;
+
+    // ✅ Fix temp extension or ensure valid .mp4 file
+    final correctedPath = isVideo ? await ensureMp4File(filePath) : filePath;
+
+    final file = File(correctedPath);
+    if (!await file.exists()) {
+      throw Exception("File not found at path: $correctedPath");
     }
 
-    try {
-      //Ensure .mp4 extension or rename .temp file properly
-      final correctedPath = isVideo ? await ensureMp4File(filePath) : filePath;
+    // ✅ Send media to single user chat
+    await chatController.sendVideoToSingleChat(
+      chatId: chatId,
+      mediaFile: file,
+      thumbnail: thumbnail,
+      contentType: isVideo ? 'video' : 'image',
+    );
 
-      final file = File(correctedPath);
-      if (!await file.exists()) {
-        throw Exception("File not found at path: $correctedPath");
-      }
-      await chatController.sendMediaToMultipleChats(
-        friends: friends,
-        selectedIds: selectedIds,
-        mediaFile: file,
-        thumbnail: thumbnail!,
-        contentType: isVideo ? 'video' : 'image',
-      );
-      Get.offAllNamed(AppRoutes.messageScreen);
-    } catch (e) {
-      Get.snackbar("Error", "Failed to send media: $e");
-    } finally {
-      isLoading.value = false;
-    }
+    // Navigate to message screen after sending
+    Get.offAllNamed(AppRoutes.messageScreen);
+    // Get.back(); // Optionally close the current screen after sending
+  } catch (e) {
+    // Show error message if sending fails
+    debugPrint("Failed to send media: $e");
+  } finally {
+    isLoading.value = false;
   }
-
-  Future<void> sendMediaToSingleChat({
-    required String chatId,
-    required String filePath,
-    required File? thumbnail,
-    required bool isVideo,
-  }) async {
-    try {
-      isLoading.value = true;
-      // ✅ Fix temp extension or ensure valid .mp4 file
-      final correctedPath = isVideo ? await ensureMp4File(filePath) : filePath;
-
-      final file = File(correctedPath);
-      if (!await file.exists()) {
-        throw Exception("File not found at path: $correctedPath");
-      }
-
-      // ✅ Send media to single user chat
-      await chatController.sendVideoToSingleChat(
-        chatId: chatId,
-        mediaFile: file,
-        thumbnail: thumbnail!,
-        contentType: isVideo ? 'video' : 'image',
-      );
-      Get.offAllNamed(AppRoutes.messageScreen);
-      // Get.back(); // Close current screen after sending
-    } catch (e) {
-      Get.snackbar(
-        "Error",
-        "Failed to send ${isVideo ? 'video' : 'image'}: $e",
-        backgroundColor: Colors.red.shade600,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
+}
 
   Future<String> ensureMp4File(String filePath) async {
     try {

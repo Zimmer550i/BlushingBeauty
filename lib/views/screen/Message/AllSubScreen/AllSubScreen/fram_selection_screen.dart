@@ -4,10 +4,10 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_loading.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../../Camera/AllSubScreen/send_message_with_friend_screen.dart';
 
 class FrameSelectionScreen extends StatefulWidget {
@@ -35,7 +35,7 @@ class FrameSelectionScreen extends StatefulWidget {
 class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   final sendMessageController = Get.put(SendMessageController());
   final ScrollController _scrollController = ScrollController();
-  String _thumbnailPaths = "";
+  final List<String> _thumbnailPaths = [];
   bool _isInitialized = false;
   int _selectedFrameIndex = 0;
   final double _thumbnailWidth = 60.0;
@@ -51,9 +51,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   Future<void> _initFlow() async {
     // await _requestPermissions();
     await _loadVideoDuration();
-    // await _generateThumbnails();
-    String thumbnail = widget.thumbnail!.path;
-    _thumbnailPaths = thumbnail;
+    await _generateThumbnails();
     if (mounted) setState(() => _isInitialized = true);
   }
 
@@ -67,37 +65,35 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
     await controller.dispose();
   }
 
-  // Future<void> _generateThumbnails() async {
-  //   if (_videoDuration == null) return;
+  Future<void> _generateThumbnails() async {
+    if (_videoDuration == null) return;
 
-  //   _thumbnailPaths.clear();
+    _thumbnailPaths.clear();
 
-  //   final totalSeconds = _videoDuration!.inSeconds;
-  //   debugPrint("🎞 Generating thumbnails for $totalSeconds seconds...");
+    final totalSeconds = _videoDuration!.inSeconds;
+    debugPrint("🎞 Generating thumbnails for $totalSeconds seconds...");
 
-  //   for (int i = 0; i <= totalSeconds; i++) {
-  //     // Use a unique thumbnail file path for each second
-  //     final thumbnailPath = await VideoThumbnail.thumbnailFile(
-  //       video: widget.frontVideoUrl,
-  //       imageFormat: ImageFormat.PNG,
-  //       timeMs: i * 1000, // frame at each second
-  //       maxHeight: 0,
-  //       maxWidth: 0,
-  //       quality: 100,
-  //       // Ensure unique file name to avoid caching the same file
-  //       thumbnailPath:
-  //           '${Directory.systemTemp.path}/${DateTime.now().millisecondsSinceEpoch}_$i.png',
-  //     );
+    for (int i = 0; i <= totalSeconds; i++) {
+      final thumbnailPath = await VideoThumbnail.thumbnailFile(
+        video: widget.frontVideoUrl,
+        imageFormat: ImageFormat.PNG,
+        timeMs: i * 1000, 
+        maxHeight: 0,
+        maxWidth: 0,
+        quality: 100,
+        thumbnailPath:
+            '${Directory.systemTemp.path}/${DateTime.now().millisecondsSinceEpoch}_$i.png',
+      );
 
-  //     if (thumbnailPath != null && File(thumbnailPath).existsSync()) {
-  //       _thumbnailPaths.add(thumbnailPath);
-  //     }
-  //   }
+      if (thumbnailPath != null && File(thumbnailPath).existsSync()) {
+        _thumbnailPaths.add(thumbnailPath);
+      }
+    }
 
-  //   debugPrint("Generated ${_thumbnailPaths.length} thumbnails.");
+    debugPrint("Generated ${_thumbnailPaths.length} thumbnails.");
 
-  //   if (mounted) setState(() {});
-  // }
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {

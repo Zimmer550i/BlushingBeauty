@@ -347,10 +347,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           msgId: msg["_id"],
           imageUrl: imageUrl.toString(),
           receiverName: widget.groupName,
-          receiverImage: image,
           chatId: widget.chatId,
           isView: isViewed,
+          receiverImage: widget.groupImage,
         ),
+
         const SizedBox(height: 4),
         _buildImageFooter(msg, imageUrl.toString()),
       ],
@@ -359,11 +360,21 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
-    final thumbnail = userController.addBaseUrl(msg["thumbnail"] ?? "");
     bool isMe = msg["isMe"] ?? false;
-    bool view = msg["view"] ?? false;
-    final bool isViewed = isMe ? true : view;
-    bool hasThumbnail = msg["thumbnail"] != null;
+    bool hasThumbnail = false;
+
+    String thumbnail = "";
+
+    if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
+      final thumbnailUrl = userController.addBaseUrl(msg["thumbnail"]);
+      debugPrint("🚀 URL: $thumbnailUrl");
+      thumbnail = thumbnailUrl.toString();
+      hasThumbnail = true;
+    } else {
+      hasThumbnail = false;
+      thumbnail = "";
+    }
+    final bool isViewed = isMe ? true : (msg["view"] ?? false);
 
     return FutureBuilder<File>(
       future: _downloadVideoToLocal(videoUrl.toString()),
@@ -389,24 +400,26 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         final localVideo = snap.data!;
 
         return Column(
-          crossAxisAlignment: isMe
+          crossAxisAlignment: msg["isMe"]
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
             BlurVideoCard(
               hasThumbnail: hasThumbnail,
-              thumbnail: thumbnail.toString(),
               isMe: isMe,
-              chatController: chatController,
-              msgId: msg["_id"],
+              thumbnail: thumbnail.toString(),
               isView: isViewed,
               videoFile: localVideo,
               msg: msg,
-              receiverImage: image,
+              receiverImage: widget.groupImage,
               receiverName: widget.groupName,
               chatId: widget.chatId,
+              msgId: msg["_id"],
+              chatController: chatController,
             ),
             const SizedBox(height: 6),
+
+            // Footer (Save + Time)
             _buildVideoFooter(msg, localVideo.path),
           ],
         );
@@ -416,30 +429,27 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildVideoFooter(Map<String, dynamic> msg, String path) {
     final isMe = msg['isMe'] ?? false;
-    final rawTime =
-        msg["time"]; // e.g. "2025-11-04T15:45:00" or "2025-11-04 15:45:00"
-    String formattedTime = "";
+    final formattedTime = msg["time"];
+    //     String formattedTime = "";
+    //     if (rawTime.isNotEmpty) {
+    //       final DateFormat formatter = DateFormat("HH:mm");
+    // final DateTime dt = formatter.parseLoose(rawTime);
+    //       if (dt != null) {
+    //         final now = DateTime.now();
+    //         final DateFormat timeFormat = DateFormat('h:mm a'); // AM/PM format
 
-    if (rawTime != null && rawTime.isNotEmpty) {
-      try {
-        final dateTime = DateTime.parse(rawTime);
-        int hour = dateTime.hour;
-        int minute = dateTime.minute;
-
-        // Determine AM or PM
-        String suffix = hour >= 12 ? 'PM' : 'AM';
-
-        // Convert to 12-hour format
-        hour = hour % 12;
-        if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
-
-        // Format with leading zero for minute
-        formattedTime =
-            "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $suffix";
-      } catch (e) {
-        formattedTime = rawTime; // fallback if parsing fails
-      }
-    }
+    //         if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
+    //           // If it's today, show time with AM/PM
+    //           formattedTime = timeFormat.format(dt);
+    //         } else if (dt.difference(now).inDays == -1) {
+    //           // If it's yesterday
+    //           formattedTime = "Yesterday";
+    //         } else {
+    //           // For older dates, show full date with month name
+    //           formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
+    //         }
+    //       }
+    //     }
 
     final timeText = Text(
       formattedTime,
@@ -450,37 +460,47 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       onTap: () async => await saveVideoToGallery(context, path, false),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        // mainAxisAlignment:  MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
-          if (isMe) ...[
-            Spacer(),
-            SvgPicture.asset(
-              'assets/icons/download.svg',
-              color: const Color(0xFF56BBFF),
-              height: 18,
+          SizedBox(
+            width: MediaQuery.of(context).size.width / 2.25,
+            child: Row(
+              children: [
+                if (isMe) ...[
+                  SvgPicture.asset(
+                    'assets/icons/download.svg',
+                    color: const Color(0xFF56BBFF),
+                    height: 18,
+                  ),
+                  SizedBox(width: 8),
+                  const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                  ),
+                  Spacer(),
+                  timeText,
+                ],
+
+                if (!isMe) ...[
+                  timeText,
+                  const Spacer(),
+                  const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                  ),
+                  const SizedBox(width: 6),
+                  SvgPicture.asset(
+                    'assets/icons/download.svg',
+                    color: const Color(0xFF56BBFF),
+                    height: 18,
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(width: 8),
-            const Text(
-              "Save",
-              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-            ),
-            Spacer(),
-            timeText,
-          ],
-          if (!isMe) ...[
-            timeText,
-            const Spacer(),
-            const Text(
-              "Save",
-              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-            ),
-            const SizedBox(width: 6),
-            SvgPicture.asset(
-              'assets/icons/download.svg',
-              color: const Color(0xFF56BBFF),
-              height: 18,
-            ),
-            const Spacer(),
-          ],
+          ),
         ],
       ),
     );
@@ -490,31 +510,34 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildImageFooter(Map<String, dynamic> msg, String path) {
     final isMe = msg['isMe'] ?? false;
-    final rawTime =
-        msg["time"]; // e.g. "2025-11-04T15:45:00" or "2025-11-04 15:45:00"
+    final rawTime = msg["time"];
     String formattedTime = "";
 
     if (rawTime != null && rawTime.isNotEmpty) {
       try {
-        final dateTime = DateTime.parse(rawTime);
-        int hour = dateTime.hour;
-        int minute = dateTime.minute;
+        // Check if the time format is valid (hh.mm)
+        final parts = rawTime.split(':');
+        if (parts.length == 2) {
+          int hour = int.parse(parts[0]);
+          int minute = int.parse(parts[1]);
 
-        // Determine AM or PM
-        String suffix = hour >= 12 ? 'PM' : 'AM';
+          // Determine AM or PM
+          String suffix = hour >= 12 ? 'PM' : 'AM';
 
-        // Convert to 12-hour format
-        hour = hour % 12;
-        if (hour == 0) hour = 12;
+          // Convert to 12-hour format
+          hour = hour % 12;
+          if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
 
-        // Format with leading zero for minute
-        formattedTime =
-            "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $suffix";
+          // Format with leading zero for minute
+          formattedTime = "$hour:${minute.toString().padLeft(2, '0')} $suffix";
+        } else {
+          formattedTime = "Invalid time format";
+        }
       } catch (e) {
-        formattedTime = rawTime;
+        // Fallback if any error occurs during parsing
+        formattedTime = "Error parsing time: $e";
       }
     }
-
     final timeText = Text(
       formattedTime,
       style: const TextStyle(fontSize: 10, color: Colors.grey),
@@ -524,37 +547,48 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       onTap: () async => await saveVideoToGallery(context, path, true),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        // mainAxisAlignment:  MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
-          if (isMe) ...[
-            Spacer(),
-            SvgPicture.asset(
-              'assets/icons/download.svg',
-              color: const Color(0xFF56BBFF),
-              height: 18,
+          SizedBox(
+            width: MediaQuery.of(context).size.width / 2.25,
+            child: Row(
+              children: [
+                if (isMe) ...[
+                  
+                  SvgPicture.asset(
+                    'assets/icons/download.svg',
+                    color: const Color(0xFF56BBFF),
+                    height: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                  ),
+                  Spacer(),
+                  timeText,
+                ],
+                if (!isMe) ...[
+                  timeText,
+                  const Spacer(),
+                  const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
+                  ),
+                  const SizedBox(width: 6),
+                  SvgPicture.asset(
+                    'assets/icons/download.svg',
+                    color: const Color(0xFF56BBFF),
+                    height: 18,
+                  ),
+                  
+                ],
+              ],
             ),
-            const SizedBox(width: 8),
-            const Text(
-              "Save",
-              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-            ),
-            Spacer(),
-            timeText,
-          ],
-          if (!isMe) ...[
-            timeText,
-            const Spacer(),
-            const Text(
-              "Save",
-              style: TextStyle(fontSize: 12, color: Color(0xFF56BBFF)),
-            ),
-            const SizedBox(width: 6),
-            SvgPicture.asset(
-              'assets/icons/download.svg',
-              color: const Color(0xFF56BBFF),
-              height: 18,
-            ),
-            const Spacer(),
-          ],
+          ),
         ],
       ),
     );
