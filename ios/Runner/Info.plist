@@ -39,6 +39,17 @@
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>This app requires access to your photo library to allow selecting photos for your
 			profile.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+  				<string>fetch</string>
+  				<string>remote-notification</string>
+		</array>
+		<key>UIUserNotificationSettings</key>
+		<dict>
+  			<key>types</key>
+  			<integer>7</integer>
+		</dict>
+
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>This app needs access to save photos or videos to your gallery.</string>
 		<key>NSContactsUsageDescription</key>
