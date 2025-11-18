@@ -6,7 +6,6 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/views/base/blur_image_card.dart';
@@ -601,7 +600,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return saveRow;
   }
 
-  String _monthName(int month) {
+  String monthName(int month) {
     const months = [
       "Jan",
       "Feb",

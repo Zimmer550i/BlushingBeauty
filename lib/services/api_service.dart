@@ -317,6 +317,7 @@ Future<http.Response> postMultipartData(
     // Add file fields (media and thumbnail)
     for (MultipartBody element in multipartBody) {
       // Upload the media file (video or image)
+      // ignore: unnecessary_null_comparison
       if (element.file != null && await element.file.exists()) {
         final mimeType = lookupMimeType(element.file.path);
         final mediaType = _getMediaType(mimeType);

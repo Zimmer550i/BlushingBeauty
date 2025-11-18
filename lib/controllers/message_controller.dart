@@ -85,7 +85,7 @@ Future<void> createChatAndSendReaction(
 
       final body = jsonDecode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final chatId = body['data']['_id'];
+        // final chatId = body['data']['_id'];
       } else {
         debugPrint("⚠️ Failed: ${body['message']}");
       }
