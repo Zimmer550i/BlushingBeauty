@@ -39,7 +39,6 @@ dependencies:
   video_thumbnail: ^0.5.6
   sms_autofill: ^2.4.1
   flutter_slidable: ^4.0.3
-  onesignal_flutter: ^5.3.4
   
 
 

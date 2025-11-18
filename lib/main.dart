@@ -5,7 +5,6 @@ import 'package:ree_social_media_app/controllers/localization_controller.dart';
 import 'package:ree_social_media_app/controllers/theme_controller.dart';
 import 'package:ree_social_media_app/helpers/dependency_injection.dart';
 import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
-import 'package:ree_social_media_app/helpers/one_signal_manager.dart';
 import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/services/shared_prefs_service.dart';
 import 'package:ree_social_media_app/services/socket_manager.dart';
