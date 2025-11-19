@@ -140,17 +140,12 @@ class _CameraScreenState extends State<CameraScreen>
       final file = await _controller!.takePicture();
       if (!mounted) return;
 
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VideoEditScreen(
+      Get.to(()=> VideoEditScreen(
             filePath: file.path,
             isVideo: false,
             isChatBox: widget.isChatBox,
             chatId: widget.chatId,
-          ),
-        ),
-      );
+          ),);
 
       // ✅ Reinitialize after coming back
       if (widget.cameras.isNotEmpty) {
@@ -174,17 +169,12 @@ class _CameraScreenState extends State<CameraScreen>
       if (xfile != null) {
         // ✅ If an image is selected
         final file = File(xfile.path);
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => VideoEditScreen(
+        Get.to(() => VideoEditScreen(
               filePath: file.path,
               isVideo: false,
               isChatBox: widget.isChatBox,
               chatId: widget.chatId,
-            ),
-          ),
-        );
+            ),);
       }
 
       // ✅ Always reinitialize camera after picker closes — even if cancelled
@@ -223,17 +213,12 @@ class _CameraScreenState extends State<CameraScreen>
       _stopTimer();
       setState(() => _isRecording = false);
 
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VideoEditScreen(
+      Get.to(()=> VideoEditScreen(
             filePath: file.path,
             isVideo: true,
             isChatBox: widget.isChatBox,
             chatId: widget.chatId,
-          ),
-        ),
-      );
+          ),);
 
       // ✅ Reinitialize after returning
       if (widget.cameras.isNotEmpty) {
