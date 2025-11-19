@@ -148,30 +148,26 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
                     ),
                   )
                 : _thumbnailPath != null
-                ? widget.hasThumbnail ? AnimatedOpacity(
-                    duration: const Duration(milliseconds: 500),
-                    opacity: _isTapped ? 1.0 : 0.6,
-                    child: ImageFiltered(
-                      imageFilter: widget.isView
-                          ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
-                          : ImageFilter.blur(
-                              sigmaX: 20,
-                              sigmaY: 20,
-                              tileMode: TileMode.decal,
-                            ),
-                      child: Container(
-                        height: 260,
-                        width: 180,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(widget.thumbnail),
-                            fit: BoxFit.fill,
-                          ),
+                ? widget.hasThumbnail ? ImageFiltered(
+                  imageFilter: widget.isView
+                      ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                      : ImageFilter.blur(
+                          sigmaX: 20,
+                          sigmaY: 20,
+                          tileMode: TileMode.decal,
                         ),
-                        
+                  child: Container(
+                    height: 260,
+                    width: 180,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(widget.thumbnail),
+                        fit: BoxFit.contain,
                       ),
                     ),
-                  )
+                    
+                  ),
+                )
                 : AnimatedOpacity(
                     duration: const Duration(milliseconds: 500),
                     opacity: _isTapped ? 1.0 : 0.6,

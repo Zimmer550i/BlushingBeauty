@@ -618,9 +618,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return months[month - 1];
   }
 
-  // ==============================================
-  // 📝 INPUT BAR
-  // ==============================================
   Widget _buildInputBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

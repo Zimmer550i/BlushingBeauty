@@ -110,27 +110,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 }),
                 const SizedBox(height: 40),
-          
-                // Push Notifications
-                // Row(
-                //   children: [
-                //     SvgPicture.asset('assets/icons/notification_fill.svg'),
-                //     const SizedBox(width: 13),
-                //     const Text(
-                //       "Push Notifications",
-                //       style: TextStyle(
-                //         color: Color(0xFF676565),
-                //         fontSize: 16,
-                //         fontWeight: FontWeight.w400,
-                //       ),
-                //     ),
-                //     const Spacer(),
-                //     CustomSwitch(
-                //       value: isSwitch,
-                //       onChanged: (val) => setState(() => isSwitch = val),
-                //     ),
-                //   ],
-                // ),
                 NotificationSettings(),
                 const SizedBox(height: 18),
           

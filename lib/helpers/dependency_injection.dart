@@ -4,6 +4,7 @@ import 'package:ree_social_media_app/controllers/user_controller.dart';
 
 
 class InitialBindings extends Bindings {
+
   @override
   void dependencies() {
     // Permanent controllers (stay in memory)
@@ -11,4 +12,6 @@ class InitialBindings extends Bindings {
     Get.put(UserController(), permanent: true);
 
   }
+
+  
 }

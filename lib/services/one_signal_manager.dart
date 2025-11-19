@@ -1,168 +1,185 @@
-// import 'package:flutter/material.dart';
-// import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:ree_social_media_app/utils/app_constants.dart';
 
-// class OneSignalManager {
-//   // Initialize OneSignal with App ID
-//   static Future<void> initialize() async {
-//     OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
-//     OneSignal.Debug.setAlertLevel(OSLogLevel.none);
+class OneSignalManager {
+  String playerId = '';
+  // Initialize OneSignal with App ID
+  Future<void> initialize() async {
+    OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+    OneSignal.Debug.setAlertLevel(OSLogLevel.none);
 
-//     // Initialize OneSignal with your app ID
-//     OneSignal.initialize("77e32082-ea27-42e3-a898-c72e141824ef");
+    // Initialize OneSignal with your app ID
+    OneSignal.initialize(AppConstants.onesignalAppId);
 
-//     // Configure live activities
-//     OneSignal.LiveActivities.setupDefault();
+        // Fetch device state (including player ID)
+    final res = getPlayerId();
+    playerId = res.toString();
 
-//     // Add observers for push notifications and user state
-//     _addObservers();
-//   }
+    // Configure live activities
+    OneSignal.LiveActivities.setupDefault();
 
-//   // Add OneSignal observers for push notifications, user state, etc.
-//   static void _addObservers() {
-//     // Push Subscription Observer
-//     OneSignal.User.pushSubscription.addObserver((state) {
-//       debugPrint("${OneSignal.User.pushSubscription.optedIn}");
-//       debugPrint(OneSignal.User.pushSubscription.id);
-//       debugPrint(OneSignal.User.pushSubscription.token);
-//       debugPrint(state.current.jsonRepresentation());
-//     });
+    // Add observers for push notifications and user state
+    _addObservers();
+  }
 
-//     // User State Observer
-//     OneSignal.User.addObserver((state) {
-//       var userState = state.jsonRepresentation();
-//       print('OneSignal user changed: $userState');
-//     });
+    Future<String?> getPlayerId() async {
+    try {
+      var playerId = await OneSignal.User.getOnesignalId();
+      debugPrint("OneSignal Player ID: $playerId");
+      return playerId;
+    } catch (e) {
+      debugPrint("Error fetching OneSignal Player ID: $e");
+      return null;
+    }
+  }
 
-//     // Notifications permission observer
-//     OneSignal.Notifications.addPermissionObserver((state) {
-//       debugPrint("Has permission " + state.toString());
-//     });
+  // Add OneSignal observers for push notifications, user state, etc.
+  static void _addObservers() {
+    // Push Subscription Observer
+    OneSignal.User.pushSubscription.addObserver((state) {
+      debugPrint("${OneSignal.User.pushSubscription.optedIn}");
+      debugPrint(OneSignal.User.pushSubscription.id);
+      debugPrint(OneSignal.User.pushSubscription.token);
+      debugPrint(state.current.jsonRepresentation());
+    });
 
-//     // Notification Click Listener
-//     OneSignal.Notifications.addClickListener((event) {
-//       debugPrint('NOTIFICATION CLICK LISTENER CALLED WITH EVENT: $event');
-//       // Handle notification click
-//     });
+    // User State Observer
+    OneSignal.User.addObserver((state) {
+      var userState = state.jsonRepresentation();
+      print('OneSignal user changed: $userState');
+    });
 
-//     // Foreground Notification Listener
-//     OneSignal.Notifications.addForegroundWillDisplayListener((event) {
-//       debugPrint('NOTIFICATION WILL DISPLAY LISTENER CALLED WITH: ${event.notification.jsonRepresentation()}');
-//       event.preventDefault(); // Prevent default display
-//       event.notification.display(); // Manually display notification
-//     });
+    // Notifications permission observer
+    OneSignal.Notifications.addPermissionObserver((state) {
+      debugPrint("Has permission $state");
+    });
 
-//     // In-App Message Listeners
-//     OneSignal.InAppMessages.addClickListener((event) {
-//       debugPrint("In-App Message Clicked: ${event.result.jsonRepresentation()}");
-//     });
-//     OneSignal.InAppMessages.addWillDisplayListener((event) {
-//       debugPrint("Will Display In-App Message: ${event.message.messageId}");
-//     });
-//     OneSignal.InAppMessages.addDidDisplayListener((event) {
-//       debugPrint("Did Display In-App Message: ${event.message.messageId}");
-//     });
-//     OneSignal.InAppMessages.addWillDismissListener((event) {
-//       debugPrint("Will Dismiss In-App Message: ${event.message.messageId}");
-//     });
-//     OneSignal.InAppMessages.addDidDismissListener((event) {
-//       debugPrint("Did Dismiss In-App Message: ${event.message.messageId}");
-//     });
-//   }
+    // Notification Click Listener
+    OneSignal.Notifications.addClickListener((event) {
+      debugPrint('NOTIFICATION CLICK LISTENER CALLED WITH EVENT: $event');
+      // Handle notification click
+    });
 
-//   // Send Tags to OneSignal
-//   static void sendTags(Map<String, String> tags) {
-//     debugPrint("Sending tags");
-//     OneSignal.User.addTags(tags);
-//   }
+    // Foreground Notification Listener
+    OneSignal.Notifications.addForegroundWillDisplayListener((event) {
+      debugPrint('NOTIFICATION WILL DISPLAY LISTENER CALLED WITH: ${event.notification.jsonRepresentation()}');
+      event.preventDefault(); // Prevent default display
+      event.notification.display(); // Manually display notification
+    });
 
-//   // Get tags from OneSignal
-//   static Future<void> getTags() async {
-//     debugPrint("Getting tags");
-//     var tags = await OneSignal.User.getTags();
-//     debugPrint("$tags");
-//   }
+    // In-App Message Listeners
+    OneSignal.InAppMessages.addClickListener((event) {
+      debugPrint("In-App Message Clicked: ${event.result.jsonRepresentation()}");
+    });
+    OneSignal.InAppMessages.addWillDisplayListener((event) {
+      debugPrint("Will Display In-App Message: ${event.message.messageId}");
+    });
+    OneSignal.InAppMessages.addDidDisplayListener((event) {
+      debugPrint("Did Display In-App Message: ${event.message.messageId}");
+    });
+    OneSignal.InAppMessages.addWillDismissListener((event) {
+      debugPrint("Will Dismiss In-App Message: ${event.message.messageId}");
+    });
+    OneSignal.InAppMessages.addDidDismissListener((event) {
+      debugPrint("Did Dismiss In-App Message: ${event.message.messageId}");
+    });
+  }
 
-//   // Set Email
-//   static void setEmail(String email) {
-//     debugPrint("Setting email");
-//     OneSignal.User.addEmail(email);
-//   }
+  // Send Tags to OneSignal
+  static void sendTags(Map<String, String> tags) {
+    debugPrint("Sending tags");
+    OneSignal.User.addTags(tags);
+  }
 
-//   // Remove Email
-//   static void removeEmail(String email) {
-//     debugPrint("Removing email");
-//     OneSignal.User.removeEmail(email);
-//   }
+  // Get tags from OneSignal
+  static Future<void> getTags() async {
+    debugPrint("Getting tags");
+    var tags = await OneSignal.User.getTags();
+    debugPrint("$tags");
+  }
 
-//   // Set SMS Number
-//   static void setSMSNumber(String smsNumber) {
-//     debugPrint("Setting SMS Number");
-//     OneSignal.User.addSms(smsNumber);
-//   }
+  // Set Email
+  static void setEmail(String email) {
+    debugPrint("Setting email");
+    OneSignal.User.addEmail(email);
+  }
 
-//   // Remove SMS Number
-//   static void removeSMSNumber(String smsNumber) {
-//     debugPrint("Removing SMS Number");
-//     OneSignal.User.removeSms(smsNumber);
-//   }
+  // Remove Email
+  static void removeEmail(String email) {
+    debugPrint("Removing email");
+    OneSignal.User.removeEmail(email);
+  }
 
-//   // Set Location Shared
-//   static void setLocationShared(bool shared) {
-//     debugPrint("Setting location shared to $shared");
-//     OneSignal.Location.setShared(shared);
-//   }
+  // Set SMS Number
+  static void setSMSNumber(String smsNumber) {
+    debugPrint("Setting SMS Number");
+    OneSignal.User.addSms(smsNumber);
+  }
 
-//   // Set External User ID (login)
-//   static void setExternalUserId(String externalUserId) {
-//     debugPrint("Setting external user ID");
-//     OneSignal.login(externalUserId);
-//   }
+  // Remove SMS Number
+  static void removeSMSNumber(String smsNumber) {
+    debugPrint("Removing SMS Number");
+    OneSignal.User.removeSms(smsNumber);
+  }
 
-//   // Logout (remove external user ID)
-//   static void logout() {
-//     debugPrint("Logging out");
-//     OneSignal.logout();
-//   }
+  // Set Location Shared
+  static void setLocationShared(bool shared) {
+    debugPrint("Setting location shared to $shared");
+    OneSignal.Location.setShared(shared);
+  }
 
-//   // Request Push Permission
-//   static void requestPushPermission() {
-//     debugPrint("Requesting Push Permission");
-//     OneSignal.Notifications.requestPermission(true);
-//   }
+  // Set External User ID (login)
+  static void setExternalUserId(String externalUserId) {
+    debugPrint("Setting external user ID");
+    OneSignal.login(externalUserId);
+  }
 
-//   // Provide GDPR Consent
-//   static void provideConsent(bool consent) {
-//     debugPrint("Setting consent to $consent");
-//     OneSignal.consentGiven(consent);
-//   }
+  // Logout (remove external user ID)
+  static void logout() {
+    debugPrint("Logging out");
+    OneSignal.logout();
+  }
 
-//   // Opt-In/Opt-Out for Push Notifications
-//   static void optIn() {
-//     debugPrint("Opting in for Push Notifications");
-//     OneSignal.User.pushSubscription.optIn();
-//   }
+  // Request Push Permission
+  static void requestPushPermission() {
+    debugPrint("Requesting Push Permission");
+    OneSignal.Notifications.requestPermission(true);
+  }
 
-//   static void optOut() {
-//     debugPrint("Opting out of Push Notifications");
-//     OneSignal.User.pushSubscription.optOut();
-//   }
+  // Provide GDPR Consent
+  static void provideConsent(bool consent) {
+    debugPrint("Setting consent to $consent");
+    OneSignal.consentGiven(consent);
+  }
 
-//   // Handle Live Activities (for iOS, e.g., real-time tracking, status updates)
-//   static void startLiveActivity(String liveActivityId, Map<String, dynamic> data) {
-//     debugPrint("Starting live activity with ID: $liveActivityId");
-//     OneSignal.LiveActivities.startDefault(liveActivityId, {
-//       "title": "Welcome!",
-//       "message": {"en": "Hello World!"}
-//     }, data);
-//   }
+  // Opt-In/Opt-Out for Push Notifications
+  static void optIn() {
+    debugPrint("Opting in for Push Notifications");
+    OneSignal.User.pushSubscription.optIn();
+  }
 
-//   static void enterLiveActivity(String liveActivityId, String token) {
-//     debugPrint("Entering live activity with ID: $liveActivityId");
-//     OneSignal.LiveActivities.enterLiveActivity(liveActivityId, token);
-//   }
+  static void optOut() {
+    debugPrint("Opting out of Push Notifications");
+    OneSignal.User.pushSubscription.optOut();
+  }
 
-//   static void exitLiveActivity(String liveActivityId) {
-//     debugPrint("Exiting live activity with ID: $liveActivityId");
-//     OneSignal.LiveActivities.exitLiveActivity(liveActivityId);
-//   }
-// }
+  // Handle Live Activities (for iOS, e.g., real-time tracking, status updates)
+  static void startLiveActivity(String liveActivityId, Map<String, dynamic> data) {
+    debugPrint("Starting live activity with ID: $liveActivityId");
+    OneSignal.LiveActivities.startDefault(liveActivityId, {
+      "title": "Welcome!",
+      "message": {"en": "Hello World!"}
+    }, data);
+  }
+
+  static void enterLiveActivity(String liveActivityId, String token) {
+    debugPrint("Entering live activity with ID: $liveActivityId");
+    OneSignal.LiveActivities.enterLiveActivity(liveActivityId, token);
+  }
+
+  static void exitLiveActivity(String liveActivityId) {
+    debugPrint("Exiting live activity with ID: $liveActivityId");
+    OneSignal.LiveActivities.exitLiveActivity(liveActivityId);
+  }
+}

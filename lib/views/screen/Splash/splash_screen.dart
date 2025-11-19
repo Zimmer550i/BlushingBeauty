@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/auth_controller.dart';
 import 'package:ree_social_media_app/views/screen/Splash/Onboard/onboard_screen1.dart';
-
 import '../Message/message_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,6 +13,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   final AuthController authController = Get.put(AuthController());
+  // String _deviceId = "Loading...";
 
   @override
   void initState() {
@@ -26,7 +26,34 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     });
     super.initState();
+    // _getDeviceInfo();
+    // initPlatformState();
   }
+
+//   // Initialize OneSignal
+// Future<void> initPlatformState() async {
+//     if (!mounted) return;
+
+//     // Initialize OneSignal
+//     OneSignal.initialize(
+//       AppConstants.onesignalAppId,
+//     );
+
+
+//   }
+
+
+
+  // Future<void> _getDeviceInfo() async {
+  //   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  //   AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+
+  //   setState(() {
+  //     _deviceId = androidInfo.id;
+  //   });
+
+  //   debugPrint("======>Device ID: $_deviceId");
+  // }
 
   @override
   Widget build(BuildContext context) {

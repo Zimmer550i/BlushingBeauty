@@ -91,7 +91,7 @@ class _BlurImageCardState extends State<BlurImageCard> {
                 widget.hasThumbnail ? widget.thumbnail : widget.imageUrl,
                 height: 260,
                 width: 180,
-                fit: BoxFit.fill,
+                fit: BoxFit.contain,
                 loadingBuilder: (context, child, progress) {
                   if (progress == null) {
                     Future.delayed(const Duration(milliseconds: 200), () {

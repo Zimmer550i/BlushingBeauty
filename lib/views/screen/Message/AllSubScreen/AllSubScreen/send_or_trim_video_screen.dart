@@ -1,14 +1,17 @@
 // ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures
-
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:video_player/video_player.dart';
 import 'fram_selection_screen.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
+import 'dart:typed_data';
 
 class SendOrTrimVideoScreen extends StatefulWidget {
   final String mainVideo;
@@ -19,7 +22,6 @@ class SendOrTrimVideoScreen extends StatefulWidget {
   final bool? isInbox;
   final bool? isVideo;
   final XFile? videoFile;
-  final File? thumbnail;
 
   const SendOrTrimVideoScreen({
     super.key,
@@ -31,7 +33,6 @@ class SendOrTrimVideoScreen extends StatefulWidget {
     this.isInbox,
     this.isVideo,
     this.videoFile,
-    this.thumbnail,
   });
 
   @override
@@ -39,6 +40,8 @@ class SendOrTrimVideoScreen extends StatefulWidget {
 }
 
 class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
+  final GlobalKey _repaintKey = GlobalKey();
+  File? thumbnail;
   VideoPlayerController? _mainVideoController;
   VideoPlayerController? _reactionVideoController;
   final ValueNotifier<bool> _isPlaying = ValueNotifier(false);
@@ -60,6 +63,34 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     _reactionVideoController?.dispose();
     _isPlaying.dispose();
     super.dispose();
+  }
+
+  Future<void> _captureAndSaveScreenshot() async {
+    try {
+      RenderRepaintBoundary boundary =
+          _repaintKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
+
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      // Save file to app's temp directory
+      final dir = await getTemporaryDirectory();
+      final filePath =
+          "${dir.path}/thumbnail_${DateTime.now().millisecondsSinceEpoch}.png";
+
+      thumbnail = File(filePath);
+      await thumbnail!.writeAsBytes(pngBytes);
+
+      debugPrint("📸 thumbnail saved at: $filePath");
+    } catch (e) {
+      debugPrint("❌ thumbnail error: $e");
+    }
   }
 
   Future<void> _initializeVideos() async {
@@ -170,75 +201,101 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
           ? Center(
               child: CircularProgressIndicator(color: AppColors.primaryColor),
             )
-          : Column(
-              children: [
-                Expanded(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Reaction video full screen
-                      if (_reactionVideoController!.value.isInitialized)
-                        Positioned.fill(
-                          child: FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: _reactionVideoController!.value.size.width,
-                              height:
-                                  _reactionVideoController!.value.size.height,
-                              child: VideoPlayer(_reactionVideoController!),
+          : RepaintBoundary(
+              key: _repaintKey,
+            child: Column(
+                children: [
+                  Expanded(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Reaction video full screen
+                        if (_reactionVideoController!.value.isInitialized)
+                          Positioned.fill(
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width:
+                                    _reactionVideoController!.value.size.width,
+                                height:
+                                    _reactionVideoController!.value.size.height,
+                                child: VideoPlayer(_reactionVideoController!),
+                              ),
                             ),
                           ),
+                    
+                        // Main video mini preview
+                        if (_mainVideoController!.value.isInitialized &&
+                            widget.isVideo == true)
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Container(
+                              width: 110,
+                              // height: 160,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: .25),
+                                border: Border.all(
+                                  color: AppColors.frameColors,
+                                  width: 2,
+                                ),
+                              ),
+                              clipBehavior: Clip.antiAliasWithSaveLayer,
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: _mainVideoController!.value.size.width,
+                                  height:
+                                      _mainVideoController!.value.size.height,
+                                  child: VideoPlayer(_mainVideoController!),
+                                ),
+                              ),
+                            ),
+                          ),
+                    
+                        if (widget.isVideo == false)
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Container(
+                              width: 110,
+                              // height: 160,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: .25),
+                                border: Border.all(
+                                  color: AppColors.frameColors,
+                                  width: 2,
+                                ),
+                              ),
+                              clipBehavior: Clip.antiAliasWithSaveLayer,
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: 110,
+                                  height: 200,
+                                  child: Image.network(widget.mainVideo,fit: BoxFit.contain,)),
+                              ),
+                            ),
+                          ),
+                        // Playback controls
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: _buildPlaybackControls(),
                         ),
-
-                      // Main video mini preview
-                      // if (_mainVideoController!.value.isInitialized &&
-                      //     widget.isVideo == true)
-                      //   Positioned(
-                      //     top: 20,
-                      //     right: 20,
-                      //     child: ClipRRect(
-                      //       borderRadius: BorderRadius.circular(12),
-                      //       child: Container(
-                      //         width: 130,
-                      //         height: 160,
-                      //         decoration: BoxDecoration(
-                      //           border: Border.all(
-                      //             color: Colors.black,
-                      //             width: 2,
-                      //           ),
-                      //         ),
-                      //         clipBehavior: Clip.antiAliasWithSaveLayer,
-                      //         child: FittedBox(
-                      //           fit: BoxFit.cover,
-                      //           child: SizedBox(
-                      //             width: _mainVideoController!.value.size.width,
-                      //             height:
-                      //                 _mainVideoController!.value.size.height,
-                      //             child: VideoPlayer(_mainVideoController!),
-                      //           ),
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   ),
-
-                      // Playback controls
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: _buildPlaybackControls(),
-                      ),
-                      // Positioned(
-                      //   left: 0,
-                      //   right: 0,
-                      //   bottom: 0,
-                      //   child: _buildBottomActions(),
-                      // ),
-                    ],
+                        // Positioned(
+                        //   left: 0,
+                        //   right: 0,
+                        //   bottom: 0,
+                        //   child: _buildBottomActions(),
+                        // ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+          ),
     );
   }
 
@@ -310,7 +367,8 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         InkWell(
-          onTap: () {
+          onTap: () async {
+            await _captureAndSaveScreenshot();
             Get.to(
               () => FrameSelectionScreen(
                 frontVideoUrl: widget.reactionVideo,
@@ -318,7 +376,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                 userName: widget.userName,
                 chatId: widget.chatId,
                 isInbox: widget.isInbox,
-                thumbnail: widget.thumbnail,
+                thumbnail: thumbnail,
               ),
             );
           },
@@ -329,7 +387,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
               color: Colors.grey,
             ),
             child: Center(
-              child:  Padding(
+              child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Text(
                   "Select Image",
@@ -345,10 +403,11 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
         Obx(
           () => InkWell(
             onTap: () async {
+              await _captureAndSaveScreenshot();
               await sendMessageController.sendMediaToSingleChat(
                 chatId: widget.chatId,
                 filePath: widget.reactionVideo,
-                thumbnail: widget.thumbnail,
+                thumbnail: thumbnail,
                 isVideo: true,
               );
             },

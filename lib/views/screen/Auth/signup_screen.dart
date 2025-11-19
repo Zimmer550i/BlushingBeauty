@@ -185,7 +185,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
                     if (!isCheck) {
                       showSnackBar(
-                        'Please agree to the terms and conditions',
+                        'Please agree to the Terms of Service and Privacy Policy',
                         true,
                       );
                       return;

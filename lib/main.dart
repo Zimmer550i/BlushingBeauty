@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/localization_controller.dart';
 import 'package:ree_social_media_app/controllers/theme_controller.dart';
@@ -19,18 +20,13 @@ List<CameraDescription> cameras = [];
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // OneSignalManager.initialize();
-  
-
-  // Dispose any previously active camera (important for hot restart)
-  await GlobalCameraManager.dispose();
+    await GlobalCameraManager.dispose();
   GlobalVideoPlayerManager.dispose();
 
-  // Give CameraX time to fully release before re-querying
   await Future.delayed(const Duration(milliseconds: 200));
 
   // Initialize DI
   Map<String, Map<String, String>> languages = await di.init();
-  // Initialize GetX bindings
   InitialBindings().dependencies();
   try {
     final token = await SharedPrefsService.get('token');
@@ -41,7 +37,7 @@ void main() async {
   } catch (e) {
     debugPrint("❌ Camera init error: $e");
   }
-
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(MyApp(languages: languages));
 }
 
@@ -57,7 +53,6 @@ class MyApp extends StatelessWidget {
             return GetMaterialApp(
                   title: AppConstants.appName,
                   debugShowCheckedModeBanner: false,
-                  // theme: themeController.darkTheme ? dark(): light(),
                   theme: light(),
                   defaultTransition: Transition.topLevel,
                   locale: localizeController.locale,
@@ -76,3 +71,5 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+
