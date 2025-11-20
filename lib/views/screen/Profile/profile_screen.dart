@@ -219,9 +219,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          const Icon(
+          Icon(
             Icons.arrow_forward_ios,
-            color: Color(0xFF799777),
+            color: AppColors.primaryColor,
             size: 16,
           ),
         ],
