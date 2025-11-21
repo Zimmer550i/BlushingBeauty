@@ -8,16 +8,16 @@ class NotificationSettings extends StatefulWidget {
   const NotificationSettings({super.key});
 
   @override
-  _NotificationSettingsState createState() => _NotificationSettingsState();
+    State<NotificationSettings> createState() => _NotificationSettingsState();
 }
 
 class _NotificationSettingsState extends State<NotificationSettings> {
-  bool isSwitch = false; // Default value for the switch
+  bool isSwitch = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSwitchStatus(); // Load the saved status when the widget is loaded
+    _loadSwitchStatus();
   }
 
   // Function to load the switch status from SharedPreferences

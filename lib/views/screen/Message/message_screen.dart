@@ -1040,7 +1040,9 @@ class _MessageScreenState extends State<MessageScreen> {
           child: OutlinedButton(
             onPressed: onYes,
             style: OutlinedButton.styleFrom(
+              overlayColor: Colors.white,
               shape: RoundedRectangleBorder(
+                
                 borderRadius: BorderRadius.circular(8),
               ),
               side: const BorderSide(color: Colors.white),
@@ -1056,6 +1058,7 @@ class _MessageScreenState extends State<MessageScreen> {
               Get.back();
             },
             style: ElevatedButton.styleFrom(
+              overlayColor: Colors.white,
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),

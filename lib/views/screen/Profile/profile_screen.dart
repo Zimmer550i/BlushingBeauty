@@ -1,16 +1,15 @@
+import 'package:get/get.dart';
+import '../../base/bottom_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
+import '../../../controllers/auth_controller.dart';
+import '../../../controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
-import 'package:ree_social_media_app/views/base/custom_switch.dart';
 import 'package:ree_social_media_app/views/base/push_notification.dart';
+import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/all_data_page.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/change_password_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/edit_profile_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/report_problem_screen.dart';
-import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/all_data_page.dart';
-import '../../../controllers/auth_controller.dart';
-import '../../../controllers/user_controller.dart';
-import '../../base/bottom_menu.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -288,6 +287,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: OutlinedButton(
             onPressed: onYes,
             style: OutlinedButton.styleFrom(
+              overlayColor: Colors.white,
+              // surfaceTintColor: ,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -300,8 +301,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Expanded(
           child: ElevatedButton(
             onPressed: () => Get.back(),
-
+            
             style: ElevatedButton.styleFrom(
+              overlayColor: Colors.white,
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),

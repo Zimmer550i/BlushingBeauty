@@ -105,7 +105,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
               ReeLogo(),
               const SizedBox(height: 110),
               const Text(
-                "Check your\nmessages",
+                "Check Your\nMessages",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
                   fontSize: 28,
@@ -114,7 +114,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
               ),
               const SizedBox(height: 12),
               const Text(
-                "We've sent a 6-digit code ending in 56",
+                "We've sent a 6-digit code",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
                   fontSize: 16,
@@ -232,7 +232,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
           border: InputBorder.none,
           hintText: '*',
           hintStyle: TextStyle(fontSize: 16, color: Color(0xFFB6B6B6)),
+          
         ),
+        cursorColor: AppColors.primaryColor,
         onChanged: (v) => _handleChange(i, v),
       ),
     );

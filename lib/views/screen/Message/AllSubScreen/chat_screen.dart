@@ -636,6 +636,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: CustomTextField(
               controller: messageController,
               hintText: 'Type your message...',
+              maxLines: null,
               borderSide: const BorderSide(color: Colors.transparent),
             ),
           ),

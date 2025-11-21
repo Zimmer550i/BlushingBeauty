@@ -47,7 +47,7 @@ class OneSignalManager {
     // User State Observer
     OneSignal.User.addObserver((state) {
       var userState = state.jsonRepresentation();
-      print('OneSignal user changed: $userState');
+      debugPrint('OneSignal user changed: $userState');
     });
 
     // Notifications permission observer

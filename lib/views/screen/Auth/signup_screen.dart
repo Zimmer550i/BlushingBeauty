@@ -226,7 +226,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     children: [
                       TextSpan(
-                        text: " Login",
+                        text: " Log In",
                         style: TextStyle(
                           color: AppColors.primaryColor,
                           fontSize: 16,

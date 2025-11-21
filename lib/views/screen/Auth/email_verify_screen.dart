@@ -91,7 +91,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
               ReeLogo(),
               const SizedBox(height: 110),
               const Text(
-                "Check your\nmessages",
+                "Check Your\nMessages",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
                   fontSize: 28,
@@ -217,6 +217,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
           hintText: '*',
           hintStyle: TextStyle(fontSize: 16, color: Color(0xFFB6B6B6)),
         ),
+        cursorColor: AppColors.primaryColor,
         onChanged: (v) => _handleChange(i, v),
       ),
     );

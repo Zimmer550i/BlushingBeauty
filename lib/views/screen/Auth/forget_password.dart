@@ -34,7 +34,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
               ReeLogo(),
               SizedBox(height: 110),
               Text(
-                "Let’s get you \n back in",
+                "Let’s get you \nback in",
                 style: TextStyle(
                   color: Color(0xFF413E3E),
                   fontSize: 28,
@@ -63,7 +63,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
                     );
                     if (message == "success") {
                       Get.snackbar("Success", "Check your phone for OTP");
-                      Get.offAll(
+                      Get.to(
                         () => OtpVerificationScreen(
                           emailOrPhone: fullPhone,
                         ),

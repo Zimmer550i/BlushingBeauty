@@ -18,6 +18,7 @@ class CustomTextField extends StatefulWidget {
   final bool isPassword;
   final bool? isEmail;
   final bool? isRealOnly;
+  final bool? isNonBreak;
   final int? maxLines;
   final Color? borderColor;
   final BorderSide? borderSide;
@@ -45,7 +46,7 @@ class CustomTextField extends StatefulWidget {
     this.maxLines = 1,
     this.borderColor,
     this.borderSide,
-    this.isPassword = false,
+    this.isPassword = false, this.isNonBreak = false,
   });
 
   @override
@@ -151,6 +152,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
             fontWeight: FontWeight.w400,
           ),
         ),
+        
+        
       ),
     );
   }

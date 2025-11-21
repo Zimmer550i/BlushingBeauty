@@ -16,16 +16,16 @@ class BottomMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFd4eeff),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(16),
-          topLeft: Radius.circular(16),
-        ),
-        boxShadow: const [
-          BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 1),
-        ],
-      ),
+      // decoration: BoxDecoration(
+      //   // color: const Color(0xFFd4eeff),
+      //   borderRadius: const BorderRadius.only(
+      //     topRight: Radius.circular(16),
+      //     topLeft: Radius.circular(16),
+      //   ),
+      //   boxShadow: const [
+      //     BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 1),
+      //   ],
+      // ),
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: SafeArea(
         child: Row(

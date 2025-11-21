@@ -90,18 +90,14 @@ class UserController extends GetxController {
       return null;
     }
 
-    String baseUrl = api.devUrl;
-
-    return baseUrl + userInfo.value!.image!;
+    return userInfo.value!.image!;
   }
 
   String? addBaseUrl(String image) {
     if (image.isEmpty) {
       return null;
     }
-
-    String baseUrl = api.devUrl;
-    return baseUrl + image;
+    return image;
   }
 
   Future<String> fetchAllUsers({int page = 1, int limit = 10}) async {

@@ -98,6 +98,11 @@ class _CustomDropdownState extends State<CustomDropdown> {
           child: OutlinedButton(
             onPressed: onYes,
             style: OutlinedButton.styleFrom(
+              overlayColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                
+                borderRadius: BorderRadius.circular(8),
+              ),
               side: const BorderSide(color: Colors.white),
             ),
             child: const Text("Yes", style: TextStyle(color: Colors.white)),
@@ -106,14 +111,24 @@ class _CustomDropdownState extends State<CustomDropdown> {
         const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
-            onPressed: () => Get.back(),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            onPressed: () {
+              // No action taken if 'No' is pressed
+              Get.back();
+            },
+            style: ElevatedButton.styleFrom(
+              overlayColor: Colors.white,
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             child: const Text("No", style: TextStyle(color: Color(0xFF676565))),
           ),
         ),
       ],
     );
   }
+
 
 
 

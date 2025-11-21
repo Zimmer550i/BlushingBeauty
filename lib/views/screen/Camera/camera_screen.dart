@@ -1,5 +1,5 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
-
+ 
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -11,12 +11,12 @@ import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/bottom_menu.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_edit_screen.dart';
-
+ 
 import '../../../services/camera_manager.dart';
-
+ 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 CameraController? get _controller => GlobalCameraManager.controller;
-
+ 
 class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
   final bool isChatBox;
@@ -27,11 +27,11 @@ class CameraScreen extends StatefulWidget {
     required this.isChatBox,
     this.chatId,
   });
-
+ 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
-
+ 
 class _CameraScreenState extends State<CameraScreen>
     with WidgetsBindingObserver, RouteAware {
   final ChatController chatController = Get.put(ChatController());
@@ -41,7 +41,7 @@ class _CameraScreenState extends State<CameraScreen>
   int _recordDuration = 0;
   Timer? _timer;
   bool _isCameraChanging = false;
-
+ 
   @override
   void initState() {
     super.initState();
@@ -50,13 +50,13 @@ class _CameraScreenState extends State<CameraScreen>
       _initCamera(widget.cameras.first);
     }
   }
-
+ 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
   }
-
+ 
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
@@ -65,13 +65,13 @@ class _CameraScreenState extends State<CameraScreen>
     GlobalCameraManager.dispose();
     super.dispose();
   }
-
+ 
   @override
   void didPushNext() {
     // When navigating to another screen, release camera resources
     GlobalCameraManager.dispose();
   }
-
+ 
   @override
   void didPopNext() async {
     // When coming back to this screen, reinitialize the camera
@@ -79,12 +79,12 @@ class _CameraScreenState extends State<CameraScreen>
       await _initCamera(widget.cameras.first);
     }
   }
-
+ 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     // Handle camera on app pause/resume (e.g., minimize / reopen app)
     if (_controller == null || !_controller!.value.isInitialized) return;
-
+ 
     switch (state) {
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
@@ -99,25 +99,25 @@ class _CameraScreenState extends State<CameraScreen>
         break;
     }
   }
-
+ 
   Future<void> _initCamera(CameraDescription description) async {
     if (_isCameraChanging) return;
     _isCameraChanging = true;
-
+ 
     await GlobalCameraManager.dispose();
-
+ 
     final controller = await GlobalCameraManager.initialize(description);
-
+ 
     if (mounted && controller != null && controller.value.isInitialized) {
       setState(() {});
     }
-
+ 
     _isCameraChanging = false;
   }
-
+ 
   Future<void> _switchCamera() async {
     if (_controller == null || _isCameraChanging) return;
-
+ 
     final currentLens = _controller!.description.lensDirection;
     final newCamera = widget.cameras.firstWhere(
       (cam) => cam.lensDirection != currentLens,
@@ -125,7 +125,7 @@ class _CameraScreenState extends State<CameraScreen>
     );
     await _initCamera(newCamera);
   }
-
+ 
   Future<void> _onCapturePressed() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
     if (_isVideoMode) {
@@ -134,19 +134,19 @@ class _CameraScreenState extends State<CameraScreen>
       await _takePhoto();
     }
   }
-
+ 
   Future<void> _takePhoto() async {
     try {
       final file = await _controller!.takePicture();
       if (!mounted) return;
-
+ 
       Get.to(()=> VideoEditScreen(
             filePath: file.path,
             isVideo: false,
             isChatBox: widget.isChatBox,
             chatId: widget.chatId,
           ),);
-
+ 
       // ✅ Reinitialize after coming back
       if (widget.cameras.isNotEmpty) {
         await _initCamera(_controller?.description ?? widget.cameras.first);
@@ -155,17 +155,17 @@ class _CameraScreenState extends State<CameraScreen>
       debugPrint('❌ Error taking photo: $e');
     }
   }
-
+ 
   Future<void> openGallery() async {
     try {
       // Temporarily dispose camera to release resource for picker
       await GlobalCameraManager.dispose();
-
+ 
       // Open image picker
       final XFile? xfile = await _picker.pickImage(source: ImageSource.gallery);
-
+ 
       if (!mounted) return;
-
+ 
       if (xfile != null) {
         // ✅ If an image is selected
         final file = File(xfile.path);
@@ -176,7 +176,7 @@ class _CameraScreenState extends State<CameraScreen>
               chatId: widget.chatId,
             ),);
       }
-
+ 
       // ✅ Always reinitialize camera after picker closes — even if cancelled
       if (widget.cameras.isNotEmpty) {
         await _initCamera(widget.cameras.first);
@@ -184,14 +184,14 @@ class _CameraScreenState extends State<CameraScreen>
       }
     } catch (e) {
       debugPrint("⚠️ Error opening gallery: $e");
-
+ 
       // Safety net: try reinit anyway
       if (widget.cameras.isNotEmpty) {
         await _initCamera(widget.cameras.first);
       }
     }
   }
-
+ 
   Future<void> _startVideoRecording() async {
     if (_controller == null || _controller!.value.isRecordingVideo) return;
     try {
@@ -205,21 +205,21 @@ class _CameraScreenState extends State<CameraScreen>
       debugPrint('Error starting video recording: $e');
     }
   }
-
+ 
   Future<void> _stopVideoRecording() async {
     if (_controller == null || !_controller!.value.isRecordingVideo) return;
     try {
       final file = await _controller!.stopVideoRecording();
       _stopTimer();
       setState(() => _isRecording = false);
-
+ 
       Get.to(()=> VideoEditScreen(
             filePath: file.path,
             isVideo: true,
             isChatBox: widget.isChatBox,
             chatId: widget.chatId,
           ),);
-
+ 
       // ✅ Reinitialize after returning
       if (widget.cameras.isNotEmpty) {
         await _initCamera(_controller?.description ?? widget.cameras.first);
@@ -228,62 +228,51 @@ class _CameraScreenState extends State<CameraScreen>
       debugPrint('Error stopping video recording: $e');
     }
   }
-
+ 
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() => _recordDuration++);
     });
   }
-
+ 
   void _stopTimer() {
     _timer?.cancel();
     _recordDuration = 0;
   }
-
+ 
   @override
   Widget build(BuildContext context) {
-    if (_controller == null ||
-        !_controller!.value.isInitialized ||
-        !_controller!.value.isPreviewPaused) {
-      if (!GlobalCameraManager.isInitialized) {
-        return Scaffold(
-          backgroundColor: Colors.black,
-          body: Center(
-            child: CircularProgressIndicator(color: AppColors.primaryColor),
-          ),
-        );
-      }
+    final controller = _controller;
+ 
+    if (controller == null || !controller.value.isInitialized) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryColor),
+        ),
+      );
     }
-
+ 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
           /// Camera Preview
-          if (_controller != null && _controller!.value.isInitialized)
+          if (controller != null && controller.value.isInitialized)
             SizedBox.expand(
               child: FittedBox(
                 fit: BoxFit.cover,
                 child: SizedBox(
-                  width:
-                      _controller?.value.previewSize?.height ??
-                      0, // Safe access
-                  height:
-                      _controller?.value.previewSize?.width ?? 0, // Safe access
-                  child:
-                      _controller?.value.isInitialized ??
-                          false // Check if controller is initialized
-                      ? CameraPreview(_controller!)
-                      : Center(
-                          child: CircularProgressIndicator(),
-                        ), // Show loading until initialized
+                  width: controller.value.previewSize?.height ?? 0,
+                  height: controller.value.previewSize?.width ?? 0,
+                  child: CameraPreview(controller),
                 ),
               ),
             )
           else
             const Positioned.fill(child: ColoredBox(color: Colors.black)),
-
+ 
           if (widget.isChatBox)
             Positioned(
               top: 70,
@@ -300,7 +289,7 @@ class _CameraScreenState extends State<CameraScreen>
                 ),
               ),
             ),
-
+ 
           /// Camera / Video toggle
           Positioned(
             top: 70,
@@ -321,7 +310,7 @@ class _CameraScreenState extends State<CameraScreen>
               ],
             ),
           ),
-
+ 
           /// Timer display
           if (_isVideoMode)
             Positioned(
@@ -345,7 +334,7 @@ class _CameraScreenState extends State<CameraScreen>
                 ),
               ),
             ),
-
+ 
           /// Bottom Controls
           Positioned(
             bottom: 40,
@@ -365,7 +354,7 @@ class _CameraScreenState extends State<CameraScreen>
       bottomNavigationBar: widget.isChatBox ? SizedBox() : BottomMenu(1),
     );
   }
-
+ 
   /// 🎚 Mode button
   Widget _buildModeButton(String asset, bool active, VoidCallback onTap) {
     return GestureDetector(
@@ -387,7 +376,7 @@ class _CameraScreenState extends State<CameraScreen>
       ),
     );
   }
-
+ 
   /// 🖼 Gallery Button
   Widget _buildGalleryButton() {
     return GestureDetector(
@@ -403,7 +392,7 @@ class _CameraScreenState extends State<CameraScreen>
       ),
     );
   }
-
+ 
   /// 📸 Capture / Record button
   Widget _buildCaptureButton() {
     return GestureDetector(
@@ -421,7 +410,7 @@ class _CameraScreenState extends State<CameraScreen>
       ),
     );
   }
-
+ 
   /// 🔁 Switch camera button
   Widget _buildSwitchButton() {
     return InkWell(
@@ -441,3 +430,4 @@ class _CameraScreenState extends State<CameraScreen>
     );
   }
 }
+ 

@@ -397,14 +397,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       ),
     );
   }
-
-  Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
+    Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
     return Row(
       children: [
         Expanded(
           child: OutlinedButton(
             onPressed: onYes,
             style: OutlinedButton.styleFrom(
+              overlayColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                
+                borderRadius: BorderRadius.circular(8),
+              ),
               side: const BorderSide(color: Colors.white),
             ),
             child: const Text("Yes", style: TextStyle(color: Colors.white)),
@@ -413,12 +417,22 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
-            onPressed: () => Get.back(),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            onPressed: () {
+              // No action taken if 'No' is pressed
+              Get.back();
+            },
+            style: ElevatedButton.styleFrom(
+              overlayColor: Colors.white,
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             child: const Text("No", style: TextStyle(color: Color(0xFF676565))),
           ),
         ),
       ],
     );
   }
+
 }

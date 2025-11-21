@@ -296,28 +296,32 @@ class AuthController extends GetxController {
 
 
   Future<bool> previouslyLoggedIn() async {
-    String? token = await SharedPrefsService.get('token');
-    if (token != null) {
-      debugPrint('🔍 Token found. Fetching user info...');
-      final message = await Get.find<UserController>().getInfo();
-      final data = Get.find<UserController>().userInfo.value;
-      final name = data!.name;
-      final image = data.image;
-    
-      if (message == "success") {
-        if(name == null || image == null) {
-          return false;
-        }
-        debugPrint("🟡 Token:======> $token");
-        isLoggedIn.value = true;
-        return true;
-      }else{
+  String? token = await SharedPrefsService.get('token');
+  if (token != null) {
+    debugPrint('🔍 Token found. Fetching user info...');
+    final message = await Get.find<UserController>().getInfo();
+    final data = Get.find<UserController>().userInfo.value;
+    final name = data!.name;
+    final image = data.image;
+
+    if (message == "success") {
+      if (name == null || image == null) {
         return false;
       }
+      debugPrint("🟡 Token:======> $token");
+      isLoggedIn.value = true;
+      return true;
+    } else if (message == "User doesn't exist!") {
+      debugPrint("❌ User doesn't exist.");
+      return false;
+    } else {
+      return false;
     }
-    isLoggedIn.value = false;
-    return false;
   }
+  isLoggedIn.value = false;
+  return false;
+}
+
 
   Future<void> sendInvite(String phoneNumber, String senderName) async {
     try {

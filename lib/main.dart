@@ -10,6 +10,7 @@ import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/services/shared_prefs_service.dart';
 import 'package:ree_social_media_app/services/socket_manager.dart';
 import 'package:ree_social_media_app/themes/light_theme.dart';
+import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/app_constants.dart';
 import 'package:ree_social_media_app/utils/message.dart';
 import 'helpers/di.dart' as di;
@@ -20,7 +21,7 @@ List<CameraDescription> cameras = [];
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // OneSignalManager.initialize();
-    await GlobalCameraManager.dispose();
+  await GlobalCameraManager.dispose();
   GlobalVideoPlayerManager.dispose();
 
   await Future.delayed(const Duration(milliseconds: 200));
@@ -44,6 +45,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.languages});
   final Map<String, Map<String, String>> languages;
+
   @override
   Widget build(BuildContext context) {
     return GetBuilder<ThemeController>(
@@ -51,25 +53,34 @@ class MyApp extends StatelessWidget {
         return GetBuilder<LocalizationController>(
           builder: (localizeController) {
             return GetMaterialApp(
-                  title: AppConstants.appName,
-                  debugShowCheckedModeBanner: false,
-                  theme: light(),
-                  defaultTransition: Transition.topLevel,
-                  locale: localizeController.locale,
-                  translations: Messages(languages: languages),
-                  fallbackLocale: Locale(
-                    AppConstants.languages[0].languageCode,
-                    AppConstants.languages[0].countryCode,
+              title: AppConstants.appName,
+              debugShowCheckedModeBanner: false,
+              theme: light(),
+              defaultTransition: Transition.topLevel,
+              locale: localizeController.locale,
+              translations: Messages(languages: languages),
+              fallbackLocale: Locale(
+                AppConstants.languages[0].languageCode,
+                AppConstants.languages[0].countryCode,
+              ),
+              transitionDuration: const Duration(milliseconds: 500),
+              getPages: AppRoutes.page,
+              initialRoute: AppRoutes.splashScreen,
+              builder: (context, child) {
+                return TextSelectionTheme(
+                  data: TextSelectionThemeData(
+                    selectionColor: AppColors.primaryColor,
+                    cursorColor: AppColors.primaryColor,
+                    selectionHandleColor:
+                        AppColors.primaryColor,
                   ),
-                  transitionDuration: const Duration(milliseconds: 500),
-                  getPages: AppRoutes.page,
-                  initialRoute: AppRoutes.splashScreen,
+                  child: child!,
                 );
+              },
+            );
           },
         );
       },
     );
   }
 }
-
-

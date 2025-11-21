@@ -58,7 +58,7 @@ class _OnboardScreen1State extends State<OnboardScreen1> {
                 textAlign: TextAlign.center,),
               ),
               SizedBox(height: 16,),
-              Text("Send photo and video that stays blurred until the countdown reveal",
+              Text("Send photos and videos that stay blurred until the countdown reveal",
               style: TextStyle(
                 color: Color(0xFF676565),
                 fontSize: 16,

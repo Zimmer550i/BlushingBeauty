@@ -614,6 +614,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             child: CustomTextField(
               controller: messageTextController,
               hintText: 'Type your message...',
+              maxLines: null,
               borderSide: const BorderSide(color: Colors.transparent),
             ),
           ),
