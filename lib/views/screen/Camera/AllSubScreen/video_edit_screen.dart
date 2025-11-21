@@ -173,7 +173,9 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: .24),
                   ),
-                  child: _buildBottomActions(),
+                  child: Platform.isAndroid ? SafeArea(child: _buildBottomActions()) : Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 26),
+                    child: _buildBottomActions()),
                 ),
               ),
           ],
@@ -182,107 +184,108 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
     );
   }
 
-  Widget _buildBottomActions() => SafeArea(
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        InkWell(
-          onTap: () {
-            if (widget.isVideo) {
-              createStoryController.addStory(videoPath: widget.filePath);
-            } else {
-              createStoryController.addStory(imagePath: widget.filePath);
-            }
-          },
-          child: Container(
-            width: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(32),
-              color: Colors.grey,
-            ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Obx(
-                  () => createStoryController.isLoading.value
-                      ? SpinKitWave(color: Colors.white, size: 16.0)
-                      : Text(
-                          "Add Story",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
+  Widget _buildBottomActions() => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceAround,
+    
+    children: [
+      InkWell(
+        onTap: () {
+          if (widget.isVideo) {
+            createStoryController.addStory(videoPath: widget.filePath);
+          } else {
+            createStoryController.addStory(imagePath: widget.filePath);
+          }
+        },
+        child: Container(
+          width: 120,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            color: Colors.grey,
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Obx(
+                () => createStoryController.isLoading.value
+                    ? SpinKitWave(color: Colors.white, size: 16.0)
+                    : Text(
+                        "Add Story",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
                         ),
-                ),
+                      ),
               ),
             ),
           ),
         ),
-
-        // Send button
-        InkWell(
-          onTap: widget.isChatBox
-              ? () {
-                  sendMessageController.sendMediaToSingleChat(
-                    chatId: widget.chatId!,
-                    filePath: widget.filePath,
-                    isVideo: widget.isVideo,
-                    thumbnail: null,
-                  );
+      ),
+  
+      // Send button
+      InkWell(
+        onTap: widget.isChatBox
+            ? () {
+                sendMessageController.sendMediaToSingleChat(
+                  chatId: widget.chatId!,
+                  filePath: widget.filePath,
+                  isVideo: widget.isVideo,
+                  thumbnail: null,
+                );
+              }
+            : () async {
+                try {
+                  if (widget.isVideo) {
+                    final formattedFile = await ensureMp4Format(
+                      widget.filePath,
+                    );
+                    Get.to(
+                      () => SendMessageWithFriendScreen(
+                        filePath: formattedFile.path,
+                        isVideo: widget.isVideo,
+                      ),
+                    );
+                  } else {
+                    Get.to(
+                      () => SendMessageWithFriendScreen(
+                        filePath: widget.filePath,
+                        isVideo: widget.isVideo,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  debugPrint('⚠️ Could not format video: $e');
                 }
-              : () async {
-                  try {
-                    if (widget.isVideo) {
-                      final formattedFile = await ensureMp4Format(
-                        widget.filePath,
-                      );
-                      Get.to(
-                        () => SendMessageWithFriendScreen(
-                          filePath: formattedFile.path,
-                          isVideo: widget.isVideo,
-                        ),
-                      );
-                    } else {
-                      Get.to(
-                        () => SendMessageWithFriendScreen(
-                          filePath: widget.filePath,
-                          isVideo: widget.isVideo,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    debugPrint('⚠️ Could not format video: $e');
-                  }
-                },
-          child: Container(
-            width: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(32),
-              color: AppColors.primaryColor,
-            ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Obx(() {
-                  final loading1 = createStoryController.isLoading.value;
-                  final loading2 = sendMessageController.isLoading.value;
-                  if (loading1 || loading2) {
-                    return const SpinKitWave(color: Colors.white, size: 16.0);
-                  }
-                  return Text(
-                    "Send Now",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  );
-                }),
-              ),
+              },
+        child: Container(
+          width: 120,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            color: AppColors.primaryColor,
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Obx(() {
+                final loading1 = createStoryController.isLoading.value;
+                final loading2 = sendMessageController.isLoading.value;
+                if (loading1 || loading2) {
+                  return const SpinKitWave(color: Colors.white, size: 16.0);
+                }
+                return Text(
+                  "Send Now",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                );
+              }),
             ),
           ),
         ),
-      ],
-    ),
+      ),
+  
+    ]
+  ,
   );
 
   /// ==== Video Controls ====
@@ -360,6 +363,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
             ),
           ),
           _buildBottomActions(),
+          SizedBox(height: 20),
         ],
       ),
     );

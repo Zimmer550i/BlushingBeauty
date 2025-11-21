@@ -83,15 +83,15 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   onPressed: Get.back,
                   icon: const Icon(Icons.arrow_back_ios),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  "Create Group",
-                  style: TextStyle(
-                    color: AppColors.textColor,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                // const SizedBox(width: 8),
+                // Text(
+                //   "Create Group",
+                //   style: TextStyle(
+                //     color: AppColors.textColor,
+                //     fontSize: 24,
+                //     fontWeight: FontWeight.w600,
+                //   ),
+                // ),
               ],
             ),
             const SizedBox(height: 24),

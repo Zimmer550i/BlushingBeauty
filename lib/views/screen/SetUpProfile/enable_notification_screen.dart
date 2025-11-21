@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/services/shared_prefs_service.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
@@ -84,7 +85,11 @@ class _EnableNotificationScreenState extends State<EnableNotificationScreen> {
               ),
               SizedBox(height: 24),
               CustomButton(
-                onTap: () {
+                onTap: () async {
+                  await SharedPrefsService.set(
+                    'push_notifications_status',
+                    'true',
+                  );
                   Get.to(() => SetupProfileScreen());
                 },
                 text: "Enable Notifications",

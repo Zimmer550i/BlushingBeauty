@@ -154,8 +154,6 @@ class ChatController extends GetxController {
         Get.to(
           () => GroupChatScreen(
             chatId: chatId,
-            groupName: "Group Chat",
-            groupImage: "",
           ),
         );
       } else {

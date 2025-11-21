@@ -165,34 +165,36 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   );
 
   Widget _buildBottomControls() => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-    child: SafeArea(
-      child: Row(
-        children: [
-          _buildFrameSelector(),
-          IconButton(
-            onPressed: () => Get.back(),
-            icon: Icon(Icons.delete, color: AppColors.primaryColor),
+  color: Colors.white,
+  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+  child: SafeArea(
+    child: Row(
+      children: [
+        _buildFrameSelector(),
+      SizedBox(width: 12,),
+        IconButton(
+          onPressed: () => Get.back(),
+          icon: Icon(Icons.delete, color: AppColors.primaryColor),
+        ),
+        Spacer(),
+        Obx(
+          () => InkWell(
+            onTap: _handleFrameAndSend,
+            child: sendMessageController.isLoading.value
+                ? CustomLoading()
+                : SvgPicture.asset(
+                    'assets/icons/send.svg',
+                    color: AppColors.primaryColor,
+                    height: 24,
+                  ),
           ),
-          Spacer(),
-          Obx(
-            () => InkWell(
-              onTap: _handleFrameAndSend,
-              child: sendMessageController.isLoading.value
-                  ? CustomLoading()
-                  : SvgPicture.asset(
-                      'assets/icons/send.svg',
-                      // ignore: deprecated_member_use
-                      color: AppColors.primaryColor,
-                      height: 24,
-                    ),
-            ),
-          ),
-        ],
-      ),
+        ),
+        Spacer(),
+      ],
     ),
-  );
+  ),
+);
+
 
   Widget _buildFrameSelector() {
     return SizedBox(
@@ -203,7 +205,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
           color: AppColors.primaryColor,
           borderRadius: BorderRadius.circular(10),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         child: ListView.builder(
           controller: _scrollController,
           scrollDirection: Axis.horizontal,
@@ -214,15 +216,15 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
               onTap: () => setState(() => _selectedFrameIndex = i),
               child: Container(
                 width: _thumbnailWidth,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
+                // margin: const EdgeInsets.symmetric(horizontal: 2),
                 decoration: BoxDecoration(
                   border: isSelected
                       ? Border.all(color: Colors.white, width: 2)
                       : null,
-                  borderRadius: BorderRadius.circular(6),
+                  // borderRadius: BorderRadius.circular(6),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
+                  // borderRadius: BorderRadius.circular(0),
                   child: Image.file(
                     File(_thumbnailPaths[i]),
                     fit: BoxFit.cover,

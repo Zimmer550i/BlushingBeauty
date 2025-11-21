@@ -21,7 +21,6 @@ class SendOrTrimVideoScreen extends StatefulWidget {
   final String chatId;
   final bool? isInbox;
   final bool? isVideo;
-  final XFile? videoFile;
 
   const SendOrTrimVideoScreen({
     super.key,
@@ -32,7 +31,6 @@ class SendOrTrimVideoScreen extends StatefulWidget {
     required this.reactionVideo,
     this.isInbox,
     this.isVideo,
-    this.videoFile,
   });
 
   @override
@@ -52,7 +50,9 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeVideos();
+    widget.isVideo == true
+        ? _initializeVideos()
+        : _initializeOnlyReactionVideos();
   }
 
   @override
@@ -93,34 +93,72 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     }
   }
 
+  Future<void> _initializeOnlyReactionVideos() async {
+    try {
+      // Reaction video (background)
+      _reactionVideoController = widget.reactionVideo.startsWith('http')
+          ? VideoPlayerController.networkUrl(Uri.parse(widget.reactionVideo))
+          : VideoPlayerController.file(File(widget.reactionVideo));
+
+      await Future.wait([_reactionVideoController!.initialize()]);
+
+      // Check if both videos are initialized successfully
+      if (!_reactionVideoController!.value.isInitialized) {
+        throw Exception('Error: Video(s) not initialized properly.');
+      }
+      _reactionVideoController!.setLooping(true);
+
+      _videoDuration = _reactionVideoController!.value.duration;
+      _reactionVideoController!.addListener(_syncReactionVideos);
+
+      // Start both videos paused
+      _isPlaying.value = false;
+      setState(() {});
+    } catch (e) {
+      debugPrint("❌ Error initializing videos: $e");
+      // Handle error if video initialization fails
+    }
+  }
+
   Future<void> _initializeVideos() async {
-    // Main video (background)
-    _mainVideoController = widget.mainVideo.startsWith('http')
-        ? VideoPlayerController.network(widget.mainVideo)
-        : VideoPlayerController.file(File(widget.mainVideo));
+    try {
+      // Main video (background)
+      _mainVideoController = widget.mainVideo.startsWith('http')
+          ? VideoPlayerController.networkUrl(Uri.parse(widget.mainVideo))
+          : VideoPlayerController.file(File(widget.mainVideo));
 
-    // Reaction video (mini preview)
-    _reactionVideoController = widget.reactionVideo.startsWith('http')
-        ? VideoPlayerController.network(widget.reactionVideo)
-        : VideoPlayerController.file(File(widget.reactionVideo));
+      // Reaction video (background)
+      _reactionVideoController = widget.reactionVideo.startsWith('http')
+          ? VideoPlayerController.networkUrl(Uri.parse(widget.reactionVideo))
+          : VideoPlayerController.file(File(widget.reactionVideo));
 
-    await Future.wait([
-      _mainVideoController!.initialize(),
-      _reactionVideoController!.initialize(),
-    ]);
+      await Future.wait([
+        _mainVideoController!.initialize(),
+        _reactionVideoController!.initialize(),
+      ]);
 
-    // Loop both videos
-    _mainVideoController!.setLooping(true);
-    _reactionVideoController!.setLooping(true);
+      // Check if both videos are initialized successfully
+      if (!_mainVideoController!.value.isInitialized ||
+          !_reactionVideoController!.value.isInitialized) {
+        throw Exception('Error: Video(s) not initialized properly.');
+      }
 
-    _videoDuration = _reactionVideoController!.value.duration;
+      // Loop both videos
+      _mainVideoController!.setLooping(true);
+      _reactionVideoController!.setLooping(true);
 
-    // Listen to reaction video to sync main video
-    _reactionVideoController!.addListener(_syncVideos);
+      _videoDuration = _reactionVideoController!.value.duration;
 
-    // Start both videos paused
-    _isPlaying.value = false;
-    setState(() {});
+      // Listen to reaction video to sync main video
+      _reactionVideoController!.addListener(_syncVideos);
+
+      // Start both videos paused
+      _isPlaying.value = false;
+      setState(() {});
+    } catch (e) {
+      debugPrint("❌ Error initializing videos: $e");
+      // Handle error if video initialization fails
+    }
   }
 
   void _syncVideos() async {
@@ -149,6 +187,23 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     }
   }
 
+  void _syncReactionVideos() async {
+    if (_reactionVideoController == null)
+      return;
+    if (!_reactionVideoController!.value.isInitialized)
+      return;
+
+    final front = _reactionVideoController!;
+
+    // Update UI
+    if (mounted) {
+      setState(() {
+        _videoPosition = front.value.position;
+        _isPlaying.value = front.value.isPlaying;
+      });
+    }
+  }
+
   void _togglePlayPause() async {
     if (_reactionVideoController == null || _mainVideoController == null)
       return;
@@ -163,6 +218,20 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
       await main.seekTo(front.value.position);
       await Future.delayed(const Duration(milliseconds: 60));
       await main.play();
+      await front.play();
+      _isPlaying.value = true;
+    }
+  }
+
+  void _togglePlayReactionVideoPause() async {
+    if (_reactionVideoController == null) return;
+    final front = _reactionVideoController!;
+
+    if (front.value.isPlaying) {
+      await front.pause();
+      _isPlaying.value = false;
+    } else {
+      await Future.delayed(const Duration(milliseconds: 60));
       await front.play();
       _isPlaying.value = true;
     }
@@ -197,13 +266,13 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
           ],
         ),
       ),
-      body: _mainVideoController == null || _reactionVideoController == null
+      body: _reactionVideoController == null
           ? Center(
               child: CircularProgressIndicator(color: AppColors.primaryColor),
             )
           : RepaintBoundary(
               key: _repaintKey,
-            child: Column(
+              child: Column(
                 children: [
                   Expanded(
                     child: Stack(
@@ -223,10 +292,9 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                               ),
                             ),
                           ),
-                    
+
                         // Main video mini preview
-                        if (_mainVideoController!.value.isInitialized &&
-                            widget.isVideo == true)
+                        if (widget.isVideo == true)
                           Positioned(
                             top: 0,
                             right: 0,
@@ -252,7 +320,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                               ),
                             ),
                           ),
-                    
+
                         if (widget.isVideo == false)
                           Positioned(
                             top: 0,
@@ -273,7 +341,11 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                                 child: SizedBox(
                                   width: 110,
                                   height: 200,
-                                  child: Image.network(widget.mainVideo,fit: BoxFit.contain,)),
+                                  child: Image.network(
+                                    widget.mainVideo,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -295,7 +367,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                   ),
                 ],
               ),
-          ),
+            ),
     );
   }
 
@@ -330,8 +402,15 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                       inactiveColor: Colors.grey,
                       onChanged: (v) async {
                         final pos = Duration(milliseconds: v.toInt());
+
+                        // Seek to the reaction video position
                         await _reactionVideoController?.seekTo(pos);
-                        await _mainVideoController?.seekTo(pos);
+
+                        // Only seek the main video if isVideo is true
+                        if (widget.isVideo == true) {
+                          await _mainVideoController?.seekTo(pos);
+                        }
+
                         setState(() => _videoPosition = pos);
                       },
                     ),
@@ -348,7 +427,9 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                         playing ? Icons.pause : Icons.play_arrow,
                         color: Colors.white,
                       ),
-                      onPressed: _togglePlayPause,
+                      onPressed: widget.isVideo == true
+                          ? _togglePlayPause
+                          : _togglePlayReactionVideoPause,
                     ),
                   ),
                 ],

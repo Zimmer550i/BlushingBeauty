@@ -209,7 +209,6 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                   : storyChatId.toString(),
               isInbox: widget.isInbox ?? false,
               isVideo: true,
-              videoFile: recordedFile,
             ),
           )
         : Get.to(

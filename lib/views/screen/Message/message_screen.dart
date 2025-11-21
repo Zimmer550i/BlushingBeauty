@@ -905,8 +905,6 @@ class _MessageScreenState extends State<MessageScreen> {
                   Get.to(
                     () => GroupChatScreen(
                       chatId: chatId,
-                      groupName: name,
-                      groupImage: image,
                     ),
                   );
                 }

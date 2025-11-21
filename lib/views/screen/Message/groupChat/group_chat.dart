@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:ree_social_media_app/controllers/group_chat_controller.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/views/screen/Camera/camera_screen.dart';
 import '../../../../controllers/chat_controller.dart';
@@ -21,15 +22,8 @@ import 'group_details_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final String chatId;
-  final String groupName;
-  final String groupImage;
 
-  const GroupChatScreen({
-    super.key,
-    required this.chatId,
-    required this.groupName,
-    required this.groupImage,
-  });
+  const GroupChatScreen({super.key, required this.chatId});
 
   @override
   State<GroupChatScreen> createState() => _GroupChatScreenState();
@@ -37,6 +31,9 @@ class GroupChatScreen extends StatefulWidget {
 
 class _GroupChatScreenState extends State<GroupChatScreen> {
   final UserController userController = Get.put(UserController());
+  final GroupChatController groupChatController = Get.put(
+    GroupChatController(),
+  );
   final ChatController chatController = Get.put(ChatController());
   final messageTextController = TextEditingController();
 
@@ -53,7 +50,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Future<void> _initGroupChat() async {
-    image = userController.addBaseUrl(widget.groupImage);
+    groupChatController.fetchGroupDetails(widget.chatId);
     currentUserId = userController.userInfo.value?.id;
     token = await SharedPrefsService.get('token');
 
@@ -197,51 +194,59 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       child: Row(
         children: [
           InkWell(
-            onTap: () => Get.back(),
+            onTap: () => Get.toNamed(AppRoutes.messageScreen),
             child: const Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
           ),
           const SizedBox(width: 12),
           InkWell(
-            onTap: () => Get.to(
-              () => GroupDetailsScreen(
-                chatId: widget.chatId,
-                groupName: widget.groupName,
-                groupImage: widget.groupImage,
+            onTap: () {
+              Get.to(
+                () => GroupDetailsScreen(
+                  chatId: widget.chatId,
+                  groupName: groupChatController.groupName.value,
+                  groupImage: groupChatController.groupImage.value,
+                ),
+              )?.then((_) {
+                groupChatController.fetchGroupDetails(widget.chatId);
+              });
+            },
+
+            child: Obx(
+              () => CircleAvatar(
+                radius: 22,
+                backgroundColor: AppColors.primaryColor,
+                backgroundImage: groupChatController.groupImage.isNotEmpty
+                    ? NetworkImage(image!)
+                    : null,
+                child: groupChatController.groupImage.isEmpty
+                    ? Text(
+                        groupChatController.groupName.isNotEmpty
+                            ? groupChatController.groupName.value[0]
+                                  .toUpperCase()
+                            : "?",
+                      )
+                    : null,
               ),
-            ),
-            child: CircleAvatar(
-              radius: 22,
-              backgroundColor: AppColors.primaryColor,
-              backgroundImage: widget.groupImage.isNotEmpty
-                  ? NetworkImage(image!)
-                  : null,
-              child: widget.groupImage.isEmpty
-                  ? Text(
-                      widget.groupName.isNotEmpty
-                          ? widget.groupName[0].toUpperCase()
-                          : "?",
-                    )
-                  : null,
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              widget.groupName,
+            child: Obx(()=> Text(
+              groupChatController.groupName.value == "group chat" ? "Group Chat" : groupChatController.groupName.value,
               style: const TextStyle(
                 color: Color(0xFF413E3E),
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
               overflow: TextOverflow.ellipsis,
-            ),
+            ),),
           ),
           InkWell(
             onTap: () => Get.to(
               () => GroupDetailsScreen(
                 chatId: widget.chatId,
-                groupName: widget.groupName,
-                groupImage: widget.groupImage,
+                groupName: groupChatController.groupName.value,
+                groupImage: groupChatController.groupImage.value,
               ),
             ),
             child: Container(
@@ -346,10 +351,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           chatController: chatController,
           msgId: msg["_id"],
           imageUrl: imageUrl.toString(),
-          receiverName: widget.groupName,
+          receiverName: groupChatController.groupName.value,
           chatId: widget.chatId,
           isView: isViewed,
-          receiverImage: widget.groupImage,
+          receiverImage: groupChatController.groupImage.value,
         ),
 
         const SizedBox(height: 4),
@@ -411,8 +416,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               isView: isViewed,
               videoFile: localVideo,
               msg: msg,
-              receiverImage: widget.groupImage,
-              receiverName: widget.groupName,
+              receiverImage: groupChatController.groupImage.value,
+              receiverName: groupChatController.groupName.value,
               chatId: widget.chatId,
               msgId: msg["_id"],
               chatController: chatController,
@@ -557,7 +562,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             child: Row(
               children: [
                 if (isMe) ...[
-                  
                   SvgPicture.asset(
                     'assets/icons/download.svg',
                     color: const Color(0xFF56BBFF),
@@ -584,7 +588,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     color: const Color(0xFF56BBFF),
                     height: 18,
                   ),
-                  
                 ],
               ],
             ),

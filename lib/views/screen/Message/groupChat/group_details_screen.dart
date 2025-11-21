@@ -39,10 +39,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   @override
   void initState() {
     super.initState();
-
-    // 1️⃣ Fetch group details first
-    controller.fetchGroupDetails(widget.chatId);
-
     if(controller.groupName.value.isEmpty || controller.groupName.value == "group chat"){
       controller.groupName.value = widget.groupName;
     }
@@ -226,6 +222,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                       TextField(
                         controller: _nameController,
                         cursorColor: AppColors.primaryColor,
+                        textCapitalization: TextCapitalization.words,
                         decoration: InputDecoration(
                           hintText: "Write here",
                           isDense: true,
