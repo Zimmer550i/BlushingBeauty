@@ -607,7 +607,7 @@ Future<void> sendVideoToSingleChat({
       "thumbnail": m["thumbnail"] ?? "",
       "time": formattedTime,
       "temp": false,
-      "view": isMe ? true : (m["view"] ?? false),
+      "view": m["view"],
     };
   }
 

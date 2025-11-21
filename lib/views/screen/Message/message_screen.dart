@@ -818,6 +818,7 @@ class _MessageScreenState extends State<MessageScreen> {
         itemBuilder: (context, index) {
           var chat = allChats[index];
           String name = chat["name"] ?? "Unknown";
+          if(name == "group chat") name = "Group Chat";
           String image = chat["image"] ?? "";
           String chatId = chat["_id"] ?? "";
 
@@ -846,7 +847,7 @@ class _MessageScreenState extends State<MessageScreen> {
                 final now = DateTime.now();
                 final DateFormat timeFormat = DateFormat(
                   'h:mm a',
-                ); // AM/PM format
+                );
 
                 // If it's today, show time with AM/PM
                 if (dt.day == now.day &&

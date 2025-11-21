@@ -33,7 +33,8 @@ class BlurVideoCard extends StatefulWidget {
     required this.msgId,
     required this.chatController,
     required this.isMe,
-    required this.thumbnail, required this.hasThumbnail,
+    required this.thumbnail,
+    required this.hasThumbnail,
   });
 
   @override
@@ -138,7 +139,7 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
             child: _isLoading
                 ? Container(
                     height: 260,
-                        width: 180,
+                    width: 180,
                     color: Colors.black12.withValues(alpha: .1),
                     child: Center(
                       child: SpinKitWave(
@@ -148,48 +149,48 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
                     ),
                   )
                 : _thumbnailPath != null
-                ? widget.hasThumbnail ? ImageFiltered(
-                  imageFilter: widget.isView
-                      ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
-                      : ImageFilter.blur(
-                          sigmaX: 20,
-                          sigmaY: 20,
-                          tileMode: TileMode.decal,
-                        ),
-                  child: Container(
-                    height: 260,
-                    width: 180,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(widget.thumbnail),
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    
-                  ),
-                )
-                : AnimatedOpacity(
-                    duration: const Duration(milliseconds: 500),
-                    opacity: _isTapped ? 1.0 : 0.6,
-                    child: ImageFiltered(
-                      imageFilter: widget.isView
-                          ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
-                          : ImageFilter.blur(
-                              sigmaX: 20,
-                              sigmaY: 20,
-                              tileMode: TileMode.decal,
+                ? widget.hasThumbnail
+                      ? ImageFiltered(
+                          imageFilter: widget.isView
+                              ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                              : ImageFilter.blur(
+                                  sigmaX: 20,
+                                  sigmaY: 20,
+                                  tileMode: TileMode.decal,
+                                ),
+                          child: Container(
+                            height: 260,
+                            width: 180,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: NetworkImage(widget.thumbnail),
+                                fit: BoxFit.contain,
+                              ),
                             ),
-                      child: Image.file(
-                        File(_thumbnailPath!),
-                        height: 260,
-                        width: 180,
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                  )
+                          ),
+                        )
+                      : AnimatedOpacity(
+                          duration: const Duration(milliseconds: 500),
+                          opacity: 1.0,
+                          child: ImageFiltered(
+                            imageFilter: widget.isView
+                                ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                                : ImageFilter.blur(
+                                    sigmaX: 20,
+                                    sigmaY: 20,
+                                    tileMode: TileMode.decal,
+                                  ),
+                            child: Image.file(
+                              File(_thumbnailPath!),
+                              height: 260,
+                              width: 180,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        )
                 : Container(
                     height: 260,
-                        width: 180,
+                    width: 180,
                     color: Colors.grey.shade200,
                     alignment: Alignment.center,
                     child: const Icon(Icons.error, color: Colors.red),

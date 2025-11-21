@@ -212,12 +212,11 @@ Future<void> createChatAndSendReaction(
 
     // Check if the current user sent the message
     if (sender == currentUserId) {
-      // Current user sent a video or photo
       switch (msg["contentType"]) {
         case "image":
-          return "📸 Photo"; // If the user sent a photo
+          return "Photo";
         case "video":
-          return "🎥 Video"; // If the user sent a video
+          return "Video"; 
         default:
           return msg["message"] ?? "";
       }
@@ -225,9 +224,9 @@ Future<void> createChatAndSendReaction(
       // Current user received a video or photo
       switch (msg["contentType"]) {
         case "image":
-          return "Sent a photo"; // If the user received a photo
+          return "Sent a photo";
         case "video":
-          return "Sent a video"; // If the user received a video
+          return "Sent a video";
         default:
           return msg["message"] ?? "";
       }

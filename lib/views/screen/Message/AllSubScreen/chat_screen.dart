@@ -321,9 +321,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildImageMessage(Map<String, dynamic> msg) {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
-    bool isMe = msg["isMe"] ?? false;
-    bool view = msg["view"] ?? false;
-    final bool isViewed = isMe ? true : view;
+    bool isMe = msg["isMe"];
+    bool view = msg["view"];
     bool hasThumbnail = false;
 
     String thumbnail = "";
@@ -352,7 +351,7 @@ class _ChatScreenState extends State<ChatScreen> {
           imageUrl: imageUrl.toString(),
           receiverName: widget.receiverName,
           chatId: widget.chatId,
-          isView: isViewed,
+          isView: view,
           receiverImage: _receiverImage,
         ),
 
@@ -364,7 +363,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
-    bool isMe = msg["isMe"] ?? false;
+    bool isMe = msg["isMe"];
     bool hasThumbnail = false;
 
     String thumbnail = "";
@@ -378,7 +377,7 @@ class _ChatScreenState extends State<ChatScreen> {
       hasThumbnail = false;
       thumbnail = "";
     }
-    final bool isViewed = isMe ? true : (msg["view"] ?? false);
+    final bool isViewed = msg["view"] ?? false;
 
     return FutureBuilder<File>(
       future: _downloadVideoToLocal(videoUrl.toString()),
@@ -404,7 +403,7 @@ class _ChatScreenState extends State<ChatScreen> {
         final localVideo = snap.data!;
 
         return Column(
-          crossAxisAlignment: msg["isMe"]
+          crossAxisAlignment: isMe
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [

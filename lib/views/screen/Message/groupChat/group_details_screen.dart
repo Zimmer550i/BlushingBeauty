@@ -43,6 +43,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     // 1️⃣ Fetch group details first
     controller.fetchGroupDetails(widget.chatId);
 
+    if(controller.groupName.value.isEmpty || controller.groupName.value == "group chat"){
+      controller.groupName.value = widget.groupName;
+    }
+
     // 2️⃣ Watch for group image change reactively
     ever(controller.groupImage, (_) {
       setState(() {
@@ -139,9 +143,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        controller.groupName.value.isNotEmpty
-                            ? controller.groupName.value
-                            : "Group",
+                        controller.groupName.value == "group chat" ? "Group Chat" :controller.groupName.value,
+                             
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
