@@ -21,6 +21,7 @@ class BlurVideoCard extends StatefulWidget {
   final bool hasThumbnail;
   final bool isView;
   final bool isMe;
+  final bool isReaction;
 
   const BlurVideoCard({
     super.key,
@@ -33,6 +34,7 @@ class BlurVideoCard extends StatefulWidget {
     required this.msgId,
     required this.chatController,
     required this.isMe,
+    required this.isReaction,
     required this.thumbnail,
     required this.hasThumbnail,
   });
@@ -106,7 +108,13 @@ class _BlurVideoCardState extends State<BlurVideoCard> {
         Get.to(() => ViewMedia(mediaUrl: widget.videoFile.path))?.then((_) {
           if (mounted) setState(() => _isTapped = false);
         });
-      } else {
+      }
+      else if(widget.isMe == false && widget.isReaction == true){
+        Get.to(() => ViewMedia(mediaUrl: widget.videoFile.path))?.then((_) {
+          if (mounted) setState(() => _isTapped = false);
+        });
+      }
+       else {
         widget.chatController.updateChatView(widget.msgId);
         Navigator.push(
           context,

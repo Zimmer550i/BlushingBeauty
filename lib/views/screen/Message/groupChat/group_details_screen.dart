@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
+import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_dropdown.dart';
 import '../../../../controllers/group_chat_controller.dart';
@@ -12,14 +13,12 @@ import 'add_group_member.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final String chatId;
-  final String groupName;
-  final String groupImage;
+  final bool? isCreated;
 
   const GroupDetailsScreen({
     super.key,
     required this.chatId,
-    required this.groupName,
-    required this.groupImage,
+     this.isCreated = false,
   });
 
   @override
@@ -33,28 +32,14 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
 
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
-  String? imageUrl;
   final List<Map<String, dynamic>> members = [];
 
   @override
   void initState() {
     super.initState();
-    if(controller.groupName.value.isEmpty || controller.groupName.value == "group chat"){
-      controller.groupName.value = widget.groupName;
+    if(widget.isCreated == true){
+      controller.fetchGroupDetails(widget.chatId);
     }
-
-    // 2️⃣ Watch for group image change reactively
-    ever(controller.groupImage, (_) {
-      setState(() {
-        imageUrl = controller.groupImage.value.isNotEmpty
-            ? controller.groupImage.value.startsWith("http")
-                  ? controller.groupImage.value
-                  : userController.addBaseUrl(controller.groupImage.value)
-            : "";
-      });
-    });
-
-    // 3️⃣ Watch for members change reactively
     ever(controller.members, (_) {
       setState(() {
         members
@@ -133,7 +118,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 Row(
                   children: [
                     InkWell(
-                      onTap: () => Get.back(),
+                      onTap: () {
+                        widget.isCreated == true ? Get.offAllNamed(AppRoutes.messageScreen) : Get.back();
+                      },
                       child: const Icon(Icons.arrow_back, color: Colors.black),
                     ),
                     const SizedBox(width: 12),
@@ -152,18 +139,16 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-
-                /// Group image
                 Center(
                   child: Stack(
                     children: [
                       CircleAvatar(
                         radius: 60,
                         backgroundColor: AppColors.primaryColor,
-                        backgroundImage: (imageUrl?.isNotEmpty ?? false)
-                            ? NetworkImage(imageUrl!)
+                        backgroundImage: (controller.groupImage.isNotEmpty)
+                            ? NetworkImage(controller.groupImage.value)
                             : null,
-                        child: (imageUrl == null || imageUrl!.isEmpty)
+                        child: (controller.groupImage.value.isEmpty)
                             ? Text(
                                 controller.groupName.value.isNotEmpty
                                     ? controller.groupName.value[0]

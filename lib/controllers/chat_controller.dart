@@ -5,12 +5,12 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/views/screen/Message/groupChat/group_details_screen.dart';
 import 'package:uuid/uuid.dart';
 import '../models/multi_body.dart';
 import '../services/api_service.dart';
 import '../services/socket_manager.dart';
 import '../views/screen/Message/AllSubScreen/chat_screen.dart';
-import '../views/screen/Message/groupChat/group_chat.dart';
 
 class ChatController extends GetxController {
   final userCtrl = Get.find<UserController>();
@@ -152,8 +152,9 @@ class ChatController extends GetxController {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final chatId = body['data']['_id'];
         Get.to(
-          () => GroupChatScreen(
+          () => GroupDetailsScreen(
             chatId: chatId,
+            isCreated: true,
           ),
         );
       } else {
@@ -165,10 +166,6 @@ class ChatController extends GetxController {
       isLoading.value = false;
     }
   }
-
-  // ==============================
-  // FETCH MESSAGES (API)
-  // ==============================
 
   Future<void> fetchMessages() async {
     _resetPagination();
@@ -223,23 +220,11 @@ class ChatController extends GetxController {
     }
   }
 
-  /// Format time nicely (optional)
-  String formatTime(String? isoString) {
-    if (isoString == null) return "";
-    final dt = DateTime.tryParse(isoString);
-    if (dt == null) return "";
-    return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
-  }
-
   void _resetPagination() {
     _currentPage = 1;
     _hasMore = true;
     messages.clear();
   }
-
-  // ==============================
-  // SOCKET SEND EVENTS
-  // ==============================
 
   void sendText(String text) {
     final tempId = const Uuid().v4();
@@ -523,7 +508,7 @@ Future<void> sendVideoToSingleChat({
     // Prepare the multipart files (video/image and optional thumbnail)
     final multipartFiles = <MultipartBody>[
       MultipartBody(
-        key: contentType == 'video' ? 'video' : 'image',  // Choose the appropriate key based on contentType
+        key: contentType == 'video' ? 'video' : 'image',
         file: mediaFile,
       ),
     ];
@@ -532,13 +517,11 @@ Future<void> sendVideoToSingleChat({
     if (thumbnail != null) {
       multipartFiles.add(
         MultipartBody(
-          key: 'thumbnail',  // Always use 'thumbnail' as key
+          key: 'thumbnail',
           file: thumbnail,
         ),
       );
     }
-
-    // API call to send data
     final response = await api.postMultipartData(
       "/message/send-message",
       body,
@@ -582,15 +565,8 @@ Future<void> sendVideoToSingleChat({
     }
   }
 
-  // ==============================
-  // HELPERS
-  // ==============================
-
   Map<String, dynamic> _mapMessage(dynamic m, String currentUserId) {
     final createdAt = DateTime.tryParse(m['createdAt'] ?? '');
-    final formattedTime = createdAt != null
-        ? "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}"
-        : "";
 
     final isMe = m["sender"] is Map
         ? m["sender"]["_id"] == currentUserId
@@ -603,7 +579,7 @@ Future<void> sendVideoToSingleChat({
       "message": m["message"] ?? "",
       "media": m["media"] ?? "",
       "thumbnail": m["thumbnail"] ?? "",
-      "time": formattedTime,
+      "time": createdAt,
       "temp": false,
       "view": m["view"],
     };

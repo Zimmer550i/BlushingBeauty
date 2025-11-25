@@ -184,6 +184,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                 ? CustomLoading()
                 : SvgPicture.asset(
                     'assets/icons/send.svg',
+                    // ignore: deprecated_member_use
                     color: AppColors.primaryColor,
                     height: 24,
                   ),

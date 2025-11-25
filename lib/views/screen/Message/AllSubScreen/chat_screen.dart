@@ -6,6 +6,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/views/base/blur_image_card.dart';
@@ -172,7 +173,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemCount: msgs.length,
                     itemBuilder: (_, index) {
                       final msg = msgs[index];
-                      debugPrint("Rendering message: $msg");
+                      // debugPrint("Rendering message: $msg");
                       return Align(
                         alignment: msg["isMe"]
                             ? Alignment.centerRight
@@ -202,16 +203,60 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // ==============================================
-  // 🧱 HEADER
-  // ==============================================
+String formatServerTime(dynamic serverTime) {
+  if (serverTime == null) return "";
+
+  late DateTime parsedTime;
+
+  if (serverTime is DateTime) {
+    parsedTime = serverTime;
+  } 
+  else {
+    String timeStr = serverTime.toString().trim();
+
+    if (!timeStr.contains('-') && timeStr.contains(':') && timeStr.length <= 5) {
+      final today = DateTime.now();
+      timeStr =
+          "${today.toIso8601String().split('T')[0]}T$timeStr:00";
+    }
+
+    parsedTime = DateTime.parse(timeStr);
+  }
+
+  final DateTime localTime = parsedTime.toLocal();
+
+  return _formatLocalTime(localTime);
+}
+
+String _formatLocalTime(DateTime localTime) {
+  final now = DateTime.now();
+  final timeFormat = DateFormat('h:mm a');       // Ex: 2:32 PM
+  final dateFormat = DateFormat('d MMM yyyy');   // Ex: 25 Nov 2025
+
+  // Today → return time only
+  if (localTime.year == now.year &&
+      localTime.month == now.month &&
+      localTime.day == now.day) {
+    return timeFormat.format(localTime);
+  }
+
+  // Yesterday
+  if (now.difference(localTime).inDays == 1) {
+    return "Yesterday";
+  }
+
+  // Else → return date (e.g. 25 Nov 2025)
+  return dateFormat.format(localTime);
+}
+
+
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
           InkWell(
-            onTap: () => Get.back(),
+            onTap: () => Get.offAllNamed(AppRoutes.messageScreen),
             child: const Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
           ),
           const SizedBox(width: 12),
@@ -236,9 +281,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // ==============================================
-  // 💬 MESSAGE TYPES
-  // ==============================================
   Widget _buildMessageBubble(Map<String, dynamic> msg) {
     switch (msg["type"]) {
       case "image":
@@ -251,34 +293,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildTextMessage(Map<String, dynamic> msg) {
-    final rawTime = msg["time"];
-    String formattedTime = "";
-
-    if (rawTime != null && rawTime.isNotEmpty) {
-      try {
-        // Check if the time format is valid (hh.mm)
-        final parts = rawTime.split(':');
-        if (parts.length == 2) {
-          int hour = int.parse(parts[0]);
-          int minute = int.parse(parts[1]);
-
-          // Determine AM or PM
-          String suffix = hour >= 12 ? 'PM' : 'AM';
-
-          // Convert to 12-hour format
-          hour = hour % 12;
-          if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
-
-          // Format with leading zero for minute
-          formattedTime = "$hour:${minute.toString().padLeft(2, '0')} $suffix";
-        } else {
-          formattedTime = "Invalid time format";
-        }
-      } catch (e) {
-        // Fallback if any error occurs during parsing
-        formattedTime = "Error parsing time: $e";
-      }
-    }
+    final time = msg["time"];
+    String formattedTime = formatServerTime(time);
     return Column(
       crossAxisAlignment: msg["isMe"]
           ? CrossAxisAlignment.end
@@ -321,8 +337,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildImageMessage(Map<String, dynamic> msg) {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
+    
     bool isMe = msg["isMe"];
     bool view = msg["view"];
+    bool isReaction = msg["reaction"] ?? false;
     bool hasThumbnail = false;
 
     String thumbnail = "";
@@ -346,6 +364,7 @@ class _ChatScreenState extends State<ChatScreen> {
           hasThumbnail: hasThumbnail,
           thumbnail: thumbnail,
           isMe: isMe,
+          isReaction: isReaction,
           chatController: chatController,
           msgId: msg["_id"],
           imageUrl: imageUrl.toString(),
@@ -364,6 +383,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildVideoMessage(Map<String, dynamic> msg) {
     final videoUrl = userController.addBaseUrl(msg["media"] ?? "");
     bool isMe = msg["isMe"];
+    bool isReaction = msg["reaction"] ?? false;
     bool hasThumbnail = false;
 
     String thumbnail = "";
@@ -410,6 +430,7 @@ class _ChatScreenState extends State<ChatScreen> {
             BlurVideoCard(
               hasThumbnail: hasThumbnail,
               isMe: isMe,
+              isReaction: isReaction,
               thumbnail: thumbnail.toString(),
               isView: isViewed,
               videoFile: localVideo,
@@ -432,27 +453,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildVideoFooter(Map<String, dynamic> msg, String path) {
     final isMe = msg['isMe'] ?? false;
-    final formattedTime = msg["time"];
-    //     String formattedTime = "";
-    //     if (rawTime.isNotEmpty) {
-    //       final DateFormat formatter = DateFormat("HH:mm");
-    // final DateTime dt = formatter.parseLoose(rawTime);
-    //       if (dt != null) {
-    //         final now = DateTime.now();
-    //         final DateFormat timeFormat = DateFormat('h:mm a'); // AM/PM format
-
-    //         if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
-    //           // If it's today, show time with AM/PM
-    //           formattedTime = timeFormat.format(dt);
-    //         } else if (dt.difference(now).inDays == -1) {
-    //           // If it's yesterday
-    //           formattedTime = "Yesterday";
-    //         } else {
-    //           // For older dates, show full date with month name
-    //           formattedTime = "${dt.day} ${_monthName(dt.month)} ${dt.year}";
-    //         }
-    //       }
-    //     }
+final time = msg["time"];
+    String formattedTime = formatServerTime(time);
 
     final timeText = Text(
       formattedTime,
@@ -513,34 +515,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildImageFooter(Map<String, dynamic> msg, String path) {
     final isMe = msg['isMe'] ?? false;
-    final rawTime = msg["time"];
-    String formattedTime = "";
+    final time = msg["time"];
+    String formattedTime = formatServerTime(time);
 
-    if (rawTime != null && rawTime.isNotEmpty) {
-      try {
-        // Check if the time format is valid (hh.mm)
-        final parts = rawTime.split(':');
-        if (parts.length == 2) {
-          int hour = int.parse(parts[0]);
-          int minute = int.parse(parts[1]);
-
-          // Determine AM or PM
-          String suffix = hour >= 12 ? 'PM' : 'AM';
-
-          // Convert to 12-hour format
-          hour = hour % 12;
-          if (hour == 0) hour = 12; // 0 hour means 12 AM or 12 PM
-
-          // Format with leading zero for minute
-          formattedTime = "$hour:${minute.toString().padLeft(2, '0')} $suffix";
-        } else {
-          formattedTime = "Invalid time format";
-        }
-      } catch (e) {
-        // Fallback if any error occurs during parsing
-        formattedTime = "Error parsing time: $e";
-      }
-    }
     final timeText = Text(
       formattedTime,
       style: const TextStyle(fontSize: 10, color: Colors.grey),

@@ -33,7 +33,7 @@ class BottomMenu extends StatelessWidget {
           children: [
             _buildMenuItemWithBadge(AppIcons.messageIcon, 0, menuIndex, () {
               Get.offAndToNamed(AppRoutes.messageScreen);
-            }, badgeCount: messageCount), //
+            }, badgeCount: messageCount),
             _buildMenuItem(AppIcons.cameraIcon, 1, menuIndex, () {
               Get.offAndToNamed(AppRoutes.cameraScreen);
             }),

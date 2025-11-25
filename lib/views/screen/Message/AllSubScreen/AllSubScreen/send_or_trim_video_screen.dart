@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures
 import 'dart:io';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -106,7 +105,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
       if (!_reactionVideoController!.value.isInitialized) {
         throw Exception('Error: Video(s) not initialized properly.');
       }
-      _reactionVideoController!.setLooping(true);
+      _reactionVideoController!.setLooping(false);
 
       _videoDuration = _reactionVideoController!.value.duration;
       _reactionVideoController!.addListener(_syncReactionVideos);
@@ -144,13 +143,13 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
       }
 
       // Loop both videos
-      _mainVideoController!.setLooping(true);
-      _reactionVideoController!.setLooping(true);
+      _mainVideoController!.setLooping(false);
+      _reactionVideoController!.setLooping(false);
 
       _videoDuration = _reactionVideoController!.value.duration;
 
       // Listen to reaction video to sync main video
-      _reactionVideoController!.addListener(_syncVideos);
+      // _reactionVideoController!.addListener(_syncVideos);
 
       // Start both videos paused
       _isPlaying.value = false;

@@ -9,22 +9,19 @@ import '../models/multi_body.dart';
 import '../services/api_service.dart';
 
 class MessageController extends GetxController {
+  final userController = Get.find<UserController>();
   final ApiService _api = ApiService();
   final ImagePicker _picker = ImagePicker();
   final chatController = Get.put(ChatController());
 
-  /// -----------------------------
-  /// 🧩 CHATS (Private & Group)
-  /// -----------------------------
-  final privateChats = <dynamic>[].obs;
-  final groupChats = <dynamic>[].obs;
+  final RxList<Map<String, dynamic>> privateChats =
+      <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> groupChats = <Map<String, dynamic>>[].obs;
+  final RxInt unreadCount = 0.obs;
   final isLoadingChats = false.obs;
   final chatPage = 1.obs;
   final hasMoreChats = true.obs;
 
-  /// -----------------------------
-  /// 🧩 STORIES
-  /// -----------------------------
   final stories = <dynamic>[].obs;
   final isLoadingStories = false.obs;
   final isLoading = false.obs;
@@ -38,41 +35,83 @@ class MessageController extends GetxController {
     fetchStories();
   }
 
-  Future<String?> getOrCreatePrivateChat(
-    String userId,
-    String name,
-    String image,
-  ) async {
-    try {
-      // Check if a private chat already exists with the given userId
-      final existingChat = privateChats.firstWhere((chat) {
-        // Check if any member in the chat has the userId
-        return chat['members'].any((member) => member['_id'] == userId);
-      }, orElse: () => null);
+  void calculateUnreadMessages() {
+    final String currentUserId = userController.userInfo.value?.id ?? '';
 
-      if (existingChat != null) {
-        // If a chat exists, return the existing chatId
-        return existingChat['_id'];
-      } else {
-        // If no chat exists, create a new one
-        await createChatAndSendReaction(name, image, userId);
+    int total = 0;
 
-        // After creating the chat, check if the new chat was added to the list
-        final newChat = privateChats.firstWhere((chat) {
-          // Check again after creation
-          return chat['members'].any((member) => member['_id'] == userId);
-        }, orElse: () => null);
+    for (final Map<String, dynamic> chat in groupChats) {
+      final last = chat["lastMessage"];
 
-        debugPrint("Chat ID: ${newChat?['_id']}");
-
-        return newChat?['_id'];
+      if (last != null &&
+          last["read"] == false &&
+          last["sender"] != currentUserId) {
+        total++;
       }
-    } catch (e) {
-      debugPrint("❌ Error in getOrCreatePrivateChat: $e");
-      return null;
     }
+
+    for (final Map<String, dynamic> chat in privateChats) {
+      final last = chat["lastMessage"];
+
+      if (last != null &&
+          last["read"] == false &&
+          last["sender"] != currentUserId) {
+        total++;
+      }
+    }
+
+    unreadCount.value = total;
+    debugPrint("Total unread messages: $total");
   }
-Future<void> createChatAndSendReaction(
+
+Future<String?> getOrCreatePrivateChat(
+  String userId,
+  String name,
+  String image,
+) async {
+  try {
+    // Step 1 — Check if chat exists
+    final Map<String, dynamic>? existingChat = _findChatByUserId(userId);
+
+    if (existingChat != null) {
+      return existingChat["_id"];
+    }
+
+    // Step 2 — Create new chat
+    await createChatAndSendReaction(name, image, userId);
+
+    // Step 3 — Re-check after creation
+    final Map<String, dynamic>? newChat = _findChatByUserId(userId);
+
+    debugPrint("Chat ID: ${newChat?['_id']}");
+
+    return newChat?['_id'];
+  } catch (e) {
+    debugPrint("❌ Error in getOrCreatePrivateChat: $e");
+    return null;
+  }
+}
+
+/// Helper: Find private chat where member id matches userId
+Map<String, dynamic>? _findChatByUserId(String userId) {
+  try {
+    return privateChats.firstWhere(
+      (chat) {
+        final members = chat["members"] as List<dynamic>?;
+
+        if (members == null) return false;
+
+        return members.any(
+          (m) => m is Map && m["_id"] == userId,
+        );
+      },
+    );
+  } catch (_) {
+    return null; // No chat found → return null safely
+  }
+}
+
+  Future<void> createChatAndSendReaction(
     String name,
     String image,
     String memberId,
@@ -96,10 +135,6 @@ Future<void> createChatAndSendReaction(
     }
   }
 
-
-  /// =====================================================
-  /// STORIES SECTION
-  /// =====================================================
   Future<void> fetchStories({int limit = 20, bool loadMore = false}) async {
     if (isLoadingStories.value || (loadMore && !hasMoreStories.value)) return;
 
@@ -147,9 +182,6 @@ Future<void> createChatAndSendReaction(
     }
   }
 
-  /// =====================================================
-  /// CHATS SECTION
-  /// =====================================================
   Future<void> fetchChats({bool loadMore = false}) async {
     if (isLoadingChats.value || !hasMoreChats.value) return;
 
@@ -174,8 +206,15 @@ Future<void> createChatAndSendReaction(
         if (body["success"] == true) {
           final List data = body["data"] ?? [];
 
-          final privates = data.where((c) => c['type'] == "private").toList();
-          final groups = data.where((c) => c['type'] == "group").toList();
+          final List<Map<String, dynamic>> privates = data
+              .where((c) => c['type'] == "private")
+              .map((c) => Map<String, dynamic>.from(c))
+              .toList();
+
+          final List<Map<String, dynamic>> groups = data
+              .where((c) => c['type'] == "group")
+              .map((c) => Map<String, dynamic>.from(c))
+              .toList();
 
           if (loadMore) {
             privateChats.addAll(privates);
@@ -184,6 +223,8 @@ Future<void> createChatAndSendReaction(
             privateChats.assignAll(privates);
             groupChats.assignAll(groups);
           }
+
+          calculateUnreadMessages();
 
           final meta = body['meta'] ?? {};
           final totalPage = meta['totalPage'] ?? 1;
@@ -202,7 +243,6 @@ Future<void> createChatAndSendReaction(
     }
   }
 
-  /// Helper - Get last message
   String getLastMessage(Map<String, dynamic> chat) {
     final msg = chat["lastMessage"];
     final sender = msg?["sender"];
@@ -216,7 +256,7 @@ Future<void> createChatAndSendReaction(
         case "image":
           return "Photo";
         case "video":
-          return "Video"; 
+          return "Video";
         default:
           return msg["message"] ?? "";
       }

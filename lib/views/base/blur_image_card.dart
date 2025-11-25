@@ -17,6 +17,7 @@ class BlurImageCard extends StatefulWidget {
   final String chatId;
   final bool isView;
   final bool isMe;
+  final bool isReaction;
 
   const BlurImageCard({
     super.key,
@@ -28,6 +29,7 @@ class BlurImageCard extends StatefulWidget {
     required this.msgId,
     required this.chatController,
     required this.isMe,
+    required this.isReaction,
     required this.thumbnail,
     required this.hasThumbnail,
   });
@@ -46,6 +48,12 @@ class _BlurImageCardState extends State<BlurImageCard> {
     Future.delayed(const Duration(milliseconds: 150), () {
       if (!mounted) return;
       if (widget.isMe == true) {
+        Get.to(() => ViewMedia(mediaUrl: widget.imageUrl))?.then((_) {
+          if (mounted) setState(() => _isTapped = false);
+        });
+      } else if (widget.isMe == false && widget.isReaction == true) {
+        widget.chatController.updateChatView(widget.msgId);
+
         Get.to(() => ViewMedia(mediaUrl: widget.imageUrl))?.then((_) {
           if (mounted) setState(() => _isTapped = false);
         });

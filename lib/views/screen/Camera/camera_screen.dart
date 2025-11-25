@@ -259,7 +259,7 @@ class _CameraScreenState extends State<CameraScreen>
       body: Stack(
         children: [
           /// Camera Preview
-          if (controller != null && controller.value.isInitialized)
+          if (controller.value.isInitialized)
             SizedBox.expand(
               child: FittedBox(
                 fit: BoxFit.cover,

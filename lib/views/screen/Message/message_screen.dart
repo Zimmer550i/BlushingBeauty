@@ -93,7 +93,7 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: BottomMenu(0, messageCount: 0),
+      bottomNavigationBar: Obx(()=> BottomMenu(0, messageCount: controller.unreadCount.value),),
       body: RefreshIndicator(
         onRefresh: controller.refreshAll,
         color: AppColors.primaryColor,
@@ -155,11 +155,11 @@ class _MessageScreenState extends State<MessageScreen> {
             'assets/icons/add.svg',
             onTap: () => Get.to(() => const ContactScreen()),
           ),
-          const SizedBox(width: 12),
-          _iconButton(
-            'assets/icons/search.svg',
-            onTap: () => Get.to(() => const SearchScreen()),
-          ),
+          // const SizedBox(width: 12),
+          // _iconButton(
+          //   'assets/icons/search.svg',
+          //   onTap: () => Get.to(() => const SearchScreen()),
+          // ),
           const SizedBox(width: 12),
           _notificationButton(),
         ],
@@ -836,42 +836,11 @@ class _MessageScreenState extends State<MessageScreen> {
 
           final imageWithBaseUrl = userController.addBaseUrl(image);
           final lastMsg = controller.getLastMessage(chat);
-          final lastTime = chat["lastMessage"]?["createdAt"] ?? "";
+          final lastTime = chat["lastMessage"]?["createdAt"];
+          String formattedTime = '';
+          if(lastTime != null) formattedTime = formatServerTime(lastTime);
 
-          String formattedTime = "";
-
-          if (lastTime.isNotEmpty) {
-            try {
-              final dt = DateTime.tryParse(lastTime);
-              if (dt != null) {
-                final now = DateTime.now();
-                final DateFormat timeFormat = DateFormat(
-                  'h:mm a',
-                );
-
-                // If it's today, show time with AM/PM
-                if (dt.day == now.day &&
-                    dt.month == now.month &&
-                    dt.year == now.year) {
-                  formattedTime = timeFormat.format(dt);
-                }
-                // If it's yesterday
-                else if (dt.difference(now).inDays == -1) {
-                  formattedTime = "Yesterday";
-                }
-                // For older dates, show full date with month name
-                else {
-                  formattedTime =
-                      "${dt.day} ${_monthName(dt.month)} ${dt.year}";
-                }
-              } else {
-                formattedTime = "Invalid time format"; // Fallback message
-              }
-            } catch (e) {
-              formattedTime =
-                  "Error parsing time: $e"; // Error handling in case of invalid format
-            }
-          }
+          
 
           // --- Chat UI ---
           final isPrivate = chat["type"] == "private";
@@ -945,16 +914,18 @@ class _MessageScreenState extends State<MessageScreen> {
                                   fontSize: 16,
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              if (chat["isOnline"] == true)
+                              const SizedBox(width: 8),
+                              if(chat['lastMessage'] != null)...[
+                                if (chat["lastMessage"]["read"] == false && chat["lastMessage"]["sender"] != currentUserId)
                                 Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.blue,
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryColor,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
+                              ]
                             ],
                           ),
                           const SizedBox(height: 4),
@@ -964,16 +935,16 @@ class _MessageScreenState extends State<MessageScreen> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 15,
-                              fontWeight:
-                                  lastMsg.contains("Video") ||
-                                      lastMsg.contains("Image")
-                                  ? FontWeight.w600
+                              fontWeight: chat["lastMessage"] == null ? FontWeight.normal :
+                                  chat["lastMessage"]["read"] == false && chat["lastMessage"]["sender"] != currentUserId
+                                  ? FontWeight.bold
                                   : FontWeight.normal,
                               color:
                                   lastMsg.contains("Video") ||
                                       lastMsg.contains("Image")
                                   ? Colors.black
                                   : Colors.black.withValues(alpha: 0.6),
+                                  
                             ),
                           ),
                         ],
@@ -992,6 +963,58 @@ class _MessageScreenState extends State<MessageScreen> {
       );
     });
   }
+
+  String formatServerTime(dynamic serverTime) {
+  if (serverTime == null) return "";
+
+  late DateTime parsedTime;
+
+  // CASE 1 — already DateTime
+  if (serverTime is DateTime) {
+    parsedTime = serverTime;
+  } 
+  // CASE 2 — serverTime as String
+  else {
+    String timeStr = serverTime.toString().trim();
+
+    // CASE 2A — If only "HH:mm" is provided (e.g. "10:30")
+    if (!timeStr.contains('-') && timeStr.contains(':') && timeStr.length <= 5) {
+      final today = DateTime.now();
+      timeStr =
+          "${today.toIso8601String().split('T')[0]}T$timeStr:00"; // attach today's date
+    }
+
+    // Parse to DateTime
+    parsedTime = DateTime.parse(timeStr);
+  }
+
+  // Convert to device local time
+  final DateTime localTime = parsedTime.toLocal();
+
+  return _formatLocalTime(localTime);
+}
+
+String _formatLocalTime(DateTime localTime) {
+  final now = DateTime.now();
+  final timeFormat = DateFormat('h:mm a');       // Ex: 2:32 PM
+  final dateFormat = DateFormat('d MMM yyyy');   // Ex: 25 Nov 2025
+
+  // Today → return time only
+  if (localTime.year == now.year &&
+      localTime.month == now.month &&
+      localTime.day == now.day) {
+    return timeFormat.format(localTime);
+  }
+
+  // Yesterday
+  if (now.difference(localTime).inDays == 1) {
+    return "Yesterday";
+  }
+
+  // Else → return date (e.g. 25 Nov 2025)
+  return dateFormat.format(localTime);
+}
+
 
   void confirm(
     BuildContext context,

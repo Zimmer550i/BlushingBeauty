@@ -48,16 +48,10 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
     super.dispose();
   }
 
-  /// Initialize contacts and filter out existing group members
   Future<void> _initializeContacts() async {
-  // ✅ Wait for contacts to be fetched first
   await _contactController.fetchContacts();
-
-  // Now that data is loaded
   final allContacts = _contactController.matchedContacts;
   final existingIds = widget.existMembers.map((m) => m["_id"]).toSet();
-
-  // Filter out already added members
   final availableContacts = allContacts
       .where((contact) => !existingIds.contains(contact["_id"]))
       .map((contact) => {
@@ -77,7 +71,6 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
 }
 
 
-  /// Handle search query filtering
   void _onSearchChanged() {
     final query = _searchController.text.trim().toLowerCase();
 
@@ -92,7 +85,6 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
     });
   }
 
-  /// Handle Add Member button click
   Future<void> _handleAddMembers() async {
     final selectedIds = _filteredFriends
         .where((f) => f['isInvite'] == true)
@@ -149,7 +141,6 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
     );
   }
 
-  /// Header section
   Widget _buildHeader() {
     return Row(
       children: [

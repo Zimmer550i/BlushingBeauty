@@ -5,8 +5,6 @@ import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/localization_controller.dart';
 import 'package:ree_social_media_app/controllers/theme_controller.dart';
 import 'package:ree_social_media_app/helpers/dependency_injection.dart';
-import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
-import 'package:ree_social_media_app/services/camera_manager.dart';
 import 'package:ree_social_media_app/services/shared_prefs_service.dart';
 import 'package:ree_social_media_app/services/socket_manager.dart';
 import 'package:ree_social_media_app/themes/light_theme.dart';
@@ -21,8 +19,8 @@ List<CameraDescription> cameras = [];
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // OneSignalManager.initialize();
-  await GlobalCameraManager.dispose();
-  GlobalVideoPlayerManager.dispose();
+  // await GlobalCameraManager.dispose();
+  // GlobalVideoPlayerManager.dispose();
 
   await Future.delayed(const Duration(milliseconds: 200));
 

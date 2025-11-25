@@ -22,14 +22,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final userController = Get.put(UserController());
   final searchTextController = TextEditingController();
 
-  late List<Map<String, dynamic>> allFriends; // 🔹 all contacts
-  late List<Map<String, dynamic>> filteredFriends; // 🔹 filtered contacts
+  late List<Map<String, dynamic>> allFriends;
+  late List<Map<String, dynamic>> filteredFriends;
 
   @override
   void initState() {
     super.initState();
-
-    // initialize friend list
     allFriends = widget.matchedContacts.map((c) {
       return {
         "_id": c["_id"],
@@ -40,8 +38,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     }).toList();
 
     filteredFriends = List.from(allFriends);
-
-    // attach search listener
     searchTextController.addListener(_onSearchChanged);
   }
 
@@ -52,7 +48,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     super.dispose();
   }
 
-  // 🔎 Search function
   void _onSearchChanged() {
     final query = searchTextController.text.trim().toLowerCase();
 
@@ -156,8 +151,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               ),
             ),
 
-            // 🟢 Create Group Button
-            CustomButton(
+            Obx(()=> CustomButton(
+              loading: chatController.isLoading.value,
               onTap: () {
                 final selected = filteredFriends
                     .where((c) => c['isInvite'] == true)
@@ -174,7 +169,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 chatController.createGroupChat(selected);
               },
               text: "Create Now",
-            ),
+            ),),
           ],
         ),
       ),
