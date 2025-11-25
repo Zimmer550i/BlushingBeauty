@@ -17,7 +17,6 @@ import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScr
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../base/bottom_menu.dart';
 import '../Notification/notification_screen.dart';
-import 'AllSubScreen/AllSubScreen/search_screen.dart';
 import 'AllSubScreen/AllSubScreen/video_preview_screen.dart';
 import 'AllSubScreen/chat_screen.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -1094,7 +1093,7 @@ String _formatLocalTime(DateTime localTime) {
   }
 
   /// Helper for month names
-  String _monthName(int month) {
+  String monthName(int month) {
     const months = [
       "Jan",
       "Feb",

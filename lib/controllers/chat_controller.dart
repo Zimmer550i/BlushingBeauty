@@ -20,6 +20,8 @@ class ChatController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isPaginating = false.obs;
   final RxList<Map<String, dynamic>> messages = <Map<String, dynamic>>[].obs;
+  final RxString userName = ''.obs;
+  final RxString userImage = ''.obs;
 
   final ImagePicker _picker = ImagePicker();
   late ScrollController scrollController;
@@ -471,6 +473,7 @@ Future<void> sendVideoToSingleChat({
   required File mediaFile,
   required File? thumbnail,
   required String contentType,
+  bool isReaction = false,
 }) async {
   try {
     isLoading.value = true;
@@ -500,6 +503,7 @@ Future<void> sendVideoToSingleChat({
     final body = {
       "data": jsonEncode({
         "senderId": senderId,
+        "reaction": isReaction,
         "chatIds": [chatId],
         "contentType": contentType,
       }),
@@ -582,6 +586,7 @@ Future<void> sendVideoToSingleChat({
       "time": createdAt,
       "temp": false,
       "view": m["view"],
+      "reaction": m["reaction"],
     };
   }
 

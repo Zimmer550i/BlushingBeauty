@@ -230,6 +230,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                   filePath: widget.filePath,
                   isVideo: widget.isVideo,
                   thumbnail: null,
+                  isReaction: false,
                 );
               }
             : () async {

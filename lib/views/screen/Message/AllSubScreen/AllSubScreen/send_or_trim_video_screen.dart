@@ -249,9 +249,10 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
             ),
             const SizedBox(width: 12),
             CircleAvatar(
-              backgroundImage: NetworkImage(widget.userProfile),
-              backgroundColor: AppColors.primaryColor,
               radius: 22,
+              backgroundColor: AppColors.primaryColor,
+              backgroundImage: widget.userProfile.isEmpty ? null : NetworkImage(widget.userProfile),
+              child: widget.userProfile.isEmpty ? Text(widget.userName[0].toUpperCase()) : null,
             ),
             const SizedBox(width: 12),
             Text(
@@ -489,6 +490,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                 filePath: widget.reactionVideo,
                 thumbnail: thumbnail,
                 isVideo: true,
+                isReaction: true,
               );
             },
             child: Container(

@@ -77,7 +77,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       final thumbnailPath = await VideoThumbnail.thumbnailFile(
         video: widget.frontVideoUrl,
         imageFormat: ImageFormat.PNG,
-        timeMs: i * 1000, 
+        timeMs: i * 1000,
         maxHeight: 0,
         maxWidth: 0,
         quality: 100,
@@ -132,8 +132,6 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
                     ),
                   ),
           ),
-
-          // 🖼️ Thumbnails and send button
           _buildBottomControls(),
         ],
       ),
@@ -150,7 +148,12 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
       CircleAvatar(
         radius: 22,
         backgroundColor: AppColors.primaryColor,
-        backgroundImage: NetworkImage(widget.userProfile),
+        backgroundImage: widget.userProfile.isEmpty
+            ? null
+            : NetworkImage(widget.userProfile),
+        child: widget.userProfile.isEmpty
+            ? Text(widget.userName[0].toUpperCase())
+            : null,
       ),
       const SizedBox(width: 12),
       Text(
@@ -165,37 +168,36 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   );
 
   Widget _buildBottomControls() => Container(
-  color: Colors.white,
-  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-  child: SafeArea(
-    child: Row(
-      children: [
-        _buildFrameSelector(),
-      SizedBox(width: 12,),
-        IconButton(
-          onPressed: () => Get.back(),
-          icon: Icon(Icons.delete, color: AppColors.primaryColor),
-        ),
-        Spacer(),
-        Obx(
-          () => InkWell(
-            onTap: _handleFrameAndSend,
-            child: sendMessageController.isLoading.value
-                ? CustomLoading()
-                : SvgPicture.asset(
-                    'assets/icons/send.svg',
-                    // ignore: deprecated_member_use
-                    color: AppColors.primaryColor,
-                    height: 24,
-                  ),
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+    child: SafeArea(
+      child: Row(
+        children: [
+          _buildFrameSelector(),
+          SizedBox(width: 12),
+          IconButton(
+            onPressed: () => Get.back(),
+            icon: Icon(Icons.delete, color: AppColors.primaryColor),
           ),
-        ),
-        Spacer(),
-      ],
+          Spacer(),
+          Obx(
+            () => InkWell(
+              onTap: _handleFrameAndSend,
+              child: sendMessageController.isLoading.value
+                  ? CustomLoading()
+                  : SvgPicture.asset(
+                      'assets/icons/send.svg',
+                      // ignore: deprecated_member_use
+                      color: AppColors.primaryColor,
+                      height: 24,
+                    ),
+            ),
+          ),
+          Spacer(),
+        ],
+      ),
     ),
-  ),
-);
-
+  );
 
   Widget _buildFrameSelector() {
     return SizedBox(
@@ -247,12 +249,13 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
         chatId: widget.chatId.toString(),
         filePath: selectedFrame,
         isVideo: false,
+        isReaction: true,
       );
     } else {
       await Get.to(
         () => SendMessageWithFriendScreen(
           filePath: selectedFrame,
-           thumbnail: widget.thumbnail!,
+          thumbnail: widget.thumbnail!,
           isVideo: false,
         ),
         transition: Transition.rightToLeft,

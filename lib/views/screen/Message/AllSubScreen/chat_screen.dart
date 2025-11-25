@@ -263,7 +263,8 @@ String _formatLocalTime(DateTime localTime) {
           CircleAvatar(
             backgroundColor: AppColors.primaryColor,
             radius: 22,
-            backgroundImage: NetworkImage(_receiverImage ?? ""),
+            backgroundImage: widget.receiverImage.isEmpty ? null : NetworkImage(_receiverImage!),
+            child: widget.receiverImage.isEmpty ? Text(widget.receiverName[0].toUpperCase()) : null,
           ),
           const SizedBox(width: 12),
           Expanded(

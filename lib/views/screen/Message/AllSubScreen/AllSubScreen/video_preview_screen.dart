@@ -311,7 +311,8 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             CircleAvatar(
               radius: 22,
               backgroundColor: AppColors.primaryColor,
-              backgroundImage: NetworkImage(widget.userProfile),
+              backgroundImage: widget.userProfile.isEmpty ? null : NetworkImage(widget.userProfile),
+              child: widget.userProfile.isEmpty ? Text(widget.userName[0].toUpperCase()) : null,
             ),
             const SizedBox(width: 12),
             Text(

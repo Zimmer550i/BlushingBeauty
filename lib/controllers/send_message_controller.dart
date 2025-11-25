@@ -152,6 +152,7 @@ Future<void> sendMediaToSingleChat({
   required String filePath,
   required File? thumbnail,
   required bool isVideo,
+  required bool isReaction,
 }) async {
   try {
     isLoading.value = true;
@@ -170,6 +171,7 @@ Future<void> sendMediaToSingleChat({
       mediaFile: file,
       thumbnail: thumbnail,
       contentType: isVideo ? 'video' : 'image',
+      isReaction: isReaction,
     );
 
     // Navigate to message screen after sending

@@ -24,7 +24,7 @@ class GroupChatController extends GetxController {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body)["data"];
         groupName.value = data["name"] ?? "";
-        groupImage.value = ApiService.getImgUrl(data["image"]) ?? "";
+        groupImage.value = data["image"] ?? "";
         members.value = List<Map<String, dynamic>>.from(data["members"]);
       } else {
         Get.snackbar("Error", "Failed to fetch groupChat details");
