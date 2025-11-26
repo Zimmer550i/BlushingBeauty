@@ -2,28 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:ree_social_media_app/utils/app_constants.dart';
 
-class OneSignalManager {
+class OneSignalHelper {
   String playerId = '';
-  // Initialize OneSignal with App ID
-  Future<void> initialize() async {
+  static Future<void> initialize() async {
     OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
     OneSignal.Debug.setAlertLevel(OSLogLevel.none);
-
-    // Initialize OneSignal with your app ID
     OneSignal.initialize(AppConstants.onesignalAppId);
-
-        // Fetch device state (including player ID)
-    final res = getPlayerId();
-    playerId = res.toString();
-
-    // Configure live activities
     OneSignal.LiveActivities.setupDefault();
 
-    // Add observers for push notifications and user state
     _addObservers();
   }
 
-    Future<String?> getPlayerId() async {
+  static Future<String?> getPlayerId() async {
     try {
       var playerId = await OneSignal.User.getOnesignalId();
       debugPrint("OneSignal Player ID: $playerId");
@@ -63,14 +53,18 @@ class OneSignalManager {
 
     // Foreground Notification Listener
     OneSignal.Notifications.addForegroundWillDisplayListener((event) {
-      debugPrint('NOTIFICATION WILL DISPLAY LISTENER CALLED WITH: ${event.notification.jsonRepresentation()}');
-      event.preventDefault(); // Prevent default display
-      event.notification.display(); // Manually display notification
+      debugPrint(
+        'NOTIFICATION WILL DISPLAY LISTENER CALLED WITH: ${event.notification.jsonRepresentation()}',
+      );
+      event.preventDefault();
+      event.notification.display();
     });
 
     // In-App Message Listeners
     OneSignal.InAppMessages.addClickListener((event) {
-      debugPrint("In-App Message Clicked: ${event.result.jsonRepresentation()}");
+      debugPrint(
+        "In-App Message Clicked: ${event.result.jsonRepresentation()}",
+      );
     });
     OneSignal.InAppMessages.addWillDisplayListener((event) {
       debugPrint("Will Display In-App Message: ${event.message.messageId}");
@@ -165,11 +159,14 @@ class OneSignalManager {
   }
 
   // Handle Live Activities (for iOS, e.g., real-time tracking, status updates)
-  static void startLiveActivity(String liveActivityId, Map<String, dynamic> data) {
+  static void startLiveActivity(
+    String liveActivityId,
+    Map<String, dynamic> data,
+  ) {
     debugPrint("Starting live activity with ID: $liveActivityId");
     OneSignal.LiveActivities.startDefault(liveActivityId, {
       "title": "Welcome!",
-      "message": {"en": "Hello World!"}
+      "message": {"en": "Hello World!"},
     }, data);
   }
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/services/one_signal_manager.dart';
 import '../models/all_user_model.dart';
 import '../models/multi_body.dart';
 import '../models/user.dart';
@@ -85,6 +86,25 @@ class UserController extends GetxController {
     }
   }
 
+  void setPlayerId() async {
+    try {
+      final playerId = OneSignalHelper.getPlayerId();
+
+      final response = await api.post(
+        "/user/player-id/$playerId",
+        {},
+        authReq: true,
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint("=========>Player ID set successfully");
+      } else {
+        debugPrint("=========>Failed to set player ID");
+      }
+    } catch (e) {
+      debugPrint("=========>Error setting player ID: $e");
+    }
+  }
+
   String? getImageUrl() {
     if (userInfo.value == null || userInfo.value!.image == null) {
       return null;
@@ -142,7 +162,7 @@ class UserController extends GetxController {
     } catch (e) {
       debugPrint('❗ deleteStory Error: $e');
       throw Exception('Failed to delete the story. Please try again.');
-    }finally {
+    } finally {
       isLoading.value = false;
     }
   }

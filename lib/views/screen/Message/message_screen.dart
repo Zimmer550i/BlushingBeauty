@@ -10,6 +10,7 @@ import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/services/api_service.dart';
+import 'package:ree_social_media_app/services/one_signal_manager.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/show_snackbar.dart';
 import 'package:ree_social_media_app/views/screen/Contact/contact_screen.dart';
@@ -68,6 +69,7 @@ class _MessageScreenState extends State<MessageScreen> {
         _loadMoreStories();
       }
     });
+    userController.setPlayerId();
   }
 
   Future<void> _loadMoreChats() async {
@@ -92,7 +94,9 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: Obx(()=> BottomMenu(0, messageCount: controller.unreadCount.value),),
+      bottomNavigationBar: Obx(
+        () => BottomMenu(0, messageCount: controller.unreadCount.value),
+      ),
       body: RefreshIndicator(
         onRefresh: controller.refreshAll,
         color: AppColors.primaryColor,
@@ -349,8 +353,8 @@ class _MessageScreenState extends State<MessageScreen> {
           topRight: Radius.circular(8),
           topLeft: Radius.circular(8),
         ),
-        
-         border: Border.all(
+
+        border: Border.all(
           color: myStories.isNotEmpty
               ? AppColors.primaryColor
               : Colors.transparent,
@@ -817,7 +821,7 @@ class _MessageScreenState extends State<MessageScreen> {
         itemBuilder: (context, index) {
           var chat = allChats[index];
           String name = chat["name"] ?? "Unknown";
-          if(name == "group chat") name = "Group Chat";
+          if (name == "group chat") name = "Group Chat";
           String image = chat["image"] ?? "";
           String chatId = chat["_id"] ?? "";
 
@@ -837,9 +841,7 @@ class _MessageScreenState extends State<MessageScreen> {
           final lastMsg = controller.getLastMessage(chat);
           final lastTime = chat["lastMessage"]?["createdAt"];
           String formattedTime = '';
-          if(lastTime != null) formattedTime = formatServerTime(lastTime);
-
-          
+          if (lastTime != null) formattedTime = formatServerTime(lastTime);
 
           // --- Chat UI ---
           final isPrivate = chat["type"] == "private";
@@ -870,11 +872,7 @@ class _MessageScreenState extends State<MessageScreen> {
                     ),
                   );
                 } else {
-                  Get.to(
-                    () => GroupChatScreen(
-                      chatId: chatId,
-                    ),
-                  );
+                  Get.to(() => GroupChatScreen(chatId: chatId));
                 }
               },
               child: Padding(
@@ -914,17 +912,19 @@ class _MessageScreenState extends State<MessageScreen> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              if(chat['lastMessage'] != null)...[
-                                if (chat["lastMessage"]["read"] == false && chat["lastMessage"]["sender"] != currentUserId)
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryColor,
-                                    shape: BoxShape.circle,
+                              if (chat['lastMessage'] != null) ...[
+                                if (chat["lastMessage"]["read"] == false &&
+                                    chat["lastMessage"]["sender"] !=
+                                        currentUserId)
+                                  Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryColor,
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                ),
-                              ]
+                              ],
                             ],
                           ),
                           const SizedBox(height: 4),
@@ -934,8 +934,11 @@ class _MessageScreenState extends State<MessageScreen> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 15,
-                              fontWeight: chat["lastMessage"] == null ? FontWeight.normal :
-                                  chat["lastMessage"]["read"] == false && chat["lastMessage"]["sender"] != currentUserId
+                              fontWeight: chat["lastMessage"] == null
+                                  ? FontWeight.normal
+                                  : chat["lastMessage"]["read"] == false &&
+                                        chat["lastMessage"]["sender"] !=
+                                            currentUserId
                                   ? FontWeight.bold
                                   : FontWeight.normal,
                               color:
@@ -943,7 +946,6 @@ class _MessageScreenState extends State<MessageScreen> {
                                       lastMsg.contains("Image")
                                   ? Colors.black
                                   : Colors.black.withValues(alpha: 0.6),
-                                  
                             ),
                           ),
                         ],
@@ -964,56 +966,57 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   String formatServerTime(dynamic serverTime) {
-  if (serverTime == null) return "";
+    if (serverTime == null) return "";
 
-  late DateTime parsedTime;
+    late DateTime parsedTime;
 
-  // CASE 1 — already DateTime
-  if (serverTime is DateTime) {
-    parsedTime = serverTime;
-  } 
-  // CASE 2 — serverTime as String
-  else {
-    String timeStr = serverTime.toString().trim();
+    // CASE 1 — already DateTime
+    if (serverTime is DateTime) {
+      parsedTime = serverTime;
+    }
+    // CASE 2 — serverTime as String
+    else {
+      String timeStr = serverTime.toString().trim();
 
-    // CASE 2A — If only "HH:mm" is provided (e.g. "10:30")
-    if (!timeStr.contains('-') && timeStr.contains(':') && timeStr.length <= 5) {
-      final today = DateTime.now();
-      timeStr =
-          "${today.toIso8601String().split('T')[0]}T$timeStr:00"; // attach today's date
+      // CASE 2A — If only "HH:mm" is provided (e.g. "10:30")
+      if (!timeStr.contains('-') &&
+          timeStr.contains(':') &&
+          timeStr.length <= 5) {
+        final today = DateTime.now();
+        timeStr =
+            "${today.toIso8601String().split('T')[0]}T$timeStr:00"; // attach today's date
+      }
+
+      // Parse to DateTime
+      parsedTime = DateTime.parse(timeStr);
     }
 
-    // Parse to DateTime
-    parsedTime = DateTime.parse(timeStr);
+    // Convert to device local time
+    final DateTime localTime = parsedTime.toLocal();
+
+    return _formatLocalTime(localTime);
   }
 
-  // Convert to device local time
-  final DateTime localTime = parsedTime.toLocal();
+  String _formatLocalTime(DateTime localTime) {
+    final now = DateTime.now();
+    final timeFormat = DateFormat('h:mm a'); // Ex: 2:32 PM
+    final dateFormat = DateFormat('d MMM yyyy'); // Ex: 25 Nov 2025
 
-  return _formatLocalTime(localTime);
-}
+    // Today → return time only
+    if (localTime.year == now.year &&
+        localTime.month == now.month &&
+        localTime.day == now.day) {
+      return timeFormat.format(localTime);
+    }
 
-String _formatLocalTime(DateTime localTime) {
-  final now = DateTime.now();
-  final timeFormat = DateFormat('h:mm a');       // Ex: 2:32 PM
-  final dateFormat = DateFormat('d MMM yyyy');   // Ex: 25 Nov 2025
+    // Yesterday
+    if (now.difference(localTime).inDays == 1) {
+      return "Yesterday";
+    }
 
-  // Today → return time only
-  if (localTime.year == now.year &&
-      localTime.month == now.month &&
-      localTime.day == now.day) {
-    return timeFormat.format(localTime);
+    // Else → return date (e.g. 25 Nov 2025)
+    return dateFormat.format(localTime);
   }
-
-  // Yesterday
-  if (now.difference(localTime).inDays == 1) {
-    return "Yesterday";
-  }
-
-  // Else → return date (e.g. 25 Nov 2025)
-  return dateFormat.format(localTime);
-}
-
 
   void confirm(
     BuildContext context,
@@ -1063,7 +1066,6 @@ String _formatLocalTime(DateTime localTime) {
             style: OutlinedButton.styleFrom(
               overlayColor: Colors.white,
               shape: RoundedRectangleBorder(
-                
                 borderRadius: BorderRadius.circular(8),
               ),
               side: const BorderSide(color: Colors.white),
