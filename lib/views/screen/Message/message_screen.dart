@@ -9,8 +9,6 @@ import 'package:ree_social_media_app/controllers/notification_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/helpers/global_video_player_manager.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
-import 'package:ree_social_media_app/services/api_service.dart';
-import 'package:ree_social_media_app/services/one_signal_manager.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/show_snackbar.dart';
 import 'package:ree_social_media_app/views/screen/Contact/contact_screen.dart';
@@ -294,9 +292,9 @@ class _MessageScreenState extends State<MessageScreen> {
 
                   var story = filteredStories[index - 1];
                   final isVideo = story["contentType"] == "video";
-                  final mediaUrl = (story["image"] as String).isNotEmpty
-                      ? "${ApiService().devUrl}${story["image"]}"
-                      : "${ApiService().devUrl}${story["video"]}";
+                  final mediaUrl = story["image"].isNotEmpty
+                      ? story["image"]
+                      : story["video"];
 
                   // handle author safely
                   String authorName = "User";
@@ -306,9 +304,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   if (story["author"] is Map) {
                     authorName = story["author"]["name"] ?? "User";
                     authorId = story["author"]["_id"] ?? "";
-                    authorImage = userController.addBaseUrl(
-                      story["author"]["image"],
-                    );
+                    authorImage = story["author"]["image"];
                   } else if (story["author"] is String) {
                     authorName = "User";
                   }

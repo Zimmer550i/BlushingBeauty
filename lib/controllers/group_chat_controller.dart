@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/views/screen/Message/message_screen.dart';
 import '../services/api_service.dart';
 import '../models/multi_body.dart';
@@ -12,6 +13,7 @@ class GroupChatController extends GetxController {
 
   var groupName = "".obs;
   var groupImage = "".obs;
+  var createdBy = "".obs;
   var members = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;
 
@@ -19,12 +21,16 @@ class GroupChatController extends GetxController {
   Future<void> fetchGroupDetails(String chatId) async {
     try {
       isLoading.value = true;
-      final res = await _apiService.get("/chat/group-chat/$chatId", authReq: true);
+      final res = await _apiService.get(
+        "/chat/group-chat/$chatId",
+        authReq: true,
+      );
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body)["data"];
         groupName.value = data["name"] ?? "";
         groupImage.value = data["image"] ?? "";
+        createdBy.value = data["createdBy"] ?? "";
         members.value = List<Map<String, dynamic>>.from(data["members"]);
       } else {
         Get.snackbar("Error", "Failed to fetch groupChat details");
@@ -37,25 +43,14 @@ class GroupChatController extends GetxController {
   }
 
   /// Update groupChat name/image
-  Future<String> updateGroup(
-      String chatId, {
-        String? name,
-        File? image,
-      }) async {
+  Future<String> updateGroup(String chatId, {String? name, File? image}) async {
     isLoading.value = true;
     try {
-      final body = {
-        "name": name ?? groupName.value,
-      };
+      final body = {"name": name ?? groupName.value};
 
       final multipartBody = <MultipartBody>[];
       if (image != null) {
-        multipartBody.add(
-          MultipartBody(
-            key: "image",
-            file: image,
-          ),
-        );
+        multipartBody.add(MultipartBody(key: "image", file: image));
       }
 
       http.Response response;
@@ -106,10 +101,7 @@ class GroupChatController extends GetxController {
   }) async {
     isLoading.value = true;
     try {
-      final body = {
-        "newMembers": newMembers,
-        "chatId": chatId,
-      };
+      final body = {"newMembers": newMembers, "chatId": chatId};
 
       final response = await _apiService.post(
         "/chat/add-members",
@@ -131,15 +123,17 @@ class GroupChatController extends GetxController {
     }
   }
 
-
   /// Leave groupChat
   Future<void> leaveGroup(String chatId) async {
     try {
       isLoading.value = true;
-      final res = await _apiService.post("/chat/leave-group", {"groupId": chatId}, authReq: true);
-      if (res.statusCode == 200) {
+      final res = await _apiService.post("/chat/leave-group", {
+        "groupId": chatId,
+      }, authReq: true);
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        
+        Get.offAllNamed(AppRoutes.messageScreen);
         Get.snackbar("Success", "You left the groupChat");
-        Get.back(); // Go back after leaving
       } else {
         Get.snackbar("Error", "Failed to leave groupChat");
       }
@@ -154,10 +148,13 @@ class GroupChatController extends GetxController {
   Future<void> deleteGroup(String chatId) async {
     try {
       isLoading.value = true;
-      final res = await _apiService.delete("/chat/delete-chat/$chatId", authReq: true);
+      final res = await _apiService.delete(
+        "/chat/delete-chat/$chatId",
+        authReq: true,
+      );
       if (res.statusCode == 200 || res.statusCode == 201) {
         Get.snackbar("Success", "Group deleted successfully");
-        Get.offAll(()=>MessageScreen());
+        Get.offAll(() => MessageScreen());
       } else {
         Get.snackbar("Error", "Failed to delete groupChat");
       }
@@ -175,14 +172,10 @@ class GroupChatController extends GetxController {
     try {
       isLoading.value = true;
 
-      final response = await _apiService.post(
-        "/chat/remove-member",
-        {
-          "memberId": memberId,
-          "groupId": groupId,
-        },
-        authReq: true,
-      );
+      final response = await _apiService.post("/chat/remove-member", {
+        "memberId": memberId,
+        "groupId": groupId,
+      }, authReq: true);
 
       if (response.statusCode == 200) {
         // Refresh groupChat details after removal
@@ -200,5 +193,4 @@ class GroupChatController extends GetxController {
       isLoading.value = false;
     }
   }
-
 }

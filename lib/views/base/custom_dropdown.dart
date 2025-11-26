@@ -54,8 +54,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
   //   );
   // }
 
-
-  void _confirmRemove(BuildContext context,Map<String, dynamic> member) {
+  void _confirmRemove(BuildContext context, Map<String, dynamic> member) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -63,7 +62,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-             Text(
+            Text(
               "Are you sure you want to remove ${member['name']}?",
               style: TextStyle(color: Colors.white, fontSize: 20),
               textAlign: TextAlign.center,
@@ -72,18 +71,21 @@ class _CustomDropdownState extends State<CustomDropdown> {
             _dialogActions(
               context,
               onYes: () async {
-        final result = await controller.removeMemberFromGroup(
-          groupId: widget.chatId,
-          memberId: member["_id"],
-        );
+                final result = await controller.removeMemberFromGroup(
+                  groupId: widget.chatId,
+                  memberId: member["_id"],
+                );
 
-        if (result == "success") {
-          // 🔥 Re-fetch group details to refresh UI
-          await controller.fetchGroupDetails(widget.chatId);
-          Get.back();
-          Get.snackbar("Removed", "${member['name']} removed from groupChat");
-        }
-      },
+                if (result == "success") {
+                  // 🔥 Re-fetch group details to refresh UI
+                  await controller.fetchGroupDetails(widget.chatId);
+                  Get.back();
+                  Get.snackbar(
+                    "Removed",
+                    "${member['name']} removed from groupChat",
+                  );
+                }
+              },
             ),
           ],
         ),
@@ -100,7 +102,6 @@ class _CustomDropdownState extends State<CustomDropdown> {
             style: OutlinedButton.styleFrom(
               overlayColor: Colors.white,
               shape: RoundedRectangleBorder(
-                
                 borderRadius: BorderRadius.circular(8),
               ),
               side: const BorderSide(color: Colors.white),
@@ -129,9 +130,6 @@ class _CustomDropdownState extends State<CustomDropdown> {
     );
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -143,10 +141,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
             children: [
               const Text(
                 "See members",
-                style: TextStyle(
-                  color: Color(0xFF413E3E),
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Color(0xFF413E3E), fontSize: 16),
               ),
               const Spacer(),
               Container(
@@ -158,7 +153,9 @@ class _CustomDropdownState extends State<CustomDropdown> {
                 ),
                 child: Center(
                   child: Icon(
-                    expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    expanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
                     color: Colors.white,
                   ),
                 ),
@@ -179,9 +176,15 @@ class _CustomDropdownState extends State<CustomDropdown> {
               child: Column(
                 children: members.map((item) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
@@ -191,12 +194,14 @@ class _CustomDropdownState extends State<CustomDropdown> {
                           CircleAvatar(
                             radius: 20,
                             backgroundColor: AppColors.primaryColor,
-                            backgroundImage: item['image'] != null &&
-                                item['image'].toString().isNotEmpty
+                            backgroundImage:
+                                item['image'] != null &&
+                                    item['image'].toString().isNotEmpty
                                 ? NetworkImage(item['image'])
                                 : null,
-                            child: (item['image'] == null ||
-                                item['image'].toString().isEmpty)
+                            child:
+                                (item['image'] == null ||
+                                    item['image'].toString().isEmpty)
                                 ? const Icon(Icons.person)
                                 : null,
                           ),
@@ -212,9 +217,10 @@ class _CustomDropdownState extends State<CustomDropdown> {
                             ),
                           ),
                           // inside Row children
-                          if (item["_id"] != myId)
+                          if (item["_id"] != myId &&
+                              controller.createdBy.value == myId)
                             InkWell(
-                              onTap: () => _confirmRemove(context,item),
+                              onTap: () => _confirmRemove(context, item),
                               child: Container(
                                 height: 24,
                                 width: 24,
@@ -228,8 +234,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
                                   size: 16,
                                 ),
                               ),
-                            )
-
+                            ),
                         ],
                       ),
                     ),
@@ -237,7 +242,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
                 }).toList(),
               ),
             ),
-          )
+          ),
       ],
     );
   }

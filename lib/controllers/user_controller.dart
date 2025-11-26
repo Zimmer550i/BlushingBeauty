@@ -88,7 +88,7 @@ class UserController extends GetxController {
 
   void setPlayerId() async {
     try {
-      final playerId = OneSignalHelper.getPlayerId();
+      String? playerId = await OneSignalHelper.getPlayerId();
 
       final response = await api.post(
         "/user/player-id/$playerId",
@@ -96,7 +96,7 @@ class UserController extends GetxController {
         authReq: true,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("=========>Player ID set successfully");
+        debugPrint("=========> $playerId Player ID set successfully");
       } else {
         debugPrint("=========>Failed to set player ID");
       }

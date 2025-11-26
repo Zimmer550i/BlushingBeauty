@@ -18,7 +18,7 @@ class GroupDetailsScreen extends StatefulWidget {
   const GroupDetailsScreen({
     super.key,
     required this.chatId,
-     this.isCreated = false,
+    this.isCreated = false,
   });
 
   @override
@@ -37,7 +37,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    if(widget.isCreated == true){
+    if (widget.isCreated == true) {
       controller.fetchGroupDetails(widget.chatId);
     }
     ever(controller.members, (_) {
@@ -119,15 +119,19 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   children: [
                     InkWell(
                       onTap: () {
-                        widget.isCreated == true ? Get.offAllNamed(AppRoutes.messageScreen) : Get.back();
+                        widget.isCreated == true
+                            ? Get.offAllNamed(AppRoutes.messageScreen)
+                            : Get.back();
                       },
                       child: const Icon(Icons.arrow_back, color: Colors.black),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        controller.groupName.value == "group chat" ? "Group Chat" :controller.groupName.value,
-                             
+                        controller.groupName.value == "group chat"
+                            ? "Group Chat"
+                            : controller.groupName.value,
+
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
@@ -161,147 +165,155 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                               )
                             : null,
                       ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: InkWell(
-                          onTap: _chooseImageSource,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryColor,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 20,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                /// Change group name
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF56BBFF).withValues(alpha: .2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Change Group Name",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF413E3E),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _nameController,
-                        cursorColor: AppColors.primaryColor,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          hintText: "Write here",
-                          isDense: true,
-                          filled: true,
-                          fillColor: Colors.white,
-
-                          // Border when NOT focused
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppColors.primaryColor,
-                              width: 1.5,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-
-                          // Border when focused
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: AppColors.primaryColor,
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-
-                          // Optional hint style or text color
-                          hintStyle: TextStyle(color: Colors.grey.shade500),
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: InkWell(
-                          onTap: () {
-                            final newName = _nameController.text.trim();
-                            if (newName.isNotEmpty) {
-                              controller.updateGroup(
-                                widget.chatId,
-                                name: newName,
-                              );
-                            } else {
-                              Get.snackbar(
-                                "Error",
-                                "Group name cannot be empty",
-                              );
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 20,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              "Update",
-                              style: TextStyle(
+                      if (userController.userInfo.value!.id ==
+                          controller.createdBy.value) ...[
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: InkWell(
+                            onTap: _chooseImageSource,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryColor,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                size: 20,
                                 color: Colors.white,
-                                fontSize: 16,
                               ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 20),
+                if (userController.userInfo.value!.id ==
+                    controller.createdBy.value) ...[
+                  /// Change group name
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF56BBFF).withValues(alpha: .2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Change Group Name",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF413E3E),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _nameController,
+                          cursorColor: AppColors.primaryColor,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: InputDecoration(
+                            hintText: "Write here",
+                            isDense: true,
+                            filled: true,
+                            fillColor: Colors.white,
+
+                            // Border when NOT focused
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: AppColors.primaryColor,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+
+                            // Border when focused
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: AppColors.primaryColor,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+
+                            // Optional hint style or text color
+                            hintStyle: TextStyle(color: Colors.grey.shade500),
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: InkWell(
+                            onTap: () {
+                              final newName = _nameController.text.trim();
+                              if (newName.isNotEmpty) {
+                                controller.updateGroup(
+                                  widget.chatId,
+                                  name: newName,
+                                );
+                              } else {
+                                Get.snackbar(
+                                  "Error",
+                                  "Group name cannot be empty",
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 20,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryColor,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                "Update",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
 
                 /// Members
                 _buildMembersList(),
 
                 /// Options
-                _optionTile(
-                  "Add members",
-                  onTap: () {
-                    Get.to(
-                      () => AddGroupMemberScreen(
-                        chatId: widget.chatId,
-                        existMembers: members,
-                      ),
-                    );
-                  },
-                ),
-                _optionTile(
-                  "Delete chat",
-                  onTap: () {
-                    confirm(context, () {
-                      controller.deleteGroup(widget.chatId);
-                    }, "delete this group chat");
-                  },
-                ),
+                if (userController.userInfo.value!.id ==
+                    controller.createdBy.value) ...[
+                  _optionTile(
+                    "Add members",
+                    onTap: () {
+                      Get.to(
+                        () => AddGroupMemberScreen(
+                          chatId: widget.chatId,
+                          existMembers: members,
+                        ),
+                      );
+                    },
+                  ),
+                  _optionTile(
+                    "Delete chat",
+                    onTap: () {
+                      confirm(context, () {
+                        controller.deleteGroup(widget.chatId);
+                      }, "delete this group chat");
+                    },
+                  ),
+                ],
 
                 _optionTile(
                   "Leave chat",
@@ -382,7 +394,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       ),
     );
   }
-    Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
+
+  Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
     return Row(
       children: [
         Expanded(
@@ -391,7 +404,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             style: OutlinedButton.styleFrom(
               overlayColor: Colors.white,
               shape: RoundedRectangleBorder(
-                
                 borderRadius: BorderRadius.circular(8),
               ),
               side: const BorderSide(color: Colors.white),
@@ -419,5 +431,4 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       ],
     );
   }
-
 }
