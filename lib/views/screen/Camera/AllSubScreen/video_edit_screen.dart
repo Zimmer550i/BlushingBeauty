@@ -109,77 +109,75 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Expanded(
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned.fill(
-              child: widget.isVideo
-                  ? (_video != null && _video!.value.isInitialized
-                        ? FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: _video!.value.size.width,
-                              height: _video!.value.size.height,
-                              child: VideoPlayer(_video!),
-                            ),
-                          )
-                        : Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.primaryColor,
-                            ),
-                          ))
-                  : Image.file(File(widget.filePath), fit: BoxFit.cover),
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: widget.isVideo
+                ? (_video != null && _video!.value.isInitialized
+                      ? FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _video!.value.size.width,
+                            height: _video!.value.size.height,
+                            child: VideoPlayer(_video!),
+                          ),
+                        )
+                      : Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primaryColor,
+                          ),
+                        ))
+                : Image.file(File(widget.filePath), fit: BoxFit.cover),
+          ),
+      
+          /// Close button
+          Positioned(
+            top: 70,
+            right: 20,
+            child: InkWell(
+              onTap: () {
+                Get.offAllNamed(AppRoutes.messageScreen);
+              },
+              child: Container(
+                height: 32,
+                width: 32,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                  border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
+                ),
+                child: const Center(
+                  child: Icon(Icons.close, color: Color(0xFF676565)),
+                ),
+              ),
             ),
-
-            /// Close button
+          ),
+      
+          /// Bottom controls (only if video)
+          if (widget.isVideo)
             Positioned(
-              top: 70,
-              right: 20,
-              child: InkWell(
-                onTap: () {
-                  Get.offAllNamed(AppRoutes.messageScreen);
-                },
-                child: Container(
-                  height: 32,
-                  width: 32,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: Colors.white,
-                    border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.close, color: Color(0xFF676565)),
-                  ),
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildBottomControls(),
+            ),
+      
+          if (!widget.isVideo)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .24),
                 ),
+                child: Platform.isAndroid ? SafeArea(child: _buildBottomActions()) : Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 26),
+                  child: _buildBottomActions()),
               ),
             ),
-
-            /// Bottom controls (only if video)
-            if (widget.isVideo)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: _buildBottomControls(),
-              ),
-
-            if (!widget.isVideo)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .24),
-                  ),
-                  child: Platform.isAndroid ? SafeArea(child: _buildBottomActions()) : Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 26),
-                    child: _buildBottomActions()),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }

@@ -42,6 +42,8 @@
 		<string>This app needs access to save photos or videos to your gallery.</string>
 		<key>NSContactsUsageDescription</key>
 		<string>This app requires access to your contacts to allow inviting friends.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>This app requires access to your location while in use to support location-based features.</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true />
 		<key>UILaunchStoryboardName</key>

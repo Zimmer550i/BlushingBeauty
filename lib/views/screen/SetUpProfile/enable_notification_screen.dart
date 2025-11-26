@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/services/one_signal_manager.dart';
 import 'package:ree_social_media_app/services/shared_prefs_service.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
@@ -90,6 +91,7 @@ class _EnableNotificationScreenState extends State<EnableNotificationScreen> {
                     'push_notifications_status',
                     'true',
                   );
+                  OneSignalHelper.requestPushPermission();
                   Get.to(() => SetupProfileScreen());
                 },
                 text: "Enable Notifications",

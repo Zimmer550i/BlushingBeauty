@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:ree_social_media_app/services/one_signal_manager.dart';
 import 'package:ree_social_media_app/views/base/custom_switch.dart';
 
 import '../../services/shared_prefs_service.dart';
@@ -8,7 +9,7 @@ class NotificationSettings extends StatefulWidget {
   const NotificationSettings({super.key});
 
   @override
-    State<NotificationSettings> createState() => _NotificationSettingsState();
+  State<NotificationSettings> createState() => _NotificationSettingsState();
 }
 
 class _NotificationSettingsState extends State<NotificationSettings> {
@@ -26,6 +27,12 @@ class _NotificationSettingsState extends State<NotificationSettings> {
     setState(() {
       isSwitch = status == 'true';
     });
+
+    if (isSwitch == false) {
+      OneSignalHelper.optOut();
+    } else if(isSwitch == true){
+      OneSignalHelper.optIn();
+    }
   }
 
   // Function to handle switch changes
@@ -39,6 +46,10 @@ class _NotificationSettingsState extends State<NotificationSettings> {
       'push_notifications_status',
       isSwitch ? 'true' : 'false',
     );
+
+    isSwitch
+        ? OneSignalHelper.optIn()
+        : OneSignalHelper.optOut();
   }
 
   @override

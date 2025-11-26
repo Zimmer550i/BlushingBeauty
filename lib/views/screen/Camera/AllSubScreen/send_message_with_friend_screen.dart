@@ -58,7 +58,9 @@ class _SendMessageWithFriendScreenState
       body: SafeArea(
         child: Obx(() {
           if (controller.isLoading.value) {
-            return Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
+            return Center(
+              child: CircularProgressIndicator(color: AppColors.primaryColor),
+            );
           }
 
           return Stack(
@@ -77,15 +79,17 @@ class _SendMessageWithFriendScreenState
                     const SizedBox(height: 24),
                     _buildFriendList(controller, userController),
                     const SizedBox(height: 16),
-                    Obx(()=> CustomButton(
-                      loading: controller.isLoading.value,
-                      text: "Send Now",
-                      onTap: () => controller.sendMedia(
-                        filePath: widget.filePath,
-                        thumbnail: widget.thumbnail,
-                        isVideo: widget.isVideo,
+                    Obx(
+                      () => CustomButton(
+                        loading: controller.isLoading.value,
+                        text: "Send Now",
+                        onTap: () => controller.sendMedia(
+                          filePath: widget.filePath,
+                          thumbnail: widget.thumbnail,
+                          isVideo: widget.isVideo,
+                        ),
                       ),
-                    ),),
+                    ),
                   ],
                 ),
               ),
@@ -161,8 +165,9 @@ class _SendMessageWithFriendScreenState
           separatorBuilder: (_, _) => const SizedBox(height: 16),
           itemBuilder: (_, index) {
             final friend = filtered[index];
-            final imageUrl = userController.addBaseUrl(friend['image']);
+            String imageUrl = friend['image'] ?? '';
             final id = friend['_id'];
+            String name = friend['name'] ?? "";
 
             return InkWell(
               onTap: () {
@@ -178,15 +183,20 @@ class _SendMessageWithFriendScreenState
                   CircleAvatar(
                     radius: 22,
                     backgroundColor: AppColors.primaryColor,
-                    backgroundImage: imageUrl != null
+                    backgroundImage: imageUrl.isNotEmpty
                         ? NetworkImage(imageUrl)
-                        : const AssetImage("assets/images/dummy.jpg")
-                              as ImageProvider,
+                        : null,
+                    child: imageUrl.isEmpty
+                        ? Text(
+                            name[0].toUpperCase(),
+                            style: TextStyle(color: Colors.white),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      friend['name'] ?? '',
+                      name,
                       style: TextStyle(
                         fontSize: 18,
                         color: AppColors.textColor,
