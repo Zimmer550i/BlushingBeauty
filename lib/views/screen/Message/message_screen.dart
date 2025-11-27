@@ -67,7 +67,7 @@ class _MessageScreenState extends State<MessageScreen> {
         _loadMoreStories();
       }
     });
-    userController.setPlayerId();
+    userController.setSubscriptionId();
   }
 
   Future<void> _loadMoreChats() async {
@@ -95,49 +95,50 @@ class _MessageScreenState extends State<MessageScreen> {
       bottomNavigationBar: Obx(
         () => BottomMenu(0, messageCount: controller.unreadCount.value),
       ),
-      body: RefreshIndicator(
-        onRefresh: controller.refreshAll,
-        color: AppColors.primaryColor,
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              _buildTopBar(),
-              const SizedBox(height: 24),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: _chatScrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildStoriesSection(),
-                      const SizedBox(height: 24),
-                      Text(
-                        "Chats",
-                        style: TextStyle(
-                          color: Color(0xFF413E3E),
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      _buildChatList(),
-                      if (_isFetchingMoreChats)
-                        Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(12.0),
-                            child: CircularProgressIndicator(
-                              color: AppColors.primaryColor,
-                            ),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: controller.refreshAll,
+          color: AppColors.primaryColor,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTopBar(),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _chatScrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildStoriesSection(),
+                        const SizedBox(height: 24),
+                        Text(
+                          "Chats",
+                          style: TextStyle(
+                            color: Color(0xFF413E3E),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                    ],
+                        _buildChatList(),
+                        if (_isFetchingMoreChats)
+                          Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: CircularProgressIndicator(
+                                color: AppColors.primaryColor,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -146,37 +147,35 @@ class _MessageScreenState extends State<MessageScreen> {
 
   /// Top Bar
   Widget _buildTopBar() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Row(
-        children: [
-          _logoBox(),
-          const Spacer(),
-          _iconButton(
+    return Row(
+      children: [
+        _logoBox(),
+        const Spacer(),
+        InkWell(
+          onTap: () => Get.to(() => const ContactScreen()),
+          child: _iconButton(
             'assets/icons/add.svg',
             onTap: () => Get.to(() => const ContactScreen()),
           ),
-          // const SizedBox(width: 12),
-          // _iconButton(
-          //   'assets/icons/search.svg',
-          //   onTap: () => Get.to(() => const SearchScreen()),
-          // ),
-          const SizedBox(width: 12),
-          _notificationButton(),
-        ],
-      ),
+        ),
+        // const SizedBox(width: 12),
+        // _iconButton(
+        //   'assets/icons/search.svg',
+        //   onTap: () => Get.to(() => const SearchScreen()),
+        // ),
+        const SizedBox(width: 12),
+        InkWell(
+          onTap: () => Get.to(() => const NotificationScreen()),
+          child: _notificationButton(),
+        ),
+      ],
     );
   }
 
   Widget _notificationButton() {
     return Stack(
       children: [
-        _iconButton(
-          'assets/icons/notification.svg',
-          onTap: () {
-            Get.to(() => const NotificationScreen());
-          },
-        ),
+        _iconButton('assets/icons/notification.svg', onTap: () => Get.to(() => const NotificationScreen()),),
         Positioned(
           right: -2,
           top: -2,
@@ -576,7 +575,7 @@ class _MessageScreenState extends State<MessageScreen> {
     const double barH = 32;
 
     try {
-      // ✅ 1. Use cached thumbnail if available
+      // 1. Use cached thumbnail if available
       if (_thumbCache.containsKey(videoUrl)) {
         final cachedThumb = _thumbCache[videoUrl];
         return _buildVideoCardWidget(
@@ -591,10 +590,10 @@ class _MessageScreenState extends State<MessageScreen> {
         );
       }
 
-      // ✅ 2. Download video locally
+      // 2. Download video locally
       final localVideo = await _downloadVideoToLocal(videoUrl);
 
-      // ✅ 3. Generate thumbnail safely
+      // 3. Generate thumbnail safely
       final thumbPath = await VideoThumbnail.thumbnailFile(
         video: localVideo.path,
         imageFormat: ImageFormat.JPEG,
@@ -603,15 +602,15 @@ class _MessageScreenState extends State<MessageScreen> {
         quality: 100,
       );
 
-      // ✅ 4. Cache result for reuse
+      // 4. Cache result for reuse
       _thumbCache[videoUrl] = thumbPath;
 
-      // ✅ 5. Clean up temp video to free memory
+      // 5. Clean up temp video to free memory
       if (await localVideo.exists()) {
         await localVideo.delete();
       }
 
-      // ✅ 6. Build widget
+      // 6. Build widget
       return _buildVideoCardWidget(
         thumbPath,
         name,
@@ -727,7 +726,7 @@ class _MessageScreenState extends State<MessageScreen> {
     );
   }
 
-  /// 🧩 Safe temp video downloader
+  ///Safe temp video downloader
   Future<File> _downloadVideoToLocal(String url) async {
     final response = await http.get(Uri.parse(url));
     final dir = await getTemporaryDirectory();
@@ -790,10 +789,8 @@ class _MessageScreenState extends State<MessageScreen> {
         );
       }
 
-      // 🟢 When loading is false, show actual chat list
       final allChats = [...controller.privateChats, ...controller.groupChats];
 
-      // Sort chats by latest message time (descending)
       allChats.sort((a, b) {
         final aTime =
             DateTime.tryParse(a["lastMessage"]?["createdAt"] ?? "") ??
@@ -801,7 +798,7 @@ class _MessageScreenState extends State<MessageScreen> {
         final bTime =
             DateTime.tryParse(b["lastMessage"]?["createdAt"] ?? "") ??
             DateTime(1900);
-        return bTime.compareTo(aTime); // newest first
+        return bTime.compareTo(aTime);
       });
 
       if (allChats.isEmpty) {
@@ -974,20 +971,14 @@ class _MessageScreenState extends State<MessageScreen> {
     else {
       String timeStr = serverTime.toString().trim();
 
-      // CASE 2A — If only "HH:mm" is provided (e.g. "10:30")
       if (!timeStr.contains('-') &&
           timeStr.contains(':') &&
           timeStr.length <= 5) {
         final today = DateTime.now();
-        timeStr =
-            "${today.toIso8601String().split('T')[0]}T$timeStr:00"; // attach today's date
+        timeStr = "${today.toIso8601String().split('T')[0]}T$timeStr:00";
       }
-
-      // Parse to DateTime
       parsedTime = DateTime.parse(timeStr);
     }
-
-    // Convert to device local time
     final DateTime localTime = parsedTime.toLocal();
 
     return _formatLocalTime(localTime);
@@ -995,22 +986,18 @@ class _MessageScreenState extends State<MessageScreen> {
 
   String _formatLocalTime(DateTime localTime) {
     final now = DateTime.now();
-    final timeFormat = DateFormat('h:mm a'); // Ex: 2:32 PM
-    final dateFormat = DateFormat('d MMM yyyy'); // Ex: 25 Nov 2025
+    final timeFormat = DateFormat('h:mm a');
+    final dateFormat = DateFormat('d MMM yyyy');
 
-    // Today → return time only
     if (localTime.year == now.year &&
         localTime.month == now.month &&
         localTime.day == now.day) {
       return timeFormat.format(localTime);
     }
 
-    // Yesterday
     if (now.difference(localTime).inDays == 1) {
       return "Yesterday";
     }
-
-    // Else → return date (e.g. 25 Nov 2025)
     return dateFormat.format(localTime);
   }
 

@@ -27,7 +27,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
   final phoneTextController = TextEditingController();
   final passwordTextController = TextEditingController();
-  CountryCode selectedCountryCode = CountryCode.fromDialCode('+1'); // ✅ Added
+  final confirmPasswordTextController = TextEditingController();
+  CountryCode selectedCountryCode = CountryCode.fromDialCode('+1');
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +60,6 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 40),
 
-              // ✅ Phone number with country code
               CustomNumberField(
                 controller: phoneTextController,
                 hintText: 'Enter your phone number',
@@ -101,8 +101,38 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 12),
+              CustomTextField(
+                controller: confirmPasswordTextController,
+                hintText: 'Confirm your Password',
+                borderSide: const BorderSide(
+                  color: Color(0xFFC4C3C3),
+                  width: 1,
+                ),
+                isPassword: true,
+                validator: (_) {
+                  return authController.validatePassword()
+                      ? null
+                      : authController.passwordError.value;
+                },
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    height: 24,
+                    width: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primaryColor,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: SvgPicture.asset('assets/icons/lock.svg'),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -177,9 +207,19 @@ class _SignupScreenState extends State<SignupScreen> {
                   onTap: () async {
                     final String rawPhone = phoneTextController.text.trim();
                     final String password = passwordTextController.text.trim();
+                    final String confirmPassword = confirmPasswordTextController
+                        .text
+                        .trim();
 
-                    if (rawPhone.isEmpty || password.isEmpty) {
-                      showSnackBar('Please fill all the fields', true);
+                    if (rawPhone.isEmpty ||
+                        password.isEmpty ||
+                        confirmPassword.isEmpty) {
+                      showSnackBar('Please fill in all required fields', true);
+                      return;
+                    }
+
+                    if (password != confirmPassword) {
+                      showSnackBar("Passwords do not match", true);
                       return;
                     }
 
@@ -191,11 +231,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       return;
                     }
 
-                    // ✅ Combine country code and phone number
                     final String fullPhone =
                         '${selectedCountryCode.dialCode}${rawPhone.replaceAll(RegExp(r'[^0-9]'), '')}';
-                    debugPrint('📞 Full Phone: $fullPhone');
-
                     final message = await authController.signup(
                       fullPhone,
                       password,

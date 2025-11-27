@@ -15,14 +15,12 @@ class CreateStoryController extends GetxController {
   final ImagePicker _picker = ImagePicker();
   var isLoading = false.obs;
 
-  /// Add story with optional image/video paths
   Future<void> addStory({String? imagePath, String? videoPath}) async {
     isLoading.value = true;
     try {
       String? mediaType;
       File? mediaFile;
 
-      // 🟢 Step 1: Determine media type and file source
       if (imagePath != null) {
         mediaType = 'image';
         mediaFile = File(imagePath);
@@ -30,7 +28,6 @@ class CreateStoryController extends GetxController {
         mediaType = 'video';
         mediaFile = File(videoPath);
       } else {
-        // If no path provided → show picker
         mediaType = await _showMediaPickerSheet();
         if (mediaType == null) return;
 
@@ -51,16 +48,13 @@ class CreateStoryController extends GetxController {
         return;
       }
 
-      // 🟣 Step 2: Ensure .mp4 for videos
       if (mediaType == 'video') {
         mediaFile = await _ensureMp4Format(mediaFile);
       }
 
-      // 🟢 Step 3: Upload story to API
       await _uploadStoryMedia(mediaFile, mediaType);
       
       Get.offAndToNamed(AppRoutes.messageScreen);
-
     } catch (e) {
       debugPrint("❌ Error creating story: $e");
       Get.snackbar(
@@ -106,7 +100,6 @@ class CreateStoryController extends GetxController {
     );
   }
 
-  /// 🧩 Ensure video file uses .mp4 extension
   Future<File> _ensureMp4Format(File file) async {
     final currentExt = p.extension(file.path).toLowerCase();
     if (currentExt == '.mp4') return file;
@@ -118,13 +111,11 @@ class CreateStoryController extends GetxController {
     return newFile;
   }
 
-  /// 📤 Upload story (image or video)
   Future<void> _uploadStoryMedia(File file, String type) async {
     try {
       final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
       debugPrint('📡 Uploading $type with MIME type: $mimeType');
 
-      // Build multipart body for ApiService
       final multipartBody = [
         MultipartBody(key: type, file: file),
       ];
@@ -141,14 +132,7 @@ class CreateStoryController extends GetxController {
         final resData = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Get.snackbar(
-        //   "✅ Success",
-        //   resData['message'] ?? "Story uploaded successfully!",
-        //   snackPosition: SnackPosition.BOTTOM,
-        // );
-
       } else {
-        // Handle backend validation error (Zod or server message)
         try {
           Get.snackbar(
             "Upload Failed",

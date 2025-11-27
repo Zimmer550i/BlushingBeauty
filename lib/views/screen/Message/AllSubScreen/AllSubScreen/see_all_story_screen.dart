@@ -36,91 +36,92 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                InkWell(
-                  onTap: () => Get.back(),
-                  child: Icon(Icons.arrow_back, color: AppColors.textColor),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  widget.isMe == true ? "My Stories" : "All Stories",
-                  style: TextStyle(
-                    color: AppColors.textColor,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  InkWell(
+                    onTap: () => Get.back(),
+                    child: Icon(Icons.arrow_back, color: AppColors.textColor),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            /// ✅ Stories grid
-            Expanded(
-              child: GridView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  // ✅ Match the 4:3 aspect ratio visually
-                  childAspectRatio: 3 / 4,
-                ),
-                padding: EdgeInsets.zero,
-                itemCount: storiesList.length,
-                itemBuilder: (context, index) {
-                  final story = storiesList[index];
-                  final type = story["contentType"];
-                  final storyId = story["_id"];
-                  final name = story["author"]?["name"] ?? "Unknown";
-                  final authorId = story["author"]?["_id"] ?? "Unknown";
-
-                  final userImage = userController.addBaseUrl(
-                    story["author"]?["image"] ?? "",
-                  );
-
-                  // ✅ Determine media URL safely
-                  String? mediaUrl;
-                  if (type == "image" && (story["image"] ?? "").isNotEmpty) {
-                    mediaUrl = userController.addBaseUrl(story["image"]);
-                  } else if (type == "video" &&
-                      (story["video"] ?? "").isNotEmpty) {
-                    mediaUrl = userController.addBaseUrl(story["video"]);
-                  }
-
-                  if (mediaUrl == null || mediaUrl.isEmpty) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black12,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.error, color: Colors.red),
-                      ),
-                    );
-                  }
-
-                  // ✅ Each story item now keeps 4:3 ratio visually consistent
-                  return _buildStoryCard(
-                    context,
-                    mediaUrl,
-                    name,
-                    userImage.toString(),
-                    type == "video",
-                    storyId,
-                    index,
-                    authorId,
-                  );
-                },
+                  const SizedBox(width: 12),
+                  Text(
+                    widget.isMe == true ? "My Stories" : "All Stories",
+                    style: TextStyle(
+                      color: AppColors.textColor,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              /// ✅ Stories grid
+              Expanded(
+                child: GridView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    // ✅ Match the 4:3 aspect ratio visually
+                    childAspectRatio: 3 / 4,
+                  ),
+                  padding: EdgeInsets.zero,
+                  itemCount: storiesList.length,
+                  itemBuilder: (context, index) {
+                    final story = storiesList[index];
+                    final type = story["contentType"];
+                    final storyId = story["_id"];
+                    final name = story["author"]?["name"] ?? "Unknown";
+                    final authorId = story["author"]?["_id"] ?? "Unknown";
+
+                    final userImage = userController.addBaseUrl(
+                      story["author"]?["image"] ?? "",
+                    );
+
+                    // ✅ Determine media URL safely
+                    String? mediaUrl;
+                    if (type == "image" && (story["image"] ?? "").isNotEmpty) {
+                      mediaUrl = userController.addBaseUrl(story["image"]);
+                    } else if (type == "video" &&
+                        (story["video"] ?? "").isNotEmpty) {
+                      mediaUrl = userController.addBaseUrl(story["video"]);
+                    }
+
+                    if (mediaUrl == null || mediaUrl.isEmpty) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black12,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.error, color: Colors.red),
+                        ),
+                      );
+                    }
+
+                    // ✅ Each story item now keeps 4:3 ratio visually consistent
+                    return _buildStoryCard(
+                      context,
+                      mediaUrl,
+                      name,
+                      userImage.toString(),
+                      type == "video",
+                      storyId,
+                      index,
+                      authorId,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -371,7 +372,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
     );
   }
 
-    Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
+  Widget _dialogActions(BuildContext context, {required VoidCallback onYes}) {
     return Row(
       children: [
         Expanded(
@@ -380,7 +381,6 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
             style: OutlinedButton.styleFrom(
               overlayColor: Colors.white,
               shape: RoundedRectangleBorder(
-                
                 borderRadius: BorderRadius.circular(8),
               ),
               side: const BorderSide(color: Colors.white),
@@ -408,7 +408,6 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
       ],
     );
   }
-
 
   /// Bottom overlay name bar
   Widget _buildBottomNameBar(String name) {

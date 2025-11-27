@@ -7,12 +7,11 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart'; 
+import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
-
 
 class VideoPreviewScreen extends StatefulWidget {
   const VideoPreviewScreen({
@@ -51,7 +50,6 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   Duration _position = Duration.zero;
   late final ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   late final VoidCallback _videoListener;
-  
 
   bool get isVideo {
     final ext = widget.videoUrl.toLowerCase();
@@ -93,7 +91,6 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       _startCountdown();
     }
   }
-
 
   Future<void> _onCountdownComplete() async {
     setState(() => _secondsRemaining = 0);
@@ -311,8 +308,12 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             CircleAvatar(
               radius: 22,
               backgroundColor: AppColors.primaryColor,
-              backgroundImage: widget.userProfile.isEmpty ? null : NetworkImage(widget.userProfile),
-              child: widget.userProfile.isEmpty ? Text(widget.userName[0].toUpperCase()) : null,
+              backgroundImage: widget.userProfile.isEmpty
+                  ? null
+                  : NetworkImage(widget.userProfile),
+              child: widget.userProfile.isEmpty
+                  ? Text(widget.userName[0].toUpperCase())
+                  : null,
             ),
             const SizedBox(width: 12),
             Text(
@@ -335,62 +336,62 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       ),
       body: videoReady
           ? Stack(
-            alignment: Alignment.center,
-            children: [
-              // 🎬 Background (video or image)
-              Positioned.fill(
-                child: isVideo
-                    ? FittedBox(
-                        fit: BoxFit.cover,
-                        child: SizedBox(
-                          width: _video!.value.size.width,
-                          height: _video!.value.size.height,
-                          child: VideoPlayer(_video!),
+              alignment: Alignment.center,
+              children: [
+                // 🎬 Background (video or image)
+                Positioned.fill(
+                  child: isVideo
+                      ? FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _video!.value.size.width,
+                            height: _video!.value.size.height,
+                            child: VideoPlayer(_video!),
+                          ),
+                        )
+                      : Image.network(
+                          widget.videoUrl,
+                          fit: BoxFit.fitWidth,
+                          errorBuilder: (_, _, _) => Icon(Icons.broken_image),
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return Center(
+                              child: SpinKitWave(
+                                color: AppColors.primaryColor,
+                                size: 30,
+                              ),
+                            );
+                          },
                         ),
-                      )
-                    : Image.network(
-                        widget.videoUrl,
-                        fit: BoxFit.fitWidth,
-                        errorBuilder: (_, _, _) => Icon(Icons.broken_image),
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return Center(
-                            child: SpinKitWave(
-                              color: AppColors.primaryColor,
-                              size: 30,
-                            ),
-                          );
-                        },
-                      ),
-              ),
-          
-              if (_secondsRemaining > 0) _buildCountdownOverlay(),
-          
-              // 📸 Front camera PiP
-              if (_frontCam?.value.isInitialized == true)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: SizedBox(
-                    width: 110,
-                    // height: 150,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: .25),
-                        border: Border.all(
-                          color: AppColors.frameColors,
-                          width: 2,
+                ),
+
+                if (_secondsRemaining > 0) _buildCountdownOverlay(),
+
+                // 📸 Front camera PiP
+                if (_frontCam?.value.isInitialized == true)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: SizedBox(
+                      width: 110,
+                      // height: 150,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: .25),
+                          border: Border.all(
+                            color: AppColors.frameColors,
+                            width: 2,
+                          ),
                         ),
+                        // clipBehavior: Clip.antiAliasWithSaveLayer,
+                        child: CameraPreview(_frontCam!),
                       ),
-                      // clipBehavior: Clip.antiAliasWithSaveLayer,
-                      child: CameraPreview(_frontCam!),
                     ),
                   ),
-                ),
-          
-              _buildBottomControls(),
-            ],
-          )
+
+                _buildBottomControls(),
+              ],
+            )
           : Center(
               child: SpinKitWave(color: AppColors.primaryColor, size: 30.0),
             ),
@@ -437,126 +438,141 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
 
   Widget _buildBottomControls() {
     final isVid = isVideo;
-    final total = _videoDuration.inMilliseconds.toDouble().clamp(
-      1,
-      double.infinity,
-    );
-    final value = _position.inMilliseconds.toDouble().clamp(0, total);
 
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: const EdgeInsets.only(left: 12, right: 12, top: 12),
-        color: Colors.black.withValues(alpha: 0.3),
-        child: SafeArea(
+    if (isVid) {
+      final total = _videoDuration.inMilliseconds.toDouble().clamp(
+        1,
+        double.infinity,
+      );
+      final value = _position.inMilliseconds.toDouble().clamp(0, total);
+
+      return Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          color: Colors.black.withValues(alpha: 0.3),
           child: Row(
             children: [
-              if (isVid)
-                Text(
-                  _fmt(_position),
-                  style: const TextStyle(color: Colors.white),
+              Text(
+                _fmt(_position),
+                style: const TextStyle(color: Colors.white),
+              ),
+              Expanded(
+                child: Slider(
+                  value: double.parse(value.toStringAsFixed(0)),
+                  min: 0,
+                  max: double.parse(total.toStringAsFixed(0)),
+                  activeColor: Colors.white,
+                  onChanged: (v) =>
+                      _video?.seekTo(Duration(milliseconds: v.toInt())),
                 ),
-              if (isVid)
-                Expanded(
-                  child: Slider(
-                    value: double.parse(value.toStringAsFixed(0)),
-                    min: 0,
-                    max: double.parse(total.toStringAsFixed(0)),
-                    activeColor: Colors.white,
-                    onChanged: (v) =>
-                        _video?.seekTo(Duration(milliseconds: v.toInt())),
+              ),
+              Text(
+                _fmt(_videoDuration),
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              ValueListenableBuilder<bool>(
+                valueListenable: _isPlaying,
+                builder: (_, playing, __) => IconButton(
+                  icon: Icon(
+                    playing ? Icons.pause : Icons.play_arrow,
+                    color: Colors.white,
                   ),
-                ),
-              if (isVid) ...[
-                Text(
-                  _fmt(_videoDuration),
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(width: 12),
-                ValueListenableBuilder<bool>(
-                  valueListenable: _isPlaying,
-                  builder: (_, playing, _) => IconButton(
-                    icon: Icon(
-                      playing ? Icons.pause : Icons.play_arrow,
-                      color: Colors.white,
-                    ),
-                    onPressed: () async {
-                      if (playing) {
-                        await _video?.pause();
-                      } else {
-                        await _video?.play();
-                      }
-                      _isPlaying.value = _video?.value.isPlaying ?? false;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 18),
-                InkWell(
-                  onTap: () {
-                    _onNextPressed(true);
+                  onPressed: () async {
+                    if (playing) {
+                      await _video?.pause();
+                    } else {
+                      await _video?.play();
+                    }
+                    _isPlaying.value = _video?.value.isPlaying ?? false;
                   },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(32),
-                      color: AppColors.primaryColor,
+                ),
+              ),
+              const SizedBox(width: 18),
+              InkWell(
+                onTap: () {
+                  _onNextPressed(true);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(32),
+                    color: AppColors.primaryColor,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 8,
+                      top: 8,
+                      bottom: 8,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Next",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Next",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
                           ),
-                          Icon(Icons.navigate_next, color: Colors.white),
-                        ],
-                      ),
+                        ),
+                        Icon(Icons.navigate_next, color: Colors.white),
+                      ],
                     ),
                   ),
                 ),
-              ],
-
-              if (!isVid) ...[
-                Spacer(),
-                InkWell(
-                  onTap: () {
-                    _onNextPressed(false);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(32),
-                      color: AppColors.primaryColor,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Next",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Icon(Icons.navigate_next, color: Colors.white),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ],
           ),
         ),
+      );
+    }
+
+    // IMAGE CONTROLS ONLY
+    return Positioned(
+      bottom: 40,
+      left: 0,
+      right: 20,
+      child: Row(
+        children: [
+          Spacer(),
+          InkWell(
+            onTap: () {
+              _onNextPressed(false);
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                color: AppColors.primaryColor,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 8,
+                  top: 8,
+                  bottom: 8,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Next",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Icon(Icons.navigate_next, color: Colors.white),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

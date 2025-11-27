@@ -130,7 +130,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                         ))
                 : Image.file(File(widget.filePath), fit: BoxFit.cover),
           ),
-      
+
           /// Close button
           Positioned(
             top: 70,
@@ -153,7 +153,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
               ),
             ),
           ),
-      
+
           /// Bottom controls (only if video)
           if (widget.isVideo)
             Positioned(
@@ -162,7 +162,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
               right: 0,
               child: _buildBottomControls(),
             ),
-      
+
           if (!widget.isVideo)
             Positioned(
               bottom: 0,
@@ -172,9 +172,12 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: .24),
                 ),
-                child: Platform.isAndroid ? SafeArea(child: _buildBottomActions()) : Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 26),
-                  child: _buildBottomActions()),
+                child: Platform.isAndroid
+                    ? SafeArea(child: _buildBottomActions())
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 26),
+                        child: _buildBottomActions(),
+                      ),
               ),
             ),
         ],
@@ -184,7 +187,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
 
   Widget _buildBottomActions() => Row(
     mainAxisAlignment: MainAxisAlignment.spaceAround,
-    
+
     children: [
       InkWell(
         onTap: () {
@@ -218,7 +221,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
           ),
         ),
       ),
-  
+
       // Send button
       InkWell(
         onTap: widget.isChatBox
@@ -265,9 +268,8 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Obx(() {
-                final loading1 = createStoryController.isLoading.value;
                 final loading2 = sendMessageController.isLoading.value;
-                if (loading1 || loading2) {
+                if (loading2) {
                   return const SpinKitWave(color: Colors.white, size: 16.0);
                 }
                 return Text(
@@ -282,9 +284,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
           ),
         ),
       ),
-  
-    ]
-  ,
+    ],
   );
 
   /// ==== Video Controls ====
