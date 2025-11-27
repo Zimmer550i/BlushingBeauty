@@ -3,7 +3,6 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:ree_social_media_app/utils/app_constants.dart';
 
 class OneSignalHelper {
-  String playerId = '';
   static Future<void> initialize() async {
     OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
     OneSignal.Debug.setAlertLevel(OSLogLevel.none);
