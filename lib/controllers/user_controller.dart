@@ -88,7 +88,7 @@ class UserController extends GetxController {
 
   void setPlayerId() async {
     try {
-      String? playerId = await OneSignalHelper.getPlayerId();
+      String? playerId = await OneSignalHelper.getSubscriptionId();
 
       final response = await api.post(
         "/user/player-id/$playerId",

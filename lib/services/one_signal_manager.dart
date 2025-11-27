@@ -24,6 +24,17 @@ class OneSignalHelper {
     }
   }
 
+  static Future<String?> getSubscriptionId() async {
+    try {
+      final subscriptionId = OneSignal.User.pushSubscription.id;
+      debugPrint("OneSignal Subscription ID: $subscriptionId");
+      return subscriptionId;
+    } catch (e) {
+      debugPrint("Error fetching OneSignal Subscription ID: $e");
+      return null;
+    }
+  }
+
   // Add OneSignal observers for push notifications, user state, etc.
   static void _addObservers() {
     // Push Subscription Observer
