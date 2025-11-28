@@ -22,7 +22,7 @@ dependencies:
   video_player: ^2.10.0
   path_provider:
   permission_handler: ^12.0.1
-  flutter_sound: ^9.28.0
+  flutter_sound:
   flutter_contacts:
   image_picker: ^1.2.0
   mime: ^2.0.0

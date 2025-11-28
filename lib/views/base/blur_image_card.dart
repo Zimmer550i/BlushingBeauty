@@ -88,7 +88,7 @@ class _BlurImageCardState extends State<BlurImageCard> {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: ImageFiltered(
-              imageFilter: widget.isView
+              imageFilter: widget.isView || widget.isReaction
                   ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
                   : ImageFilter.blur(
                       sigmaX: 20,

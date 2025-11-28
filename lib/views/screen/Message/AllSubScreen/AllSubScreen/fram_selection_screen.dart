@@ -243,7 +243,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
   void _handleFrameAndSend() async {
     final selectedFrame = _thumbnailPaths[_selectedFrameIndex];
-    if (widget.isInbox == true) {
+    if (widget.isInbox == true || widget.chatId!.isNotEmpty) {
       await sendMessageController.sendMediaToSingleChat(
         thumbnail: widget.thumbnail!,
         chatId: widget.chatId.toString(),

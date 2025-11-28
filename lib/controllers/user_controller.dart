@@ -86,22 +86,22 @@ class UserController extends GetxController {
     }
   }
 
-  void setPlayerId() async {
+  void setSubscriptionId() async {
     try {
-      String? playerId = await OneSignalHelper.getSubscriptionId();
+      String? subscriptionId = await OneSignalHelper.getSubscriptionId();
 
       final response = await api.post(
-        "/user/player-id/$playerId",
+        "/user/player-id/$subscriptionId",
         {},
         authReq: true,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("=========> $playerId Player ID set successfully");
+        debugPrint("=========> $subscriptionId Subscription ID set successfully");
       } else {
-        debugPrint("=========>Failed to set player ID");
+        debugPrint("=========>Failed to set Subscription ID");
       }
     } catch (e) {
-      debugPrint("=========>Error setting player ID: $e");
+      debugPrint("=========>Error setting Subscription ID: $e");
     }
   }
 

@@ -187,17 +187,18 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
   }
 
   void _syncReactionVideos() async {
-    if (_reactionVideoController == null)
-      return;
-    if (!_reactionVideoController!.value.isInitialized)
-      return;
+    if (_reactionVideoController == null) return;
+    if (!_reactionVideoController!.value.isInitialized) return;
 
     final front = _reactionVideoController!;
 
-    // Update UI
     if (mounted) {
       setState(() {
         _videoPosition = front.value.position;
+
+        // 🔥 FIX: Update duration dynamically
+        _videoDuration = front.value.duration;
+
         _isPlaying.value = front.value.isPlaying;
       });
     }
@@ -270,103 +271,92 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
           ? Center(
               child: CircularProgressIndicator(color: AppColors.primaryColor),
             )
-          : RepaintBoundary(
-              key: _repaintKey,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Reaction video full screen
-                        if (_reactionVideoController!.value.isInitialized)
-                          Positioned.fill(
-                            child: FittedBox(
-                              fit: BoxFit.cover,
-                              child: SizedBox(
-                                width:
-                                    _reactionVideoController!.value.size.width,
-                                height:
-                                    _reactionVideoController!.value.size.height,
-                                child: VideoPlayer(_reactionVideoController!),
-                              ),
-                            ),
-                          ),
-
-                        // Main video mini preview
-                        if (widget.isVideo == true)
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: Container(
-                              width: 110,
-                              // height: 160,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: .25),
-                                border: Border.all(
-                                  color: AppColors.frameColors,
-                                  width: 2,
-                                ),
-                              ),
-                              clipBehavior: Clip.antiAliasWithSaveLayer,
-                              child: FittedBox(
-                                fit: BoxFit.cover,
-                                child: SizedBox(
-                                  width: _mainVideoController!.value.size.width,
-                                  height:
-                                      _mainVideoController!.value.size.height,
-                                  child: VideoPlayer(_mainVideoController!),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        if (widget.isVideo == false)
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: Container(
-                              width: 110,
-                              // height: 160,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: .25),
-                                border: Border.all(
-                                  color: AppColors.frameColors,
-                                  width: 2,
-                                ),
-                              ),
-                              clipBehavior: Clip.antiAliasWithSaveLayer,
-                              child: FittedBox(
-                                fit: BoxFit.cover,
-                                child: SizedBox(
-                                  width: 110,
-                                  height: 200,
-                                  child: Image.network(
-                                    widget.mainVideo,
-                                    fit: BoxFit.contain,
+          : Column(
+              children: [
+                Expanded(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      RepaintBoundary(
+                        key: _repaintKey,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Reaction video
+                            if (_reactionVideoController!.value.isInitialized)
+                              Positioned.fill(
+                                child: FittedBox(
+                                  fit: BoxFit.cover,
+                                  child: SizedBox(
+                                    width: _reactionVideoController!.value.size.width,
+                                    height: _reactionVideoController!.value.size.height,
+                                    child: VideoPlayer(_reactionVideoController!),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                        // Playback controls
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: _buildPlaybackControls(),
+
+                            // Main video mini preview
+                            if (widget.isVideo == true)
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 110,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black26,
+                                    border: Border.all(
+                                      color: AppColors.frameColors,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: FittedBox(
+                                    fit: BoxFit.cover,
+                                    child: SizedBox(
+                                      width: _mainVideoController!.value.size.width,
+                                      height: _mainVideoController!.value.size.height,
+                                      child: VideoPlayer(_mainVideoController!),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            // When main video is an image
+                            if (widget.isVideo == false)
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 110,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black26,
+                                    border: Border.all(
+                                      color: AppColors.frameColors,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Image.network(
+                                    widget.mainVideo,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                        // Positioned(
-                        //   left: 0,
-                        //   right: 0,
-                        //   bottom: 0,
-                        //   child: _buildBottomActions(),
-                        // ),
-                      ],
-                    ),
+                      ),
+
+                      // Playback controls (excluded from screenshot)
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: _buildPlaybackControls(),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
     );
   }

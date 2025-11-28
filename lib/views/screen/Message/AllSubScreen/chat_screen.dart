@@ -348,7 +348,6 @@ String _formatLocalTime(DateTime localTime) {
 
     if (msg["thumbnail"] != null && msg["thumbnail"].toString().isNotEmpty) {
       final thumbnailUrl = userController.addBaseUrl(msg["thumbnail"]);
-      debugPrint("🚀 URL: $thumbnailUrl");
       thumbnail = thumbnailUrl.toString();
       hasThumbnail = true;
     } else {
