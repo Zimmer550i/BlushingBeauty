@@ -11,6 +11,7 @@ import 'package:ree_social_media_app/controllers/chat_controller.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/bottom_menu.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import 'package:ree_social_media_app/views/screen/Camera/AllSubScreen/video_edit_screen.dart';
 
 import '../../../services/camera_manager.dart';
@@ -160,6 +161,48 @@ class _CameraScreenState extends State<CameraScreen>
     }
   }
 
+  Future<void> pickAndSendMedia() async {
+    // Bottom sheet: choose Image or Video
+    await showModalBottomSheet(
+      context: Get.context!,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.image, color: AppColors.primaryColor),
+                title: const Text("Select Image"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await openGallery();
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.videocam, color: AppColors.primaryColor),
+                title: const Text("Select Video"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await openVideo();
+                },
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(Icons.close, color: Colors.redAccent),
+                title: const Text("Cancel"),
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> openGallery() async {
     try {
       await GlobalCameraManager.dispose();
@@ -174,6 +217,40 @@ class _CameraScreenState extends State<CameraScreen>
           () => VideoEditScreen(
             filePath: file.path,
             isVideo: false,
+            isChatBox: widget.isChatBox,
+            chatId: widget.chatId,
+          ),
+          transition: Transition.leftToRight,
+        );
+      }
+
+      if (widget.cameras.isNotEmpty) {
+        await _initCamera(widget.cameras.first);
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint("⚠️ Error opening gallery: $e");
+
+      if (widget.cameras.isNotEmpty) {
+        await _initCamera(widget.cameras.first);
+      }
+    }
+  }
+
+  Future<void> openVideo() async {
+    try {
+      await GlobalCameraManager.dispose();
+
+      final XFile? xfile = await _picker.pickVideo(source: ImageSource.gallery);
+
+      if (!mounted) return;
+
+      if (xfile != null) {
+        final file = File(xfile.path);
+        Get.to(
+          () => VideoEditScreen(
+            filePath: file.path,
+            isVideo: true,
             isChatBox: widget.isChatBox,
             chatId: widget.chatId,
           ),
@@ -279,17 +356,7 @@ class _CameraScreenState extends State<CameraScreen>
             Positioned(
               top: 70,
               left: 20,
-              child: InkWell(
-                onTap: () => Get.back(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white38,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.arrow_back, color: AppColors.primaryColor),
-                ),
-              ),
+              child: ReBack(onTap: () => Get.back()),
             ),
 
           /// Camera / Video toggle
@@ -379,10 +446,10 @@ class _CameraScreenState extends State<CameraScreen>
     );
   }
 
-  /// 🖼 Gallery Button
+  /// Gallery Button
   Widget _buildGalleryButton() {
     return GestureDetector(
-      onTap: () => openGallery(),
+      onTap: () => pickAndSendMedia(),
       child: Container(
         height: 48,
         width: 48,

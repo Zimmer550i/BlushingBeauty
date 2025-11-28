@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/show_snackbar.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import '../../../controllers/notification_controller.dart';
 import '../../../controllers/user_controller.dart';
 
@@ -34,12 +35,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
             children: [
               Row(
                 children: [
-                  InkWell(
-                    onTap: () {
-                      Get.back();
-                    },
-                    child: Icon(Icons.arrow_back, color: AppColors.textColor),
-                  ),
+                  ReBack(onTap: ()=> Get.back()),
+                  // InkWell(
+                  //   onTap: () {
+                  //     Get.back();
+                  //   },
+                  //   child: Icon(Icons.arrow_back, color: AppColors.textColor),
+                  // ),
                   SizedBox(width: 12),
                   Text(
                     "Notifications",

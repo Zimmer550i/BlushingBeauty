@@ -5,6 +5,7 @@ import 'package:ree_social_media_app/controllers/auth_controller.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import '../../../../utils/show_snackbar.dart';
 
 class ReportProblemScreen extends StatefulWidget {
@@ -32,12 +33,7 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                 padding: EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    InkWell(
-                      onTap: () {
-                        Get.back();
-                      },
-                      child: Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
-                    ),
+                    ReBack(onTap: () => Get.back()),
                     SizedBox(width: 15),
                     Text(
                       "Report a Problem",
@@ -61,7 +57,8 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                       () => CustomTextField(
                         controller: passwordTextController,
                         isRealOnly: true,
-                        hintText: userController.userInfo.value!.name.toString(),
+                        hintText: userController.userInfo.value!.name
+                            .toString(),
                         borderSide: BorderSide(
                           color: Color(0xFFC4C3C3),
                           width: 1,
@@ -97,7 +94,8 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                     Obx(
                       () => CustomTextField(
                         controller: passwordTextController,
-                        hintText: userController.userInfo.value!.phone.toString(),
+                        hintText: userController.userInfo.value!.phone
+                            .toString(),
                         isRealOnly: true,
                         borderSide: BorderSide(
                           color: Color(0xFFC4C3C3),
@@ -117,9 +115,15 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                     SizedBox(height: 16),
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Color(0xFFC4C3C3), width: 0.5),
+                        border: Border.all(
+                          color: Color(0xFFC4C3C3),
+                          width: 0.5,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -148,7 +152,7 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                     Obx(() {
                       final authController = Get.find<AuthController>();
                       final user = userController.userInfo.value;
-          
+
                       return CustomButton(
                         loading: authController.isLoading.value,
                         onTap: () async {
@@ -156,20 +160,22 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                             showSnackBar("Please enter a report", true);
                             return;
                           }
-          
+
                           final name = user?.name ?? "";
                           final phone = user?.phone ?? "";
-          
+
                           final message = await authController.reportSubmit(
                             name,
                             phone,
                             reportController.text.trim(),
                           );
-          
+
                           if (message == "success") {
-                            showSnackBar("Report submitted successfully", false);
+                            showSnackBar(
+                              "Report submitted successfully",
+                              false,
+                            );
                             reportController.clear();
-                        
                           } else {
                             showSnackBar(message, true);
                           }
@@ -177,7 +183,6 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
                         text: "Submit Now",
                       );
                     }),
-          
                   ],
                 ),
               ),

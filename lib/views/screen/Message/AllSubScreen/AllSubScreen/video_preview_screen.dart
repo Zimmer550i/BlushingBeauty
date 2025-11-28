@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
 
@@ -296,14 +297,21 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         title: Row(
           children: [
             // ← Back Arrow
-            InkWell(
+            ReBack(
               onTap: () async {
                 await _stopRecordingIfNeeded();
                 _disposeControllers();
                 Get.back();
               },
-              child: const Icon(Icons.arrow_back),
             ),
+            // InkWell(
+            //   onTap: () async {
+            //     await _stopRecordingIfNeeded();
+            //     _disposeControllers();
+            //     Get.back();
+            //   },
+            //   child: const Icon(Icons.arrow_back),
+            // ),
             const SizedBox(width: 12),
             CircleAvatar(
               radius: 22,

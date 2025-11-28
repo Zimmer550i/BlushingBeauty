@@ -10,6 +10,7 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/show_snackbar.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -95,10 +96,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             /// Top bar
             Row(
               children: [
-                IconButton(
-                  onPressed: () => Get.back(),
-                  icon: Icon(Icons.arrow_back, color: AppColors.textColor),
-                ),
+                SizedBox(width: 20),
+                ReBack(onTap: () => Get.back()),
+                SizedBox(width: 16),
                 SvgPicture.asset("assets/icons/re.svg", height: 35, width: 45),
               ],
             ),
