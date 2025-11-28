@@ -66,6 +66,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
                       Get.to(
                         () => OtpVerificationScreen(
                           emailOrPhone: fullPhone,
+                          isForgotPassword: true,
                         ),
                       );
                     } else {

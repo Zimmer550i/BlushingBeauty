@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/views/screen/SetUpProfile/contact_access_screen.dart';
 import 'package:sms_autofill/sms_autofill.dart'; // Import sms_autofill package
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
@@ -12,7 +13,8 @@ import '../../../utils/show_snackbar.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String emailOrPhone;
-  const OtpVerificationScreen({super.key, required this.emailOrPhone});
+  final bool? isForgotPassword;
+  const OtpVerificationScreen({super.key, required this.emailOrPhone, this.isForgotPassword = false});
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -31,7 +33,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
   void initState() {
     super.initState();
     _startTimer();
-    listenForCode(); // Start listening for OTP code automatically
+    listenForCode();
   }
 
   @override
@@ -63,14 +65,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
   }
 
   void _handleChange(int i, String v) {
-    if (v.length > 1) {
-      final chars = v.replaceAll(RegExp(r'\D'), '').split('');
-      for (int j = 0; j < chars.length && i + j < controllers.length; j++) {
-        controllers[i + j].text = chars[j];
+    if (v.length == 6) {
+      for (int j = 0; j < 6; j++) {
+        controllers[j].text = v[j];
       }
-      final next = (i + chars.length).clamp(0, controllers.length - 1);
-      nodes[next].requestFocus();
+      nodes.last.requestFocus();
       setState(() {});
+      _verifyCode();
       return;
     }
 
@@ -79,19 +80,30 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
     } else if (v.isEmpty && i > 0) {
       nodes[i - 1].requestFocus();
     }
+
     setState(() {});
+
+    final codeValue = controllers.map((c) => c.text).join();
+    if (codeValue.length == 6) {
+      _verifyCode();
+    }
   }
 
   // This method is called automatically when OTP is received
   @override
-  void codeUpdated() async {
-    // Fetch the OTP code from SmsAutoFill and autofill OTP in the text fields
-    String? code = await SmsAutoFill().getAppSignature;
-    for (int i = 0; i < code.length; i++) {
-      controllers[i].text = code[i];
+  void codeUpdated() {
+    String? otp = code;
+
+    if (otp == null || otp.length < 6) return;
+
+    for (int i = 0; i < 6; i++) {
+      controllers[i].text = otp[i];
     }
+
+    nodes.last.requestFocus();
     setState(() {});
-    }
+    _verifyCode();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +195,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
       code,
     );
     if (message == "success") {
-      Get.to(() => const ResetPasswordScreen());
+      widget.isForgotPassword == true ? Get.to(() => const ResetPasswordScreen()) : Get.to(() => const ContactAccessScreen());
     } else {
       showSnackBar(message, true);
     }
@@ -219,6 +231,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
         focusNode: nodes[i],
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
+        autofillHints: const [AutofillHints.oneTimeCode],
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -232,7 +245,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
           border: InputBorder.none,
           hintText: '*',
           hintStyle: TextStyle(fontSize: 16, color: Color(0xFFB6B6B6)),
-          
         ),
         cursorColor: AppColors.primaryColor,
         onChanged: (v) => _handleChange(i, v),

@@ -11,6 +11,7 @@ import 'package:ree_social_media_app/views/base/custom_email_number_field.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
 import 'package:ree_social_media_app/views/screen/Auth/email_verify_screen.dart';
 import 'package:ree_social_media_app/views/screen/Auth/login_screen.dart';
+import 'package:ree_social_media_app/views/screen/Auth/otp_verification_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/all_data_page.dart';
 import '../../../utils/show_snackbar.dart';
 
@@ -240,7 +241,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     );
 
                     if (message == "success") {
-                      Get.to(() => EmailVerifyScreen(emailOrPhone: fullPhone));
+                      Get.to(() => OtpVerificationScreen(emailOrPhone: fullPhone));
                     } else {
                       showSnackBar(message, true);
                     }
