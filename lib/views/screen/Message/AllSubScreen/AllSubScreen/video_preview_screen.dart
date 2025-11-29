@@ -11,7 +11,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/re_back.dart';
-import 'package:ree_social_media_app/views/base/reponsive_image.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
 
@@ -354,7 +353,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                           fit: BoxFit.contain,
                           child: Image.network(
                             widget.videoUrl,
-                            errorBuilder: (_, __, ___) =>
+                            errorBuilder: (_, _, _) =>
                                 const Icon(Icons.broken_image),
                           ),
                         ),
@@ -511,7 +510,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             const SizedBox(width: 12),
             ValueListenableBuilder<bool>(
               valueListenable: _isPlaying,
-              builder: (_, playing, __) => IconButton(
+              builder: (_, playing, _) => IconButton(
                 icon: Icon(
                   playing ? Icons.pause : Icons.play_arrow,
                   color: Colors.white,
