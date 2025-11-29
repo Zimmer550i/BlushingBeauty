@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 
 import '../../../../controllers/auth_controller.dart';
 import '../../../../utils/show_snackbar.dart';
@@ -34,12 +35,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 padding: EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    InkWell(
-                      onTap: () {
-                        Get.back();
-                      },
-                      child: Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
-                    ),
+                    ReBack(onTap: () => Get.back()),
                     SizedBox(width: 15),
                     Text(
                       "Change Password",
@@ -63,7 +59,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       controller: currentPasswordController,
                       hintText: 'Enter current Password',
                       isPassword: true,
-                      borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
+                      borderSide: BorderSide(
+                        color: Color(0xFFC4C3C3),
+                        width: 1,
+                      ),
                       prefixIcon: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Container(
@@ -85,7 +84,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       controller: newPasswordController,
                       hintText: 'Enter new password',
                       isPassword: true,
-                      borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
+                      borderSide: BorderSide(
+                        color: Color(0xFFC4C3C3),
+                        width: 1,
+                      ),
                       prefixIcon: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Container(
@@ -107,7 +109,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       controller: confirmPasswordController,
                       hintText: 'Confirm  Password',
                       isPassword: true,
-                      borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
+                      borderSide: BorderSide(
+                        color: Color(0xFFC4C3C3),
+                        width: 1,
+                      ),
                       prefixIcon: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Container(
@@ -138,7 +143,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 confirmPasswordController.text) {
                               showSnackBar("Passwords do not match", true);
                             } else {
-                              final message = await authController.changePassword(
+                              final message = await authController
+                                  .changePassword(
                                     currentPasswordController.text,
                                     newPasswordController.text,
                                     confirmPasswordController.text,

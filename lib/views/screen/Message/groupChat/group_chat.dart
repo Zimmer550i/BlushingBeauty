@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/controllers/group_chat_controller.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import 'package:ree_social_media_app/views/screen/Camera/camera_screen.dart';
 import '../../../../controllers/chat_controller.dart';
 import '../../../../controllers/user_controller.dart';
@@ -189,18 +190,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       padding: const EdgeInsets.all(20.0),
       child: Row(
         children: [
-          InkWell(
-            onTap: () => Get.offAllNamed(AppRoutes.messageScreen),
-            child: const Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
-          ),
+          ReBack(onTap: () => Get.offAllNamed(AppRoutes.messageScreen)),
           const SizedBox(width: 12),
           InkWell(
             onTap: () {
-              Get.to(
-                () => GroupDetailsScreen(
-                  chatId: widget.chatId,
-                ),
-              )?.then((_) {
+              Get.to(() => GroupDetailsScreen(chatId: widget.chatId))?.then((
+                _,
+              ) {
                 groupChatController.fetchGroupDetails(widget.chatId);
               });
             },
@@ -225,22 +221,23 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Obx(()=> Text(
-              groupChatController.groupName.value == "group chat" ? "Group Chat" : groupChatController.groupName.value,
-              style: const TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),),
-          ),
-          InkWell(
-            onTap: () => Get.to(
-              () => GroupDetailsScreen(
-                chatId: widget.chatId,
+            child: Obx(
+              () => Text(
+                groupChatController.groupName.value == "group chat"
+                    ? "Group Chat"
+                    : groupChatController.groupName.value,
+                style: const TextStyle(
+                  color: Color(0xFF413E3E),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+          ),
+          InkWell(
+            onTap: () =>
+                Get.to(() => GroupDetailsScreen(chatId: widget.chatId)),
             child: Container(
               height: 30,
               width: 30,
@@ -552,54 +549,55 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     return saveRow;
   }
 
-String formatServerTime(dynamic serverTime) {
-  if (serverTime == null) return "";
+  String formatServerTime(dynamic serverTime) {
+    if (serverTime == null) return "";
 
-  late DateTime parsedTime;
+    late DateTime parsedTime;
 
-  // CASE 1 — already DateTime
-  if (serverTime is DateTime) {
-    parsedTime = serverTime;
-  } 
-  // CASE 2 — serverTime as String
-  else {
-    String timeStr = serverTime.toString().trim();
+    // CASE 1 — already DateTime
+    if (serverTime is DateTime) {
+      parsedTime = serverTime;
+    }
+    // CASE 2 — serverTime as String
+    else {
+      String timeStr = serverTime.toString().trim();
 
-    // CASE 2A — If only "HH:mm" is provided (e.g. "10:30")
-    if (!timeStr.contains('-') && timeStr.contains(':') && timeStr.length <= 5) {
-      final today = DateTime.now();
-      timeStr =
-          "${today.toIso8601String().split('T')[0]}T$timeStr:00"; // attach today's date
+      // CASE 2A — If only "HH:mm" is provided (e.g. "10:30")
+      if (!timeStr.contains('-') &&
+          timeStr.contains(':') &&
+          timeStr.length <= 5) {
+        final today = DateTime.now();
+        timeStr =
+            "${today.toIso8601String().split('T')[0]}T$timeStr:00"; // attach today's date
+      }
+
+      // Parse to DateTime
+      parsedTime = DateTime.parse(timeStr);
     }
 
-    // Parse to DateTime
-    parsedTime = DateTime.parse(timeStr);
+    // Convert to device local time
+    final DateTime localTime = parsedTime.toLocal();
+
+    return _formatLocalTime(localTime);
   }
 
-  // Convert to device local time
-  final DateTime localTime = parsedTime.toLocal();
+  String _formatLocalTime(DateTime localTime) {
+    final now = DateTime.now();
+    final timeFormat = DateFormat('h:mm a');
+    final dateFormat = DateFormat('d MMM yyyy');
 
-  return _formatLocalTime(localTime);
-}
+    if (localTime.year == now.year &&
+        localTime.month == now.month &&
+        localTime.day == now.day) {
+      return timeFormat.format(localTime);
+    }
 
-String _formatLocalTime(DateTime localTime) {
-  final now = DateTime.now();
-  final timeFormat = DateFormat('h:mm a');
-  final dateFormat = DateFormat('d MMM yyyy');
+    if (now.difference(localTime).inDays == 1) {
+      return "Yesterday";
+    }
 
-  if (localTime.year == now.year &&
-      localTime.month == now.month &&
-      localTime.day == now.day) {
-    return timeFormat.format(localTime);
+    return dateFormat.format(localTime);
   }
-
-  if (now.difference(localTime).inDays == 1) {
-    return "Yesterday";
-  }
-
-  return dateFormat.format(localTime);
-}
-
 
   Widget _buildInputBar() {
     return Padding(

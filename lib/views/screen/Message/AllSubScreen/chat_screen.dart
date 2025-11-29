@@ -12,6 +12,7 @@ import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/views/base/blur_image_card.dart';
 import 'package:ree_social_media_app/views/base/blur_video_card.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import 'package:ree_social_media_app/views/screen/Camera/camera_screen.dart';
 import '../../../../controllers/chat_controller.dart';
 import '../../../../controllers/user_controller.dart';
@@ -203,68 +204,68 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-String formatServerTime(dynamic serverTime) {
-  if (serverTime == null) return "";
+  String formatServerTime(dynamic serverTime) {
+    if (serverTime == null) return "";
 
-  late DateTime parsedTime;
+    late DateTime parsedTime;
 
-  if (serverTime is DateTime) {
-    parsedTime = serverTime;
-  } 
-  else {
-    String timeStr = serverTime.toString().trim();
+    if (serverTime is DateTime) {
+      parsedTime = serverTime;
+    } else {
+      String timeStr = serverTime.toString().trim();
 
-    if (!timeStr.contains('-') && timeStr.contains(':') && timeStr.length <= 5) {
-      final today = DateTime.now();
-      timeStr =
-          "${today.toIso8601String().split('T')[0]}T$timeStr:00";
+      if (!timeStr.contains('-') &&
+          timeStr.contains(':') &&
+          timeStr.length <= 5) {
+        final today = DateTime.now();
+        timeStr = "${today.toIso8601String().split('T')[0]}T$timeStr:00";
+      }
+
+      parsedTime = DateTime.parse(timeStr);
     }
 
-    parsedTime = DateTime.parse(timeStr);
+    final DateTime localTime = parsedTime.toLocal();
+
+    return _formatLocalTime(localTime);
   }
 
-  final DateTime localTime = parsedTime.toLocal();
+  String _formatLocalTime(DateTime localTime) {
+    final now = DateTime.now();
+    final timeFormat = DateFormat('h:mm a'); // Ex: 2:32 PM
+    final dateFormat = DateFormat('d MMM yyyy'); // Ex: 25 Nov 2025
 
-  return _formatLocalTime(localTime);
-}
+    // Today → return time only
+    if (localTime.year == now.year &&
+        localTime.month == now.month &&
+        localTime.day == now.day) {
+      return timeFormat.format(localTime);
+    }
 
-String _formatLocalTime(DateTime localTime) {
-  final now = DateTime.now();
-  final timeFormat = DateFormat('h:mm a');       // Ex: 2:32 PM
-  final dateFormat = DateFormat('d MMM yyyy');   // Ex: 25 Nov 2025
+    // Yesterday
+    if (now.difference(localTime).inDays == 1) {
+      return "Yesterday";
+    }
 
-  // Today → return time only
-  if (localTime.year == now.year &&
-      localTime.month == now.month &&
-      localTime.day == now.day) {
-    return timeFormat.format(localTime);
+    // Else → return date (e.g. 25 Nov 2025)
+    return dateFormat.format(localTime);
   }
-
-  // Yesterday
-  if (now.difference(localTime).inDays == 1) {
-    return "Yesterday";
-  }
-
-  // Else → return date (e.g. 25 Nov 2025)
-  return dateFormat.format(localTime);
-}
-
 
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
-          InkWell(
-            onTap: () => Get.offAllNamed(AppRoutes.messageScreen),
-            child: const Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
-          ),
+          ReBack(onTap: () => Get.offAllNamed(AppRoutes.messageScreen)),
           const SizedBox(width: 12),
           CircleAvatar(
             backgroundColor: AppColors.primaryColor,
             radius: 22,
-            backgroundImage: widget.receiverImage.isEmpty ? null : NetworkImage(_receiverImage!),
-            child: widget.receiverImage.isEmpty ? Text(widget.receiverName[0].toUpperCase()) : null,
+            backgroundImage: widget.receiverImage.isEmpty
+                ? null
+                : NetworkImage(_receiverImage!),
+            child: widget.receiverImage.isEmpty
+                ? Text(widget.receiverName[0].toUpperCase())
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -338,7 +339,7 @@ String _formatLocalTime(DateTime localTime) {
 
   Widget _buildImageMessage(Map<String, dynamic> msg) {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
-    
+
     bool isMe = msg["isMe"];
     bool view = msg["view"];
     bool isReaction = msg["reaction"] ?? false;
@@ -453,7 +454,7 @@ String _formatLocalTime(DateTime localTime) {
 
   Widget _buildVideoFooter(Map<String, dynamic> msg, String path) {
     final isMe = msg['isMe'] ?? false;
-final time = msg["time"];
+    final time = msg["time"];
     String formattedTime = formatServerTime(time);
 
     final timeText = Text(
@@ -537,7 +538,6 @@ final time = msg["time"];
             child: Row(
               children: [
                 if (isMe) ...[
-                  
                   SvgPicture.asset(
                     'assets/icons/download.svg',
                     color: const Color(0xFF56BBFF),
@@ -564,7 +564,6 @@ final time = msg["time"];
                     color: const Color(0xFF56BBFF),
                     height: 18,
                   ),
-                  
                 ],
               ],
             ),

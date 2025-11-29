@@ -170,7 +170,6 @@ class AuthController extends GetxController {
     }
   }
 
-
   Future<String> verifyForgotPasswordOtp(String code) async {
     isLoading.value = true;
     try {
@@ -270,16 +269,14 @@ class AuthController extends GetxController {
     }
   }
 
-
-  Future<String> reportSubmit(String name, String? phone,String report) async {
+  Future<String> reportSubmit(String name, String? phone, String report) async {
     isLoading.value = true;
     try {
       final response = await api.post("/report/create-report", {
         "name": name.trim(),
         "phone": phone?.trim() ?? '',
         "content": report.trim(),
-      },
-      authReq: true);
+      }, authReq: true);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         isLoading.value = false;
@@ -294,34 +291,35 @@ class AuthController extends GetxController {
     }
   }
 
-
   Future<bool> previouslyLoggedIn() async {
-  String? token = await SharedPrefsService.get('token');
-  if (token != null) {
-    debugPrint('🔍 Token found. Fetching user info...');
-    final message = await Get.find<UserController>().getInfo();
-    final data = Get.find<UserController>().userInfo.value;
-    final name = data!.name;
-    final image = data.image;
+    String? token = await SharedPrefsService.get('token');
+    if (token != null) {
+      debugPrint('🔍 Token found. Fetching user info...');
+      final message = await Get.find<UserController>().getInfo();
+      final data = Get.find<UserController>().userInfo.value;
 
-    if (message == "success") {
-      if (name == null || image == null) {
+      if (message == "success") {
+        if (data == null) {
+          return false;
+        }
+        String name = data.name.toString();
+        String image = data.image.toString();
+        if (name.isEmpty || image.isEmpty) {
+          return false;
+        }
+        debugPrint("🟡 Token:======> $token");
+        isLoggedIn.value = true;
+        return true;
+      } else if (message == "User doesn't exist!") {
+        debugPrint("❌ User doesn't exist.");
+        return false;
+      } else {
         return false;
       }
-      debugPrint("🟡 Token:======> $token");
-      isLoggedIn.value = true;
-      return true;
-    } else if (message == "User doesn't exist!") {
-      debugPrint("❌ User doesn't exist.");
-      return false;
-    } else {
-      return false;
     }
+    isLoggedIn.value = false;
+    return false;
   }
-  isLoggedIn.value = false;
-  return false;
-}
-
 
   Future<void> sendInvite(String phoneNumber, String senderName) async {
     try {
@@ -348,18 +346,18 @@ class AuthController extends GetxController {
   }
 
   Future<void> deleteAccount() async {
-    try{
+    try {
       final response = await api.delete("/user/delete-profile", authReq: true);
       if (response.statusCode == 200 || response.statusCode == 201) {
         await SharedPrefsService.clear();
         Get.offAll(() => LoginScreen());
         showSnackBar("Your account has been deleted", false);
         isLoggedIn.value = false;
-      }else{
-        showSnackBar("Failed: ${response.body}",true);
+      } else {
+        showSnackBar("Failed: ${response.body}", true);
       }
-    }catch(e){
-      showSnackBar("Something went wrong: $e",true);
+    } catch (e) {
+      showSnackBar("Something went wrong: $e", true);
     }
   }
 

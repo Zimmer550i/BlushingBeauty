@@ -3,6 +3,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/video_preview_screen.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/view_video.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -44,10 +45,7 @@ class _SeeAllStoryScreenState extends State<SeeAllStoryScreen> {
             children: [
               Row(
                 children: [
-                  InkWell(
-                    onTap: () => Get.back(),
-                    child: Icon(Icons.arrow_back, color: AppColors.textColor),
-                  ),
+                  ReBack(onTap: () => Get.back()),
                   const SizedBox(width: 12),
                   Text(
                     widget.isMe == true ? "My Stories" : "All Stories",

@@ -8,6 +8,7 @@ import 'package:ree_social_media_app/controllers/user_controller.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_dropdown.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import '../../../../controllers/group_chat_controller.dart';
 import 'add_group_member.dart';
 
@@ -117,14 +118,21 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 /// Top bar
                 Row(
                   children: [
-                    InkWell(
+                    ReBack(
                       onTap: () {
                         widget.isCreated == true
                             ? Get.offAllNamed(AppRoutes.messageScreen)
                             : Get.back();
                       },
-                      child: const Icon(Icons.arrow_back, color: Colors.black),
                     ),
+                    // InkWell(
+                    //   onTap: () {
+                    //     widget.isCreated == true
+                    //         ? Get.offAllNamed(AppRoutes.messageScreen)
+                    //         : Get.back();
+                    //   },
+                    //   child: const Icon(Icons.arrow_back, color: Colors.black),
+                    // ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(

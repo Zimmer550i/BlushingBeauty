@@ -6,6 +6,7 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_checkbox_screen.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import '../../../controllers/chat_controller.dart';
 
 class CreateGroupScreen extends StatefulWidget {
@@ -74,10 +75,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             const SizedBox(height: 24),
             Row(
               children: [
-                IconButton(
-                  onPressed: Get.back,
-                  icon: const Icon(Icons.arrow_back_ios),
-                ),
+                ReBack(onTap: () => Get.back()),
+                // IconButton(
+                //   onPressed: Get.back,
+                //   icon: const Icon(Icons.arrow_back_ios),
+                // ),
                 // const SizedBox(width: 8),
                 // Text(
                 //   "Create Group",
@@ -109,67 +111,73 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               child: filteredFriends.isEmpty
                   ? const Center(child: Text("No friends found"))
                   : ListView.separated(
-                padding: EdgeInsets.zero,
-                itemBuilder: (context, index) {
-                  final item = filteredFriends[index];
-                  final imageUrl = userController.addBaseUrl(item['image']);
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (context, index) {
+                        final item = filteredFriends[index];
+                        final imageUrl = userController.addBaseUrl(
+                          item['image'],
+                        );
 
-                  return Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor: AppColors.primaryColor,
-                        backgroundImage: imageUrl != null
-                            ? NetworkImage(imageUrl)
-                            : const AssetImage("assets/images/dummy.jpg")
-                        as ImageProvider,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          item['name'],
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: AppColors.textColor,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                      CustomCheckboxScreen(
-                        value: item['isInvite'],
-                        onChanged: (val) {
-                          setState(() {
-                            item['isInvite'] = val!;
-                          });
-                        },
-                      ),
-                    ],
-                  );
-                },
-                separatorBuilder: (_, _) => const SizedBox(height: 16),
-                itemCount: filteredFriends.length,
-              ),
+                        return Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 22,
+                              backgroundColor: AppColors.primaryColor,
+                              backgroundImage: imageUrl != null
+                                  ? NetworkImage(imageUrl)
+                                  : const AssetImage("assets/images/dummy.jpg")
+                                        as ImageProvider,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                item['name'],
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: AppColors.textColor,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            CustomCheckboxScreen(
+                              value: item['isInvite'],
+                              onChanged: (val) {
+                                setState(() {
+                                  item['isInvite'] = val!;
+                                });
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                      separatorBuilder: (_, _) => const SizedBox(height: 16),
+                      itemCount: filteredFriends.length,
+                    ),
             ),
 
-            Obx(()=> CustomButton(
-              loading: chatController.isLoading.value,
-              onTap: () {
-                final selected = filteredFriends
-                    .where((c) => c['isInvite'] == true)
-                    .map((c) => c["_id"].toString())
-                    .toList();
+            Obx(
+              () => CustomButton(
+                loading: chatController.isLoading.value,
+                onTap: () {
+                  final selected = filteredFriends
+                      .where((c) => c['isInvite'] == true)
+                      .map((c) => c["_id"].toString())
+                      .toList();
 
-                if (selected.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Please select at least one member")),
-                  );
-                  return;
-                }
+                  if (selected.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Please select at least one member"),
+                      ),
+                    );
+                    return;
+                  }
 
-                chatController.createGroupChat(selected);
-              },
-              text: "Create Now",
-            ),),
+                  chatController.createGroupChat(selected);
+                },
+                text: "Create Now",
+              ),
+            ),
           ],
         ),
       ),

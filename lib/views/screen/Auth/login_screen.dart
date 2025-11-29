@@ -102,10 +102,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () async {
                     final String fullPhone =
                         '${selectedCountryCode.dialCode}${phoneTextController.text.replaceAll(RegExp(r'[^0-9]'), '')}';
-                    debugPrint('📞 Full Phone: $fullPhone');
                     if (phoneTextController.text.isEmpty ||
                         passwordTextController.text.isEmpty) {
-                      showSnackBar("Please fill all the fields", true);
+                      showSnackBar("Please fill in all required fields", true);
                     } else {
                       final message = await authController.login(
                         fullPhone,
