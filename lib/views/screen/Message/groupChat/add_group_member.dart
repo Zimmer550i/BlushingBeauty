@@ -9,6 +9,7 @@ import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_checkbox_screen.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 
 class AddGroupMemberScreen extends StatefulWidget {
   final String chatId;
@@ -146,10 +147,7 @@ class _AddGroupMemberScreenState extends State<AddGroupMemberScreen> {
   Widget _buildHeader() {
     return Row(
       children: [
-        IconButton(
-          onPressed: () => Get.back(),
-          icon: const Icon(Icons.arrow_back_ios),
-        ),
+        ReBack(onTap: () => Get.back()),
         const SizedBox(width: 8),
         Text(
           "Add Group Members",

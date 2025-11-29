@@ -9,7 +9,6 @@ import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
 import 'package:ree_social_media_app/views/base/custom_email_number_field.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
-import 'package:ree_social_media_app/views/screen/Auth/email_verify_screen.dart';
 import 'package:ree_social_media_app/views/screen/Auth/login_screen.dart';
 import 'package:ree_social_media_app/views/screen/Auth/otp_verification_screen.dart';
 import 'package:ree_social_media_app/views/screen/Profile/AllSubScreen/all_data_page.dart';
@@ -75,7 +74,7 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 12),
               CustomTextField(
                 controller: passwordTextController,
-                hintText: 'Enter your Password',
+                hintText: 'Enter Password',
                 borderSide: const BorderSide(
                   color: Color(0xFFC4C3C3),
                   width: 1,
@@ -105,7 +104,7 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 12),
               CustomTextField(
                 controller: confirmPasswordTextController,
-                hintText: 'Confirm your Password',
+                hintText: 'Confirm Password',
                 borderSide: const BorderSide(
                   color: Color(0xFFC4C3C3),
                   width: 1,
@@ -241,7 +240,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     );
 
                     if (message == "success") {
-                      Get.to(() => OtpVerificationScreen(emailOrPhone: fullPhone));
+                      Get.to(
+                        () => OtpVerificationScreen(emailOrPhone: fullPhone),
+                      );
                     } else {
                       showSnackBar(message, true);
                     }

@@ -70,13 +70,11 @@ class _CameraScreenState extends State<CameraScreen>
 
   @override
   void didPushNext() {
-    // When navigating to another screen, release camera resources
     GlobalCameraManager.dispose();
   }
 
   @override
   void didPopNext() async {
-    // When coming back to this screen, reinitialize the camera
     if (widget.cameras.isNotEmpty) {
       await _initCamera(widget.cameras.first);
     }
@@ -151,8 +149,6 @@ class _CameraScreenState extends State<CameraScreen>
         transition: Transition.leftToRight,
         duration: Duration(milliseconds: 3),
       );
-
-      // ✅ Reinitialize after coming back
       if (widget.cameras.isNotEmpty) {
         await _initCamera(_controller?.description ?? widget.cameras.first);
       }
@@ -162,7 +158,6 @@ class _CameraScreenState extends State<CameraScreen>
   }
 
   Future<void> pickAndSendMedia() async {
-    // Bottom sheet: choose Image or Video
     await showModalBottomSheet(
       context: Get.context!,
       backgroundColor: Colors.white,

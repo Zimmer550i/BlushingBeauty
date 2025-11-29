@@ -339,7 +339,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> logout() async {
-    await SharedPrefsService.clear();
+    await SharedPrefsService.remove('token');
     Get.offAll(() => LoginScreen());
     showSnackBar("You have been logged out", false);
     isLoggedIn.value = false;

@@ -128,7 +128,7 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
                             color: AppColors.primaryColor,
                           ),
                         ))
-                : Image.file(File(widget.filePath), fit: BoxFit.cover),
+                : Image.file(File(widget.filePath), fit: BoxFit.contain),
           ),
 
           /// Close button

@@ -7,6 +7,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
+import 'package:ree_social_media_app/views/base/reponsive_image.dart';
 import 'package:video_player/video_player.dart';
 
 class ViewMedia extends StatefulWidget {
@@ -105,14 +107,7 @@ class _ViewMediaState extends State<ViewMedia> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            InkWell(
-              onTap: () => Get.back(),
-              child: const Icon(Icons.arrow_back),
-            ),
-          ],
-        ),
+        title: Row(children: [ReBack(onTap: () => Get.back())]),
         actions: [
           IconButton(
             icon: const Icon(Icons.close, size: 26),
@@ -146,20 +141,9 @@ class _ViewMediaState extends State<ViewMedia> {
       );
     }
 
-    // 🖼️ Image view (supports both local and network images)
+    //Image view (supports both local and network images)
     if (widget.mediaUrl.startsWith('http')) {
-      return Image.network(
-        widget.mediaUrl,
-        fit: BoxFit.contain,
-        errorBuilder: (_, _, _) =>
-            const Center(child: Icon(Icons.broken_image, size: 60)),
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return Center(
-            child: SpinKitWave(color: AppColors.primaryColor, size: 30),
-          );
-        },
-      );
+      return ResponsiveImage(url: widget.mediaUrl);
     } else {
       final file = File(widget.mediaUrl);
       if (!file.existsSync()) {

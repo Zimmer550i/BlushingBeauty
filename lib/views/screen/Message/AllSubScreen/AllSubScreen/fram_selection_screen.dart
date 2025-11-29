@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import 'package:video_player/video_player.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
@@ -140,10 +141,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
 
   Widget _buildAppBarTitle() => Row(
     children: [
-      InkWell(
-        onTap: () => Get.back(),
-        child: const Icon(Icons.arrow_back, color: Color(0xFF0D1C12)),
-      ),
+      ReBack(onTap: () => Get.back()),
       const SizedBox(width: 12),
       CircleAvatar(
         radius: 22,
@@ -168,8 +166,8 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
   );
 
   Widget _buildBottomControls() => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+    color: Colors.transparent,
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
     child: SafeArea(
       child: Row(
         children: [

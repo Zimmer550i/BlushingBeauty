@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
+import 'package:ree_social_media_app/views/base/re_back.dart';
 import 'package:video_player/video_player.dart';
 import 'fram_selection_screen.dart';
 import 'dart:ui' as ui;
@@ -149,7 +150,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
       _videoDuration = _reactionVideoController!.value.duration;
 
       // Listen to reaction video to sync main video
-      // _reactionVideoController!.addListener(_syncVideos);
+      _reactionVideoController!.addListener(_syncVideos);
 
       // Start both videos paused
       _isPlaying.value = false;
@@ -181,6 +182,7 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
     if (mounted) {
       setState(() {
         _videoPosition = front.value.position;
+        _videoDuration = front.value.duration;
         _isPlaying.value = front.value.isPlaying;
       });
     }
@@ -244,16 +246,17 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            InkWell(
-              onTap: Get.back,
-              child: const Icon(Icons.arrow_back, color: Colors.black),
-            ),
+            ReBack(onTap: () => Get.back()),
             const SizedBox(width: 12),
             CircleAvatar(
               radius: 22,
               backgroundColor: AppColors.primaryColor,
-              backgroundImage: widget.userProfile.isEmpty ? null : NetworkImage(widget.userProfile),
-              child: widget.userProfile.isEmpty ? Text(widget.userName[0].toUpperCase()) : null,
+              backgroundImage: widget.userProfile.isEmpty
+                  ? null
+                  : NetworkImage(widget.userProfile),
+              child: widget.userProfile.isEmpty
+                  ? Text(widget.userName[0].toUpperCase())
+                  : null,
             ),
             const SizedBox(width: 12),
             Text(
@@ -288,9 +291,17 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                                 child: FittedBox(
                                   fit: BoxFit.cover,
                                   child: SizedBox(
-                                    width: _reactionVideoController!.value.size.width,
-                                    height: _reactionVideoController!.value.size.height,
-                                    child: VideoPlayer(_reactionVideoController!),
+                                    width: _reactionVideoController!
+                                        .value
+                                        .size
+                                        .width,
+                                    height: _reactionVideoController!
+                                        .value
+                                        .size
+                                        .height,
+                                    child: VideoPlayer(
+                                      _reactionVideoController!,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -313,8 +324,14 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                                   child: FittedBox(
                                     fit: BoxFit.cover,
                                     child: SizedBox(
-                                      width: _mainVideoController!.value.size.width,
-                                      height: _mainVideoController!.value.size.height,
+                                      width: _mainVideoController!
+                                          .value
+                                          .size
+                                          .width,
+                                      height: _mainVideoController!
+                                          .value
+                                          .size
+                                          .height,
                                       child: VideoPlayer(_mainVideoController!),
                                     ),
                                   ),
@@ -397,9 +414,9 @@ class _SendOrTrimVideoScreenState extends State<SendOrTrimVideoScreen> {
                         await _reactionVideoController?.seekTo(pos);
 
                         // Only seek the main video if isVideo is true
-                        if (widget.isVideo == true) {
-                          await _mainVideoController?.seekTo(pos);
-                        }
+                        widget.isVideo == true
+                            ? await _mainVideoController?.seekTo(pos)
+                            : null;
 
                         setState(() => _videoPosition = pos);
                       },

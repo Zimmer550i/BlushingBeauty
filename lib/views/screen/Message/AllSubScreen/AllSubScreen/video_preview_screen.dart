@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/re_back.dart';
+import 'package:ree_social_media_app/views/base/reponsive_image.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
 
@@ -304,14 +305,6 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 Get.back();
               },
             ),
-            // InkWell(
-            //   onTap: () async {
-            //     await _stopRecordingIfNeeded();
-            //     _disposeControllers();
-            //     Get.back();
-            //   },
-            //   child: const Icon(Icons.arrow_back),
-            // ),
             const SizedBox(width: 12),
             CircleAvatar(
               radius: 22,
@@ -357,19 +350,13 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                             child: VideoPlayer(_video!),
                           ),
                         )
-                      : Image.network(
-                          widget.videoUrl,
-                          fit: BoxFit.fitWidth,
-                          errorBuilder: (_, _, _) => Icon(Icons.broken_image),
-                          loadingBuilder: (context, child, progress) {
-                            if (progress == null) return child;
-                            return Center(
-                              child: SpinKitWave(
-                                color: AppColors.primaryColor,
-                                size: 30,
-                              ),
-                            );
-                          },
+                      : FittedBox(
+                          fit: BoxFit.contain,
+                          child: Image.network(
+                            widget.videoUrl,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.broken_image),
+                          ),
                         ),
                 ),
 
@@ -396,8 +383,55 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                       ),
                     ),
                   ),
-
-                _buildBottomControls(),
+                isVideo
+                    ? _buildBottomControls()
+                    : Positioned(
+                        bottom: 40,
+                        left: 0,
+                        right: 20,
+                        child: Row(
+                          children: [
+                            Spacer(),
+                            InkWell(
+                              onTap: () {
+                                _onNextPressed(false);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(32),
+                                  color: AppColors.primaryColor,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 16,
+                                    right: 8,
+                                    top: 8,
+                                    bottom: 8,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Next",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.navigate_next,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
               ],
             )
           : Center(
@@ -445,142 +479,89 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   );
 
   Widget _buildBottomControls() {
-    final isVid = isVideo;
-
-    if (isVid) {
-      final total = _videoDuration.inMilliseconds.toDouble().clamp(
-        1,
-        double.infinity,
-      );
-      final value = _position.inMilliseconds.toDouble().clamp(0, total);
-
-      return Positioned(
-        bottom: 0,
-        left: 0,
-        right: 0,
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          color: Colors.black.withValues(alpha: 0.3),
-          child: Row(
-            children: [
-              Text(
-                _fmt(_position),
-                style: const TextStyle(color: Colors.white),
-              ),
-              Expanded(
-                child: Slider(
-                  value: double.parse(value.toStringAsFixed(0)),
-                  min: 0,
-                  max: double.parse(total.toStringAsFixed(0)),
-                  activeColor: Colors.white,
-                  onChanged: (v) =>
-                      _video?.seekTo(Duration(milliseconds: v.toInt())),
-                ),
-              ),
-              Text(
-                _fmt(_videoDuration),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              ValueListenableBuilder<bool>(
-                valueListenable: _isPlaying,
-                builder: (_, playing, __) => IconButton(
-                  icon: Icon(
-                    playing ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
-                  ),
-                  onPressed: () async {
-                    if (playing) {
-                      await _video?.pause();
-                    } else {
-                      await _video?.play();
-                    }
-                    _isPlaying.value = _video?.value.isPlaying ?? false;
-                  },
-                ),
-              ),
-              const SizedBox(width: 18),
-              InkWell(
-                onTap: () {
-                  _onNextPressed(true);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    color: AppColors.primaryColor,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 8,
-                      top: 8,
-                      bottom: 8,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Next",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Icon(Icons.navigate_next, color: Colors.white),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // IMAGE CONTROLS ONLY
+    final total = _videoDuration.inMilliseconds.toDouble().clamp(
+      1,
+      double.infinity,
+    );
+    final value = _position.inMilliseconds.toDouble().clamp(0, total);
     return Positioned(
-      bottom: 40,
+      bottom: 0,
       left: 0,
-      right: 20,
-      child: Row(
-        children: [
-          Spacer(),
-          InkWell(
-            onTap: () {
-              _onNextPressed(false);
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                color: AppColors.primaryColor,
+      right: 0,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        color: Colors.black.withValues(alpha: 0.3),
+        child: Row(
+          children: [
+            Text(_fmt(_position), style: const TextStyle(color: Colors.white)),
+            Expanded(
+              child: Slider(
+                value: double.parse(value.toStringAsFixed(0)),
+                min: 0,
+                max: double.parse(total.toStringAsFixed(0)),
+                activeColor: Colors.white,
+                onChanged: (v) =>
+                    _video?.seekTo(Duration(milliseconds: v.toInt())),
               ),
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 8,
-                  top: 8,
-                  bottom: 8,
+            ),
+            Text(
+              _fmt(_videoDuration),
+              style: const TextStyle(color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            ValueListenableBuilder<bool>(
+              valueListenable: _isPlaying,
+              builder: (_, playing, __) => IconButton(
+                icon: Icon(
+                  playing ? Icons.pause : Icons.play_arrow,
+                  color: Colors.white,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Next",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                onPressed: () async {
+                  if (playing) {
+                    await _video?.pause();
+                  } else {
+                    await _video?.play();
+                  }
+                  _isPlaying.value = _video?.value.isPlaying ?? false;
+                },
+              ),
+            ),
+            const SizedBox(width: 18),
+            InkWell(
+              onTap: () {
+                _onNextPressed(true);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(32),
+                  color: AppColors.primaryColor,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 8,
+                    top: 8,
+                    bottom: 8,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Next",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    Icon(Icons.navigate_next, color: Colors.white),
-                  ],
+                      Icon(Icons.navigate_next, color: Colors.white),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -20,40 +20,13 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(Duration(seconds: 3), () async {
       final isLoggedIn = await authController.previouslyLoggedIn();
       if (isLoggedIn) {
-        Get.offAll(()=> MessageScreen());
+        Get.offAll(() => MessageScreen());
       } else {
-        Get.to(()=> OnboardScreen1());
+        Get.to(() => OnboardScreen1());
       }
     });
     super.initState();
-    // _getDeviceInfo();
-    // initPlatformState();
   }
-
-//   // Initialize OneSignal
-// Future<void> initPlatformState() async {
-//     if (!mounted) return;
-
-//     // Initialize OneSignal
-//     OneSignal.initialize(
-//       AppConstants.onesignalAppId,
-//     );
-
-
-//   }
-
-
-
-  // Future<void> _getDeviceInfo() async {
-  //   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-  //   AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-
-  //   setState(() {
-  //     _deviceId = androidInfo.id;
-  //   });
-
-  //   debugPrint("======>Device ID: $_deviceId");
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -65,20 +38,20 @@ class _SplashScreenState extends State<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF56BBFF),
-              Color(0xFFE6E6E6)
-            ]
-          )
+            colors: [Color(0xFF56BBFF), Color(0xFFE6E6E6)],
+          ),
         ),
         child: Center(
-          child: Text("re:",
-          style: TextStyle(
-            fontSize: 100,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),),
+          child: Text(
+            "re:",
+            style: TextStyle(
+              fontSize: 100,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
-    ));
+      ),
+    );
   }
 }

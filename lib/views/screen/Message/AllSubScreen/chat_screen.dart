@@ -340,7 +340,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildImageMessage(Map<String, dynamic> msg) {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
 
-    bool isMe = msg["isMe"];
+    bool isMe = msg["isMe"] ?? false;
     bool view = msg["view"];
     bool isReaction = msg["reaction"] ?? false;
     bool hasThumbnail = false;
