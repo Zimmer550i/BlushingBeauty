@@ -49,7 +49,11 @@ class _ResponsiveImageState extends State<ResponsiveImage> {
         final renderedHeight = constraints.maxWidth * (imgHeight! / imgWidth!);
 
         // 🔥 If rendered image height > 80% of screen height
-        final bool isVeryTall = renderedHeight > screenHeight * 0.8;
+        double sHeight = screenHeight * 0.7;
+        final bool isVeryTall = renderedHeight > sHeight;
+        debugPrint(
+          "🔥 renderedHeight: $renderedHeight || screenHeight: ${screenHeight * 0.7} || isVeryTall: $isVeryTall",
+        );
 
         return Image.network(
           widget.url,

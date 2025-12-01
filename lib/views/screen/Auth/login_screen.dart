@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 12),
               CustomTextField(
                 controller: passwordTextController,
-                hintText: 'Enter your Password',
+                hintText: 'Enter Password',
                 isPassword: true,
                 borderSide: BorderSide(color: Color(0xFFC4C3C3), width: 1),
                 prefixIcon: Padding(

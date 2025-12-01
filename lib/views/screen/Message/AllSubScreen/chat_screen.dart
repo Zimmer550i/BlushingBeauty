@@ -341,7 +341,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final imageUrl = userController.addBaseUrl(msg["media"] ?? "");
 
     bool isMe = msg["isMe"] ?? false;
-    bool view = msg["view"];
+    bool view = msg["view"] ?? false;
     bool isReaction = msg["reaction"] ?? false;
     bool hasThumbnail = false;
 

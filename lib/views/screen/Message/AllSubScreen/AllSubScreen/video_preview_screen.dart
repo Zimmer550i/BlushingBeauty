@@ -11,7 +11,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:ree_social_media_app/controllers/message_controller.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/views/base/re_back.dart';
-import 'package:ree_social_media_app/views/base/reponsive_image.dart';
 import 'package:ree_social_media_app/views/screen/Message/AllSubScreen/AllSubScreen/send_or_trim_video_screen.dart';
 import 'package:video_player/video_player.dart';
 
@@ -47,6 +46,8 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   bool isRecording = false;
   XFile? recordedFile;
   String? storyChatId;
+  double imgWidth = 0;
+  double imgHeight = 0;
 
   Duration _videoDuration = Duration.zero;
   Duration _position = Duration.zero;
@@ -87,6 +88,10 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
 
     if (isVideo) {
       await _initVideo();
+    }
+
+    if (!isVideo) {
+      _loadImageInfo();
     }
 
     if (mounted) {
@@ -288,6 +293,19 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     }
   }
 
+  void _loadImageInfo() {
+    NetworkImage(widget.videoUrl)
+        .resolve(const ImageConfiguration())
+        .addListener(
+          ImageStreamListener((ImageInfo info, _) {
+            setState(() {
+              imgWidth = info.image.width.toDouble();
+              imgHeight = info.image.height.toDouble();
+            });
+          }),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final videoReady = isVideo ? _video?.value.isInitialized == true : true;
@@ -350,13 +368,30 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                             child: VideoPlayer(_video!),
                           ),
                         )
-                      : FittedBox(
-                          fit: BoxFit.contain,
-                          child: Image.network(
-                            widget.videoUrl,
-                            errorBuilder: (_, __, ___) =>
-                                const Icon(Icons.broken_image),
-                          ),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final screenHeight = MediaQuery.of(
+                              context,
+                            ).size.height;
+
+                            // 🔥 Rendered height on screen
+                            final renderedHeight =
+                                constraints.maxWidth * (imgHeight / imgWidth);
+
+                            // 🔥 If rendered image height > 80% of screen height
+                            double sHeight = screenHeight * 0.7;
+                            final bool isVeryTall = renderedHeight > sHeight;
+                            debugPrint(
+                              "🔥 renderedHeight: $renderedHeight || screenHeight: ${screenHeight * 0.7} || isVeryTall: $isVeryTall",
+                            );
+
+                            return Image.network(
+                              widget.videoUrl,
+                              fit: isVeryTall ? BoxFit.fill : BoxFit.contain,
+                              errorBuilder: (_, __, ___) =>
+                                  const Icon(Icons.broken_image),
+                            );
+                          },
                         ),
                 ),
 

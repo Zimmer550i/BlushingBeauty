@@ -13,7 +13,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   final AuthController authController = Get.put(AuthController());
-  // String _deviceId = "Loading...";
 
   @override
   void initState() {
@@ -22,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (isLoggedIn) {
         Get.offAll(() => MessageScreen());
       } else {
-        Get.to(() => OnboardScreen1());
+        Get.to(() => OnboardScreen1(), transition: Transition.fadeIn);
       }
     });
     super.initState();
