@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
+import 'package:ree_social_media_app/services/one_signal_manager.dart';
 import 'package:ree_social_media_app/views/base/blur_image_card.dart';
 import 'package:ree_social_media_app/views/base/blur_video_card.dart';
 import 'package:ree_social_media_app/views/base/custom_text_field.dart';
@@ -52,6 +53,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _setupChat();
+    OneSignalHelper.optOut();
   }
 
   Future<void> _setupChat() async {
@@ -74,6 +76,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     chatController.disconnect();
     messageController.dispose();
+    OneSignalHelper.optIn();
     super.dispose();
   }
 
