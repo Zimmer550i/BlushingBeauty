@@ -40,6 +40,8 @@
 		<string>This app requires access to your photo library to allow selecting photos for your profile.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>This app needs access to save photos or videos to your gallery.</string>
+		<key>UITextInputTextContentTypeOneTimeCode</key>
+		<string>OneTimeCode</string>
 		<key>NSContactsUsageDescription</key>
 		<string>This app requires access to your contacts to allow inviting friends.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>

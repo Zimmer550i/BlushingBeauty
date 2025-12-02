@@ -14,7 +14,11 @@ import '../../../utils/show_snackbar.dart';
 class OtpVerificationScreen extends StatefulWidget {
   final String emailOrPhone;
   final bool? isForgotPassword;
-  const OtpVerificationScreen({super.key, required this.emailOrPhone, this.isForgotPassword = false});
+  const OtpVerificationScreen({
+    super.key,
+    required this.emailOrPhone,
+    this.isForgotPassword = false,
+  });
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -33,6 +37,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
   void initState() {
     super.initState();
     _startTimer();
+    SmsAutoFill().listenForCode();
     listenForCode();
   }
 
@@ -45,6 +50,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
       n.dispose();
     }
     _timer?.cancel();
+    SmsAutoFill().unregisterListener();
     super.dispose();
   }
 
@@ -89,7 +95,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
     }
   }
 
-  // This method is called automatically when OTP is received
   @override
   void codeUpdated() {
     String? otp = code;
@@ -187,15 +192,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
   }
 
   void _verifyCode() async {
-    final code = controllers
-        .map((c) => c.text)
-        .join(); // OTP from the controllers
+    final code = controllers.map((c) => c.text).join();
     final message = await authController.verifyAccount(
       widget.emailOrPhone,
       code,
     );
     if (message == "success") {
-      widget.isForgotPassword == true ? Get.to(() => const ResetPasswordScreen()) : Get.to(() => const ContactAccessScreen());
+      widget.isForgotPassword == true
+          ? Get.to(() => const ResetPasswordScreen())
+          : Get.to(() => const ContactAccessScreen());
     } else {
       showSnackBar(message, true);
     }
@@ -218,7 +223,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
         boxShadow: filled
             ? [
                 BoxShadow(
-                  color: AppColors.primaryColor.withValues(alpha: .35),
+                  color: AppColors.primaryColor.withOpacity(.35),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -238,7 +243,44 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
           color: filled ? Colors.white : AppColors.textColor,
         ),
         maxLength: 1,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+
+          /// ✔ FINAL FIX — paste handler (box stays filled)
+          TextInputFormatter.withFunction((oldValue, newValue) {
+            // User pasted multiple characters
+            if (newValue.text.length > 1) {
+              final paste = newValue.text;
+
+              if (paste.length >= 6) {
+                // Insert the FIRST digit into the SELECTED field
+                final firstDigit = paste[0];
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  // Fill remaining 5 digits after the frame
+                  for (int j = 0; j < 6; j++) {
+                    controllers[j].text = paste[j];
+                  }
+
+                  nodes.last.requestFocus();
+                  setState(() {});
+                  _verifyCode();
+                });
+
+                // Return the first digit so the selected box fills!
+                return TextEditingValue(
+                  text: firstDigit,
+                  selection: TextSelection.collapsed(offset: 1),
+                );
+              }
+
+              // If pasted less than 6 digits, ignore
+              return oldValue;
+            }
+
+            return newValue;
+          }),
+        ],
         decoration: const InputDecoration(
           counterText: '',
           isCollapsed: true,
@@ -250,5 +292,24 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
         onChanged: (v) => _handleChange(i, v),
       ),
     );
+  }
+}
+
+class OtpPasteFormatter extends TextInputFormatter {
+  final Function(String) onOtpPaste;
+
+  OtpPasteFormatter({required this.onOtpPaste});
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Check if user pasted full OTP
+    if (newValue.text.length > 1) {
+      onOtpPaste(newValue.text);
+      return oldValue; // prevent default insert
+    }
+    return newValue;
   }
 }

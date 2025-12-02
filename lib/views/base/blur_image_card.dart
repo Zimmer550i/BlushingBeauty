@@ -96,8 +96,8 @@ class _BlurImageCardState extends State<BlurImageCard> {
                       tileMode: TileMode.decal,
                     ),
               child: Image.network(
-                // widget.hasThumbnail ? widget.thumbnail : widget.imageUrl,
-                widget.imageUrl,
+                widget.hasThumbnail ? widget.thumbnail : widget.imageUrl,
+                // widget.imageUrl,
                 height: 260,
                 width: 180,
                 fit: BoxFit.contain,

@@ -11,71 +11,80 @@ class OnboardScreen1 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            SvgPicture.asset("assets/icons/re.svg", height: 35, width: 45),
-            Text(
-              "1 of 2",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                decoration: TextDecoration.underline,
-                decorationColor: AppColors.primaryColor,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SvgPicture.asset(
+                    "assets/icons/re.svg",
+                    height: 35,
+                    width: 45,
+                  ),
+                  Text(
+                    "1 of 2",
+                    style: TextStyle(
+                      color: Color(0xFF413E3E),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.primaryColor,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              'assets/images/splash.svg',
-              height: 72,
-              width: 123,
-            ),
-            SizedBox(height: 20),
-            Text(
-              "Capture &\n Share Moments",
-              style: TextStyle(
-                color: Color(0xFF413E3E),
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 16),
-            Text(
-              "Send photos and videos that stay blurred until the countdown reveal",
-              style: TextStyle(
-                color: Color(0xFF676565),
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 40),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/splash.svg',
+                    height: 72,
+                    width: 123,
+                  ),
+                  SizedBox(height: 60),
+                  Text(
+                    "Capture &\n Share Moments",
+                    style: TextStyle(
+                      color: Color(0xFF413E3E),
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    "Send photos and videos that stay blurred until the countdown reveal",
+                    style: TextStyle(
+                      color: Color(0xFF676565),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 40),
 
-            SizedBox(
-              width: MediaQuery.of(context).size.width / 2,
-              child: CustomButton(
-                onTap: () {
-                  Get.to(
-                    () => OnboardScreen2(),
-                    transition: Transition.rightToLeft,
-                  );
-                },
-                text: "Next",
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width / 2,
+                    child: CustomButton(
+                      onTap: () {
+                        Get.to(
+                          () => OnboardScreen2(),
+                          transition: Transition.rightToLeft,
+                        );
+                      },
+                      text: "Next",
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              SizedBox(),
+            ],
+          ),
         ),
       ),
     );

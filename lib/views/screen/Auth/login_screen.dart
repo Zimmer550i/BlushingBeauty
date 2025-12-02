@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/auth_controller.dart';
+import 'package:ree_social_media_app/services/one_signal_manager.dart';
 import 'package:ree_social_media_app/utils/app_colors.dart';
 import 'package:ree_social_media_app/utils/re_logo.dart';
 import 'package:ree_social_media_app/views/base/custom_button.dart';
@@ -111,6 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         passwordTextController.text,
                       );
                       if (message == "success") {
+                        OneSignalHelper.optIn();
                         Get.offAll(() => MessageScreen());
                       } else if (message == "verify") {
                         showSnackBar("Please verify your email address", true);
