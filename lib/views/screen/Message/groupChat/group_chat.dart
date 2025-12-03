@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ree_social_media_app/controllers/group_chat_controller.dart';
 import 'package:ree_social_media_app/helpers/route.dart';
+import 'package:ree_social_media_app/services/one_signal_manager.dart';
 import 'package:ree_social_media_app/views/base/re_back.dart';
 import 'package:ree_social_media_app/views/screen/Camera/camera_screen.dart';
 import '../../../../controllers/chat_controller.dart';
@@ -47,6 +48,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   void initState() {
     super.initState();
     _initGroupChat();
+    OneSignalHelper.optOut();
   }
 
   Future<void> _initGroupChat() async {
@@ -69,6 +71,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   void dispose() {
     messageTextController.dispose();
     // chatController.disconnect();
+    OneSignalHelper.optIn();
     super.dispose();
   }
 

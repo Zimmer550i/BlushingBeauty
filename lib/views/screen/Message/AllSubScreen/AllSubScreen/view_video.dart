@@ -14,7 +14,7 @@ import 'package:video_player/video_player.dart';
 class ViewMedia extends StatefulWidget {
   const ViewMedia({super.key, required this.mediaUrl});
 
-  final String mediaUrl; // can be video or image
+  final String mediaUrl;
 
   @override
   State<ViewMedia> createState() => _ViewMediaState();

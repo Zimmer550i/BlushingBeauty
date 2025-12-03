@@ -168,17 +168,12 @@ class _SendOrTrimVideoScreenState extends State<VideoEditScreen> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .24),
-                ),
-                child: Platform.isAndroid
-                    ? SafeArea(child: _buildBottomActions())
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 26),
-                        child: _buildBottomActions(),
-                      ),
-              ),
+              child: Platform.isAndroid
+                  ? SafeArea(child: _buildBottomActions())
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 26),
+                      child: _buildBottomActions(),
+                    ),
             ),
         ],
       ),

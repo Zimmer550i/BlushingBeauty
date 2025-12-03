@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ree_social_media_app/controllers/user_controller.dart';
+import 'package:ree_social_media_app/services/one_signal_manager.dart';
 import 'package:ree_social_media_app/views/screen/Auth/login_screen.dart';
 import '../services/api_service.dart';
 import '../services/shared_prefs_service.dart';
@@ -340,7 +341,8 @@ class AuthController extends GetxController {
 
   Future<void> logout() async {
     await SharedPrefsService.remove('token');
-    Get.offAll(() => LoginScreen());
+    OneSignalHelper.optOut();
+    await Get.offAll(() => LoginScreen());
     showSnackBar("You have been logged out", false);
     isLoggedIn.value = false;
   }

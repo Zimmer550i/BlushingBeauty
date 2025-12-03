@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:ree_social_media_app/helpers/route.dart';
 import 'package:ree_social_media_app/views/base/re_back.dart';
 import 'package:video_player/video_player.dart';
 import 'package:ree_social_media_app/controllers/send_message_controller.dart';
@@ -174,7 +175,7 @@ class _FrameSelectionScreenState extends State<FrameSelectionScreen> {
           _buildFrameSelector(),
           SizedBox(width: 12),
           IconButton(
-            onPressed: () => Get.back(),
+            onPressed: () => Get.offAllNamed(AppRoutes.messageScreen),
             icon: Icon(Icons.delete, color: AppColors.primaryColor),
           ),
           Spacer(),
