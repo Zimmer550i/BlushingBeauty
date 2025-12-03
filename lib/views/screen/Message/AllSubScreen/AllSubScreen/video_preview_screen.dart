@@ -546,7 +546,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             const SizedBox(width: 12),
             ValueListenableBuilder<bool>(
               valueListenable: _isPlaying,
-              builder: (_, playing, __) => IconButton(
+              builder: (_, playing, _) => IconButton(
                 icon: Icon(
                   playing ? Icons.pause : Icons.play_arrow,
                   color: Colors.white,

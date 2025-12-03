@@ -57,8 +57,8 @@ class _ResponsiveImageState extends State<ResponsiveImage> {
 
         return Image.network(
           widget.url,
-          fit: isVeryTall ? BoxFit.cover : BoxFit.contain,
-          errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+          fit: isVeryTall ? BoxFit.fill : BoxFit.contain,
+          errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
         );
       },
     );
