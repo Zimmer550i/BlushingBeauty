@@ -175,7 +175,10 @@ class _MessageScreenState extends State<MessageScreen> {
   Widget _notificationButton() {
     return Stack(
       children: [
-        _iconButton('assets/icons/notification.svg', onTap: () => Get.to(() => const NotificationScreen()),),
+        _iconButton(
+          'assets/icons/notification.svg',
+          onTap: () => Get.to(() => const NotificationScreen()),
+        ),
         Positioned(
           right: -2,
           top: -2,
@@ -817,6 +820,7 @@ class _MessageScreenState extends State<MessageScreen> {
           if (name == "group chat") name = "Group Chat";
           String image = chat["image"] ?? "";
           String chatId = chat["_id"] ?? "";
+          String userId = "";
 
           if (chat["type"] == "private") {
             final members = chat["members"] as List? ?? [];
@@ -827,6 +831,7 @@ class _MessageScreenState extends State<MessageScreen> {
             if (other != null) {
               name = other["name"] ?? name;
               image = other["image"] ?? image;
+              userId = other["_id"] ?? "";
             }
           }
 
@@ -860,6 +865,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   Get.to(
                     () => ChatScreen(
                       chatId: chatId,
+                      receiverid: userId,
                       receiverName: name,
                       receiverImage: image,
                     ),
